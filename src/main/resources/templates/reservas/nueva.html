@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:include="layout/base :: html">
+<head>
+    <title id="tituloPagina">Nueva Reserva - FELICITA</title>
+    <div id="estilosAdicionales">
+        <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+        <style>
+            .tarjeta-servicio {
+                cursor: pointer;
+                transition: all 0.3s;
+                border: 2px solid transparent;
+            }
+            .tarjeta-servicio:hover {
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            .tarjeta-servicio.seleccionado {
+                border-color: #0d6efd;
+                background-color: #f0f7ff;
+            }
+            .horario {
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .horario:hover, .horario.seleccionado {
+                background-color: #0d6efd;
+                color: white;
+            }
+            .resumen-reserva {
+                background-color: #f8f9fa;
+                border-radius: 10px;
+                position: sticky;
+                top: 20px;
+            }
+            .pasos-progreso .paso {
+                width: 2rem;
+                height: 2rem;
+                line-height: 2rem;
+                text-align: center;
+                border-radius: 50%;
+                background-color: #dee2e6;
+                color: #6c757d;
+                transition: all 0.3s;
+            }
+            .pasos-progreso .paso.activo {
+                background-color: #0d6efd;
+                color: white;
+            }
+            .pasos-progreso .conector {
+                flex-grow: 1;
+                height: 2px;
+                background-color: #dee2e6;
+            }
+            .pasos-progreso .conector.activo {
+                background-color: #0d6efd;
+            }
+        </style>
+    </div>
+</head>
+<body>
+    <div id="contenidoPagina">
+        <div class="container py-5">
+            <h1 class="mb-4">Reserva tu cita</h1>
+            
+            <!-- Pasos de Progreso -->
+            <div class="pasos-progreso d-flex align-items-center mb-5">
+                <div class="paso activo">1</div>
+                <div class="conector"></div>
+                <div class="paso">2</div>
+                <div class="conector"></div>
+                <div class="paso">3</div>
+            </div>
+            
+            <div class="row">
+                <!-- Contenido Principal -->
+                <div class="col-lg-8">
+                    <!-- Paso 1: Seleccionar Servicios -->
+                    <div id="paso1" class="contenido-paso">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">Paso 1: Selecciona los servicios</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <input type="text" id="buscarServicio" class="form-control" placeholder="Buscar servicios...">
+                                </div>
+                                
+                                <div class="row g-3" id="contenedorServicios">
+                                    <div class="col-md-6" th:each="servicio : ${servicios}" th:if="${servicio.activo}">
+                                        <div th:data-id="${servicio.id}" th:data-precio="${servicio.precio}" th:data-duracion="${servicio.duracion}" class="card tarjeta-servicio h-100">
+                                            <div class="row g-0">
+                                                <div class="col-4">
+                                                    <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" class="img-fluid rounded-start h-100" th:alt="${servicio.nombre}">
+                                                </div>
+                                                <div class="col-8">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title" th:text="${servicio.nombre}">Nombre del Servicio</h5>
+                                                        <p class="card-text text-muted small" th:text="'Duración: ' + ${servicio.duracion} + ' min'">Duración</p>
+                                                        <p class="fw-bold mb-0" th:text="'S/. ' + ${servicio.precio}">Precio</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button id="siguientePaso2" class="btn btn-primary px-4" disabled>Continuar <i class="fas fa-arrow-right ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 2: Seleccionar Fecha y Hora (Oculto inicialmente) -->
+                    <div id="paso2" class="contenido-paso" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">Paso 2: Elige fecha y hora</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Selecciona una fecha</label>
+                                        <input type="text" id="selectorFecha" class="form-control" placeholder="Selecciona una fecha">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Selecciona un especialista</label>
+                                        <select id="selectorEmpleado" class="form-select">
+                                            <option value="">Seleccione un especialista</option>
+                                            <option th:each="empleado : ${empleados}" th:if="${empleado.activo}" 
+                                                    th:value="${empleado.id}" th:text="${empleado.nombre} + ' - ' + ${empleado.cargo}">
+                                                Especialista
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div id="horariosDisponibles" class="mt-4" style="display: none;">
+                                    <label class="form-label">Horarios disponibles</label>
+                                    <div id="contenedorHorarios" class="row g-2">
+                                        <!-- Los horarios se insertarán aquí dinámicamente -->
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button id="volverPaso1" class="btn btn-outline-secondary px-4"><i class="fas fa-arrow-left me-1"></i> Atrás</button>
+                                    <button id="siguientePaso3" class="btn btn-primary px-4" disabled>Continuar <i class="fas fa-arrow-right ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 3: Confirmación (Oculto inicialmente) -->
+                    <div id="paso3" class="contenido-paso" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">Paso 3: Confirmación de reserva</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Por favor revisa los detalles de tu reserva antes de confirmar.
+                                </div>
+                                
+                                <h6 class="fw-bold mt-4">Detalles de la reserva</h6>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Servicio</th>
+                                                <th>Duración</th>
+                                                <th class="text-end">Precio</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaServiciosConfirmacion">
+                                            <!-- Los servicios se insertarán aquí dinámicamente -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="fw-bold">
+                                                <td>Total</td>
+                                                <td id="duracionTotal">0 min</td>
+                                                <td class="text-end" id="precioTotal">S/. 0.00</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha</label>
+                                        <input type="text" id="confirmarFecha" class="form-control" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Hora</label>
+                                        <input type="text" id="confirmarHora" class="form-control" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Especialista</label>
+                                    <input type="text" id="confirmarEspecialista" class="form-control" readonly>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Notas adicionales (opcional)</label>
+                                    <textarea id="notas" class="form-control" rows="3" placeholder="Agrega cualquier información adicional para tu cita"></textarea>
+                                </div>
+
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="aceptarPolitica">
+                                    <label class="form-check-label" for="aceptarPolitica">
+                                        Acepto la política de cancelación. Entiendo que debo cancelar con al menos 24 horas de anticipación para evitar cargos.
+                                    </label>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <button id="volverPaso2" class="btn btn-outline-secondary px-4"><i class="fas fa-arrow-left me-1"></i> Atrás</button>
+                                    <button id="confirmarReserva" class="btn btn-success px-4" disabled><i class="fas fa-check me-1"></i> Confirmar Reserva</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resumen de Reserva -->
+                <div class="col-lg-4">
+                    <div class="resumen-reserva p-4 mb-4">
+                        <h5 class="border-bottom pb-3">Resumen de Reserva</h5>
+                        
+                        <div id="contenedorResumenServicios" class="py-3">
+                            <p class="text-muted text-center">Selecciona servicios para ver el resumen</p>
+                        </div>
+                        
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Total</span>
+                                <span id="resumenPrecioTotal">S/. 0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div id="contenedorResumenDetalles" class="mt-3" style="display: none;">
+                            <div class="mb-2">
+                                <i class="far fa-calendar me-2"></i>
+                                <span id="resumenFecha">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="far fa-clock me-2"></i>
+                                <span id="resumenHora">-</span>
+                            </div>
+                            <div>
+                                <i class="far fa-user me-2"></i>
+                                <span id="resumenEspecialista">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">¿Necesitas ayuda?</h5>
+                            <p class="card-text">Si tienes dudas sobre el proceso de reserva, no dudes en contactarnos:</p>
+                            <div class="d-grid gap-2">
+                                <a href="tel:+51987654321" class="btn btn-outline-primary"><i class="fas fa-phone-alt me-2"></i> Llamar</a>
+                                <a href="https://wa.me/51987654321" target="_blank" class="btn btn-outline-success"><i class="fab fa-whatsapp me-2"></i> WhatsApp</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="scriptsAdicionales">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Variables globales
+                let serviciosSeleccionados = [];
+                let fechaSeleccionada = null;
+                let horaSeleccionada = null;
+                let empleadoIdSeleccionado = null;
+                let nombreEmpleadoSeleccionado = '';
+                
+                // Inicialización de Flatpickr (selector de fecha)
+                const selectorFecha = flatpickr("#selectorFecha", {
+                    minDate: "today",
+                    dateFormat: "Y-m-d",
+                    disable: [
+                        function(date) {
+                            // Deshabilitar domingos
+                            return (date.getDay() === 0);
+                        }
+                    ],
+                    onChange: function(selectedDates, dateStr) {
+                        fechaSeleccionada = dateStr;
+                        verificarCompletitudPaso2();
+                        actualizarResumen();
+                        
+                        // Si también hay un empleado seleccionado, buscar horarios disponibles
+                        if (empleadoIdSeleccionado) {
+                            buscarHorariosDisponibles();
+                        }
+                    }
+                });
+                
+                // Selección de servicios
+                const tarjetasServicio = document.querySelectorAll('.tarjeta-servicio');
+                tarjetasServicio.forEach(tarjeta => {
+                    tarjeta.addEventListener('click', function() {
+                        this.classList.toggle('seleccionado');
+                        
+                        const servicioId = parseInt(this.getAttribute('data-id'));
+                        const servicioNombre = this.querySelector('.card-title').textContent;
+                        const servicioPrecio = parseFloat(this.getAttribute('data-precio'));
+                        const servicioDuracion = parseInt(this.getAttribute('data-duracion'));
+                        
+                        if (this.classList.contains('seleccionado')) {
+                            // Agregar servicio
+                            serviciosSeleccionados.push({
+                                id: servicioId,
+                                nombre: servicioNombre,
+                                precio: servicioPrecio,
+                                duracion: servicioDuracion
+                            });
+                        } else {
+                            // Eliminar servicio
+                            serviciosSeleccionados = serviciosSeleccionados.filter(s => s.id !== servicioId);
+                        }
+                        
+                        // Actualizar resumen y botón
+                        actualizarResumen();
+                        document.getElementById('siguientePaso2').disabled = serviciosSeleccionados.length === 0;
+                    });
+                });
+                
+                // Selección de empleado
+                document.getElementById('selectorEmpleado').addEventListener('change', function() {
+                    empleadoIdSeleccionado = this.value;
+                    nombreEmpleadoSeleccionado = this.options[this.selectedIndex].text;
+                    verificarCompletitudPaso2();
+                    actualizarResumen();
+                    
+                    // Si también hay una fecha seleccionada, buscar horarios disponibles
+                    if (fechaSeleccionada) {
+                        buscarHorariosDisponibles();
+                    }
+                });
+                
+                // Búsqueda de servicios
+                document.getElementById('buscarServicio').addEventListener('input', function() {
+                    const textoBusqueda = this.value.toLowerCase();
+                    tarjetasServicio.forEach(tarjeta => {
+                        const nombreServicio = tarjeta.querySelector('.card-title').textContent.toLowerCase();
+                        if (nombreServicio.includes(textoBusqueda)) {
+                            tarjeta.style.display = 'block';
+                        } else {
+                            tarjeta.style.display = 'none';
+                        }
+                    });
+                });
+                
+                // Navegación entre pasos
+                document.getElementById('siguientePaso2').addEventListener('click', () => {
+                    mostrarPaso(2);
+                });
+                
+                document.getElementById('volverPaso1').addEventListener('click', () => {
+                    mostrarPaso(1);
+                });
+                
+                document.getElementById('siguientePaso3').addEventListener('click', () => {
+                    mostrarPaso(3);
+                    completarConfirmacion();
+                });
+                
+                document.getElementById('volverPaso2').addEventListener('click', () => {
+                    mostrarPaso(2);
+                });
+                
+                // Checkbox de política
+                document.getElementById('aceptarPolitica').addEventListener('change', function() {
+                    document.getElementById('confirmarReserva').disabled = !this.checked;
+                });
+                
+                // Confirmación de reserva
+                document.getElementById('confirmarReserva').addEventListener('click', crearReserva);
+                
+                // Funciones auxiliares
+                function mostrarPaso(paso) {
+                    // Ocultar todos los pasos
+                    document.querySelectorAll('.contenido-paso').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                    
+                    // Mostrar paso actual
+                    document.getElementById(`paso${paso}`).style.display = 'block';
+                    
+                    // Actualizar indicador de progreso
+                    const pasos = document.querySelectorAll('.pasos-progreso .paso');
+                    const conectores = document.querySelectorAll('.pasos-progreso .conector');
+                    
+                    for (let i = 0; i < pasos.length; i++) {
+                        if (i < paso) {
+                            pasos[i].classList.add('activo');
+                        } else if (i === paso - 1) {
+                            pasos[i].classList.add('activo');
+                        } else {
+                            pasos[i].classList.remove('activo');
+                        }
+                    }
+                    
+                    for (let i = 0; i < conectores.length; i++) {
+                        if (i < paso - 1) {
+                            conectores[i].classList.add('activo');
+                        } else {
+                            conectores[i].classList.remove('activo');
+                        }
+                    }
+                }
+                
+                function verificarCompletitudPaso2() {
+                    const fechaHoraCompleta = fechaSeleccionada && horaSeleccionada;
+                    const empleadoSeleccionado = empleadoIdSeleccionado && empleadoIdSeleccionado !== '';
+                    
+                    document.getElementById('siguientePaso3').disabled = !(fechaHoraCompleta && empleadoSeleccionado);
+                }
+                
+                function buscarHorariosDisponibles() {
+                    // Simulación de horarios disponibles (en un escenario real, esto se obtendría del servidor)
+                    const horariosDisponibles = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'];
+                    
+                    // Mostrar contenedor de horarios
+                    const contenedorHorarios = document.getElementById('contenedorHorarios');
+                    contenedorHorarios.innerHTML = '';
+                    
+                    horariosDisponibles.forEach(hora => {
+                        const col = document.createElement('div');
+                        col.className = 'col-4 col-lg-2';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'card horario text-center p-2';
+                        card.textContent = hora;
+                        
+                        card.addEventListener('click', function() {
+                            // Desactivar selección previa
+                            document.querySelectorAll('.horario').forEach(el => {
+                                el.classList.remove('seleccionado');
+                            });
+                            
+                            // Activar selección actual
+                            this.classList.add('seleccionado');
+                            
+                            // Guardar hora seleccionada
+                            horaSeleccionada = hora;
+                            
+                            // Actualizar resumen
+                            actualizarResumen();
+                            
+                            // Verificar si podemos continuar al siguiente paso
+                            verificarCompletitudPaso2();
+                        });
+                        
+                        col.appendChild(card);
+                        contenedorHorarios.appendChild(col);
+                    });
+                    
+                    document.getElementById('horariosDisponibles').style.display = 'block';
+                }
+                
+                function actualizarResumen() {
+                    // Actualizar resumen de servicios
+                    const contenedorResumenServicios = document.getElementById('contenedorResumenServicios');
+                    
+                    if (serviciosSeleccionados.length === 0) {
+                        contenedorResumenServicios.innerHTML = '<p class="text-muted text-center">Selecciona servicios para ver el resumen</p>';
+                    } else {
+                        let html = '';
+                        let precioTotal = 0;
+                        
+                        serviciosSeleccionados.forEach(servicio => {
+                            html += `
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <h6 class="mb-0">${servicio.nombre}</h6>
+                                        <small class="text-muted">${servicio.duracion} min</small>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold">S/. ${servicio.precio.toFixed(2)}</span>
+                                        <button class="btn btn-sm text-danger ms-2 p-0 btn-eliminar-servicio" data-id="${servicio.id}"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            precioTotal += servicio.precio;
+                        });
+                        
+                        contenedorResumenServicios.innerHTML = html;
+                        document.getElementById('resumenPrecioTotal').textContent = `S/. ${precioTotal.toFixed(2)}`;
+                        
+                        // Agregar eventos a los botones de eliminar
+                        document.querySelectorAll('.btn-eliminar-servicio').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const servicioId = parseInt(this.getAttribute('data-id'));
+                                
+                                // Quitar selección visual
+                                const tarjeta = document.querySelector(`.tarjeta-servicio[data-id="${servicioId}"]`);
+                                if (tarjeta) {
+                                    tarjeta.classList.remove('seleccionado');
+                                }
+                                
+                                // Eliminar de la lista
+                                serviciosSeleccionados = serviciosSeleccionados.filter(s => s.id !== servicioId);
+                                
+                                // Actualizar resumen
+                                actualizarResumen();
+                                
+                                // Actualizar estado del botón
+                                document.getElementById('siguientePaso2').disabled = serviciosSeleccionados.length === 0;
+                            });
+                        });
+                    }
+                    
+                    // Actualizar resumen de fecha y hora
+                    const contenedorResumenDetalles = document.getElementById('contenedorResumenDetalles');
+                    
+                    if (fechaSeleccionada && horaSeleccionada && empleadoIdSeleccionado) {
+                        document.getElementById('resumenFecha').textContent = formatearFecha(fechaSeleccionada);
+                        document.getElementById('resumenHora').textContent = horaSeleccionada;
+                        document.getElementById('resumenEspecialista').textContent = nombreEmpleadoSeleccionado;
+                        
+                        contenedorResumenDetalles.style.display = 'block';
+                    } else {
+                        contenedorResumenDetalles.style.display = 'none';
+                    }
+                }
+                
+                function completarConfirmacion() {
+                    // Completar tabla de servicios
+                    const tablaServiciosConfirmacion = document.getElementById('tablaServiciosConfirmacion');
+                    
+                    let html = '';
+                    let precioTotal = 0;
+                    let duracionTotal = 0;
+                    
+                    serviciosSeleccionados.forEach(servicio => {
+                        html += `
+                            <tr>
+                                <td>${servicio.nombre}</td>
+                                <td>${servicio.duracion} min</td>
+                                <td class="text-end">S/. ${servicio.precio.toFixed(2)}</td>
+                            </tr>
+                        `;
+                        
+                        precioTotal += servicio.precio;
+                        duracionTotal += servicio.duracion;
+                    });
+                    
+                    tablaServiciosConfirmacion.innerHTML = html;
+                    document.getElementById('precioTotal').textContent = `S/. ${precioTotal.toFixed(2)}`;
+                    document.getElementById('duracionTotal').textContent = `${duracionTotal} min`;
+                    
+                    // Completar detalles de fecha y hora
+                    document.getElementById('confirmarFecha').value = formatearFecha(fechaSeleccionada);
+                    document.getElementById('confirmarHora').value = horaSeleccionada;
+                    document.getElementById('confirmarEspecialista').value = nombreEmpleadoSeleccionado;
+                }
+                
+                function formatearFecha(fechaStr) {
+                    const fecha = new Date(fechaStr);
+                    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    return fecha.toLocaleDateString('es-ES', opciones);
+                }
+                
+                function crearReserva() {
+                    // Recolectar datos
+                    const datos = {
+                        usuarioId: 1, // En un escenario real, esto vendría del usuario autenticado
+                        empleadoId: empleadoIdSeleccionado,
+                        serviciosIds: serviciosSeleccionados.map(s => s.id),
+                        fecha: fechaSeleccionada,
+                        horaInicio: horaSeleccionada,
+                        notas: document.getElementById('notas').value
+                    };
+                    
+                    // Enviar solicitud al servidor
+                    fetch('/api/reservas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(datos)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exito) {
+                            // Redirigir a la página de confirmación
+                            window.location.href = `/reservas/${data.reservaId}/confirmacion`;
+                        } else {
+                            alert('Error: ' + data.mensaje);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al procesar la reserva. Intente nuevamente.');
+                    });
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:include="layout/base :: html">
+<head>
+    <title id="tituloPagina">Registro - FELICITA</title>
+</head>
+<body>
+    <div id="contenidoPagina">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0">Crear Cuenta</h4>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="@{/api/auth/registro}" id="formularioRegistro" method="post">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="nombreUsuario" class="form-label">Nombre de Usuario</label>
+                                        <input type="text" id="nombreUsuario" name="nombreUsuario" class="form-control" required>
+                                        <div class="invalid-feedback">El nombre de usuario es obligatorio (3-20 caracteres)</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="correo" class="form-label">Correo Electrónico</label>
+                                        <input type="email" id="correo" name="correo" class="form-control" required>
+                                        <div class="invalid-feedback">Ingrese un correo electrónico válido</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="nombreCompleto" class="form-label">Nombre Completo</label>
+                                    <input type="text" id="nombreCompleto" name="nombreCompleto" class="form-control" required>
+                                    <div class="invalid-feedback">El nombre completo es obligatorio</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="telefono" class="form-label">Teléfono</label>
+                                    <input type="tel" id="telefono" name="telefono" class="form-control">
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="contraseña" class="form-label">Contraseña</label>
+                                        <input type="password" id="contraseña" name="contraseña" class="form-control" required>
+                                        <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="confirmarContraseña" class="form-label">Confirmar Contraseña</label>
+                                        <input type="password" id="confirmarContraseña" class="form-control" required>
+                                        <div class="invalid-feedback">Las contraseñas no coinciden</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" id="terminos" class="form-check-input" required>
+                                    <label for="terminos" class="form-check-label">Acepto los términos y condiciones</label>
+                                    <div class="invalid-feedback">Debe aceptar los términos y condiciones</div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Registrar</button>
+                                </div>
+                            </form>
+                            
+                            <div class="text-center mt-3">
+                                ¿Ya tienes una cuenta? <a th:href="@{/login}">Iniciar Sesión</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="scriptsAdicionales">
+        <script>
+            // Validación del formulario
+            document.addEventListener('DOMContentLoaded', function() {
+                const formulario = document.getElementById('formularioRegistro');
+                const contraseña = document.getElementById('contraseña');
+                const confirmarContraseña = document.getElementById('confirmarContraseña');
+                
+                formulario.addEventListener('submit', function(event) {
+                    let esValido = true;
+                    
+                    // Validar coincidencia de contraseñas
+                    if (contraseña.value !== confirmarContraseña.value) {
+                        confirmarContraseña.classList.add('is-invalid');
+                        esValido = false;
+                    } else {
+                        confirmarContraseña.classList.remove('is-invalid');
+                    }
+                    
+                    // Detener envío si no es válido
+                    if (!esValido) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                });
+                
+                // Enviar el formulario mediante AJAX
+                formulario.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const datosFormulario = {
+                        nombreUsuario: document.getElementById('nombreUsuario').value,
+                        correo: document.getElementById('correo').value,
+                        nombreCompleto: document.getElementById('nombreCompleto').value,
+                        telefono: document.getElementById('telefono').value,
+                        contraseña: document.getElementById('contraseña').value
+                    };
+                    
+                    fetch('/api/auth/registro', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(datosFormulario)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exito) {
+                            // Mostrar mensaje de éxito
+                            alert('Registro exitoso. Ahora puedes iniciar sesión.');
+                            window.location.href = '/login';
+                        } else {
+                            // Mostrar mensaje de error
+                            alert('Error: ' + data.mensaje);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al procesar el registro. Intente nuevamente.');
+                    });
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <!-- Fragmento de Pie de Página -->
+    <footer th:fragment="piePagina" class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h4><i class="fas fa-cut me-2"></i> FELICITA</h4>
+                    <p>Sistema de reservas para salones de belleza y barberías. La forma más fácil de gestionar tus citas de belleza.</p>
+                </div>
+                <div class="col-md-2">
+                    <h5>Enlaces</h5>
+                    <ul class="list-unstyled">
+                        <li><a th:href="@{/}" class="text-white">Inicio</a></li>
+                        <li><a th:href="@{/servicios}" class="text-white">Servicios</a></li>
+                        <li><a th:href="@{/nosotros}" class="text-white">Sobre nosotros</a></li>
+                        <li><a th:href="@{/contacto}" class="text-white">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Contáctanos</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-map-marker-alt me-2"></i> Av. Arequipa 1234, Lima</li>
+                        <li><i class="fas fa-phone me-2"></i> +51 987 654 321</li>
+                        <li><i class="fas fa-envelope me-2"></i> info@felicita.pe</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Síguenos</h5>
+                    <div class="d-flex gap-3 fs-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-primary w-100">Descarga nuestra App</a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 FELICITA. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Fragmento de Scripts -->
+    <div th:fragment="scripts">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    </div>
+</body>
+</html>

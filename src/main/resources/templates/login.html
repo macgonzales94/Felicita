@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:include="layout/base :: html">
+<head>
+    <title id="tituloPagina">Iniciar Sesión - FELICITA</title>
+</head>
+<body>
+    <div id="contenidoPagina">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0">Iniciar Sesión</h4>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${param.error}" class="alert alert-danger">
+                                Nombre de usuario o contraseña incorrectos.
+                            </div>
+                            <div th:if="${param.logout}" class="alert alert-success">
+                                Has cerrado sesión exitosamente.
+                            </div>
+                            
+                            <form th:action="@{/login}" method="post">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Nombre de Usuario</label>
+                                    <input type="text" id="username" name="username" class="form-control" required autofocus>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Contraseña</label>
+                                    <input type="password" id="password" name="password" class="form-control" required>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" id="remember-me" name="remember-me" class="form-check-input">
+                                    <label for="remember-me" class="form-check-label">Recordarme</label>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                                </div>
+                            </form>
+                            
+                            <div class="text-center mt-3">
+                                ¿No tienes una cuenta? <a th:href="@{/registro}">Regístrate aquí</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

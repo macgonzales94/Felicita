@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:include=":: #tituloPagina">FELICITA</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- CSS Personalizado -->
+    <link th:href="@{/css/estilos.css}" rel="stylesheet">
+    
+    <!-- Estilos adicionales -->
+    <th:block th:include=":: #estilosAdicionales"></th:block>
+</head>
+<body>
+    <!-- Cabecera -->
+    <div th:replace="fragments/header :: cabecera"></div>
+    
+    <!-- Contenido de la Página -->
+    <main>
+        <div th:include=":: #contenidoPagina"></div>
+    </main>
+    
+    <!-- Pie de Página -->
+    <div th:replace="fragments/footer :: piePagina"></div>
+    
+    <!-- Scripts -->
+    <div th:replace="fragments/footer :: scripts"></div>
+    
+    <!-- Scripts adicionales -->
+    <th:block th:include=":: #scriptsAdicionales"></th:block>
+</body>
+</html>
