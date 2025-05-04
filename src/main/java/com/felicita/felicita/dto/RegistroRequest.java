@@ -1,8 +1,9 @@
+// src/main/java/com/felicita/felicita/dto/RegistroRequest.java (continuación)
 package com.felicita.felicita.dto;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * Clase que representa una solicitud de registro de usuario.

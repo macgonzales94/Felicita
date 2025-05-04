@@ -1,10 +1,11 @@
+// src/main/java/com/felicita/felicita/model/Disponibilidad.java
 package com.felicita.felicita.model;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Clase que representa la disponibilidad horaria de los empleados.
@@ -70,7 +71,7 @@ public class Disponibilidad {
         this.horaFin = horaFin;
     }
 
-    // Getters y setters
+    // Getters y setters (manteniendo los mismos)
     public Long getId() {
         return id;
     }

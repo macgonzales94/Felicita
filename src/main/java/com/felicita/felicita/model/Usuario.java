@@ -1,13 +1,14 @@
+// src/main/java/com/felicita/felicita/model/Usuario.java
 package com.felicita.felicita.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * Clase que representa a los usuarios del sistema FELICITA.
@@ -105,7 +106,7 @@ public class Usuario {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    // Getters y setters
+    // Getters y setters (manteniendo los mismos)
     public Long getId() {
         return id;
     }

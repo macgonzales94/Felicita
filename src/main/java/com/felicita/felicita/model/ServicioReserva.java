@@ -1,6 +1,7 @@
+// src/main/java/com/felicita/felicita/model/ServicioReserva.java
 package com.felicita.felicita.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Clase que representa la relación entre servicios y reservas.
@@ -44,7 +45,7 @@ public class ServicioReserva {
         this.servicio = servicio;
     }
 
-    // Getters y setters
+    // Getters y setters (manteniendo los mismos)
     public Long getId() {
         return id;
     }

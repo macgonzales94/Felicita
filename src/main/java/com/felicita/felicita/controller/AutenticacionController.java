@@ -1,3 +1,4 @@
+// src/main/java/com/felicita/felicita/controller/AutenticacionController.java
 package com.felicita.felicita.controller;
 
 import com.felicita.felicita.dto.LoginRequest;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * Controlador que maneja las operaciones de autenticación.

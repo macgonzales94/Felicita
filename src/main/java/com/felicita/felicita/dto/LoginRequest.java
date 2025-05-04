@@ -1,6 +1,7 @@
+// src/main/java/com/felicita/felicita/dto/LoginRequest.java
 package com.felicita.felicita.dto;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * Clase que representa una solicitud de inicio de sesión.

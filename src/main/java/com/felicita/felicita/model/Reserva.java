@@ -1,11 +1,12 @@
+// src/main/java/com/felicita/felicita/model/Reserva.java
 package com.felicita.felicita.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Clase que representa las reservas o citas en el sistema.
@@ -89,7 +90,7 @@ public class Reserva {
         this.estado = EstadoReserva.PENDIENTE;
     }
 
-    // Getters y setters
+    // Getters y setters (manteniendo los mismos)
     public Long getId() {
         return id;
     }

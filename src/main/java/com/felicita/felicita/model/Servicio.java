@@ -1,13 +1,14 @@
+// src/main/java/com/felicita/felicita/model/Servicio.java
 package com.felicita.felicita.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * Clase que representa los servicios ofrecidos por el salón de belleza o barbería.
@@ -86,7 +87,7 @@ public class Servicio {
         this.duracion = duracion;
     }
 
-    // Getters y setters
+    // Getters y setters (manteniendo los mismos)
     public Long getId() {
         return id;
     }

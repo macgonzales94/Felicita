@@ -1,10 +1,11 @@
+// src/main/java/com/felicita/felicita/model/Empleado.java
 package com.felicita.felicita.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * Clase que representa a los empleados del salón de belleza o barbería.
@@ -71,7 +72,7 @@ public class Empleado {
         this.cargo = cargo;
     }
 
-    // Getters y setters
+    // Getters y setters (manteniendo los mismos)
     public Long getId() {
         return id;
     }
