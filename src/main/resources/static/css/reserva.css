@@ -1,0 +1,372 @@
+/* Estilos específicos para la página de reservas de FELICITA */
+
+/* Indicador de progreso de pasos */
+.steps-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    position: relative;
+  }
+  
+  .steps-progress::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 2px;
+    width: 100%;
+    background-color: #dee2e6;
+    z-index: -1;
+  }
+  
+  .step {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #6c757d;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .step.active {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .step.completed {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: white;
+  }
+  
+  .step-label {
+    position: absolute;
+    width: max-content;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+  }
+  
+  .step.active .step-label {
+    color: var(--primary);
+  }
+  
+  .step.completed .step-label {
+    color: var(--success);
+  }
+  
+  /* Tarjetas de servicios */
+  .service-card {
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .service-card.selected {
+    border-color: var(--primary);
+    background-color: rgba(106, 44, 112, 0.05);
+  }
+  
+  .service-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .service-price {
+    font-weight: 700;
+    color: var(--secondary);
+  }
+  
+  .service-duration {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+  
+  /* Selector de fecha */
+  .date-picker-wrapper {
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .calendar-day-name {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+  }
+  
+  .calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .calendar-day:hover {
+    background-color: rgba(106, 44, 112, 0.1);
+  }
+  
+  .calendar-day.selected {
+    background-color: var(--primary);
+    color: white;
+  }
+  
+  .calendar-day.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  
+  .calendar-day.other-month {
+    opacity: 0.3;
+  }
+  
+  /* Selector de hora */
+  .time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .time-slot {
+    text-align: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .time-slot:hover {
+    background-color: rgba(106, 44, 112, 0.1);
+  }
+  
+  .time-slot.selected {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .time-slot.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  
+  /* Resumen de reserva */
+  .booking-summary {
+    position: sticky;
+    top: 2rem;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-title {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
+  .summary-label {
+    color: #6c757d;
+  }
+  
+  .summary-value {
+    font-weight: 600;
+  }
+  
+  .summary-total {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+    font-weight: 700;
+    font-size: 1.125rem;
+  }
+  
+  .summary-action {
+    margin-top: 1.5rem;
+  }
+  
+  .summary-action .btn {
+    width: 100%;
+  }
+  
+  /* Selección de profesional */
+  .stylist-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+  }
+  
+  .stylist-card:hover {
+    background-color: rgba(106, 44, 112, 0.05);
+  }
+  
+  .stylist-card.selected {
+    border-color: var(--primary);
+    background-color: rgba(106, 44, 112, 0.05);
+  }
+  
+  .stylist-avatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 1rem;
+  }
+  
+  .stylist-info {
+    flex-grow: 1;
+  }
+  
+  .stylist-name {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+  }
+  
+  .stylist-position {
+    font-size: 0.875rem;
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+  }
+  
+  .stylist-rating {
+    display: flex;
+    align-items: center;
+  }
+  
+  .rating-stars {
+    color: #ffc107;
+    margin-right: 0.5rem;
+  }
+  
+  .rating-count {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+  
+  /* Confirmación de reserva */
+  .confirmation-card {
+    text-align: center;
+    padding: 2rem;
+  }
+  
+  .confirmation-icon {
+    font-size: 5rem;
+    color: var(--success);
+    margin-bottom: 1.5rem;
+  }
+  
+  .confirmation-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 1rem;
+  }
+  
+  .confirmation-text {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+  }
+  
+  .confirmation-details {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .detail-item {
+    margin-bottom: 0.5rem;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    color: var(--success);
+  }
+  
+  /* Responsivo */
+  @media (max-width: 768px) {
+    .step {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    
+    .step-label {
+      font-size: 0.75rem;
+    }
+    
+    .booking-summary {
+      position: relative;
+      top: 0;
+      margin-top: 2rem;
+    }
+    
+    .time-slots {
+      grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    }
+    
+    .stylist-avatar {
+      width: 3rem;
+      height: 3rem;
+    }
+  }

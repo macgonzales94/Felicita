@@ -1,80 +1,170 @@
+/* Estilos globales para FELICITA */
+
+/* Variables de colores */
+:root {
+  --primary: #6A2C70;         /* Púrpura oscuro - Color principal */
+  --secondary: #1B998B;       /* Turquesa - Color secundario */
+  --accent: #F2C6DE;          /* Rosa claro - Color de acento */
+  --dark: #2D3047;            /* Azul marino - Para fondos oscuros */
+  --light: #F7F7F9;           /* Blanco tintado - Para fondos claros */
+  --text-dark: #2D3047;       /* Color para textos oscuros */
+  --text-light: #F7F7F9;      /* Color para textos claros */
+  --success: #28A745;         /* Verde - Para mensajes de éxito */
+  --danger: #DC3545;          /* Rojo - Para mensajes de error */
+  --warning: #FFC107;         /* Amarillo - Para mensajes de advertencia */
+  --info: #17A2B8;            /* Azul claro - Para mensajes informativos */
+}
+
+/* Aplicar colores personalizados a clases de Bootstrap */
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--secondary) !important;
+}
+
+.text-primary {
+  color: var(--primary) !important;
+}
+
+.text-secondary {
+  color: var(--secondary) !important;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #5a1b60;
+  border-color: #5a1b60;
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+}
+
+.btn-secondary:hover, .btn-secondary:focus {
+  background-color: #158579;
+  border-color: #158579;
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--dark);
+}
+
+.btn-accent:hover, .btn-accent:focus {
+  background-color: #e9b1ce;
+  border-color: #e9b1ce;
+  color: var(--dark);
+}
+
 /* Estilos generales */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f8f9fa;
+  font-family: 'Roboto', sans-serif;
+  color: var(--text-dark);
+  background-color: var(--light);
 }
 
-/* Header */
+/* Estilos de encabezado */
+.navbar {
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-dark {
+  background-color: var(--primary) !important;
+}
+
 .navbar-brand {
-    font-weight: bold;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-/* Tarjetas y elementos */
-.tarjeta-servicio {
-    transition: all 0.3s;
-    border-radius: 10px;
-    overflow: hidden;
+/* Transiciones y efectos hover */
+.hover-text-white {
+  transition: opacity 0.3s ease;
 }
 
-.tarjeta-servicio:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+.hover-text-white:hover {
+  opacity: 1;
+  color: white !important;
 }
 
-/* Hero section */
-.seccion-hero {
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/images/banner.jpg');
-    background-size: cover;
-    background-position: center;
-    color: white;
-    height: 70vh;
-    display: flex;
-    align-items: center;
-}
-
-/* Footer */
+/* Estilos para el footer */
 footer {
-    margin-top: 2rem;
+  background-color: var(--primary);
+  color: var(--text-light);
+  padding: 3rem 0;
 }
 
-/* Formularios */
-.form-label {
-    font-weight: 500;
+footer h4, footer h5 {
+  color: white;
+  margin-bottom: 1.5rem;
 }
 
-/* Botones */
-.btn-primary {
-    transition: all 0.2s;
+footer .btn-outline-light {
+  border-width: 1px;
+  font-size: 0.85rem;
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+footer .border-secondary {
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Página de administración */
-.barra-lateral {
-    min-height: calc(100vh - 56px);
-    background-color: #343a40;
-    color: white;
+footer .input-group .form-control {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
 }
 
-.nav-link {
-    color: rgba(255,255,255,.75);
-    border-radius: 0;
-    padding: 0.5rem 1rem;
+footer .input-group .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.nav-link:hover, .nav-link.active {
-    color: white;
-    background-color: rgba(255,255,255,.1);
+footer .input-group .btn {
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
 }
 
-.tarjeta-dashboard {
-    border-left: 4px solid;
-    transition: transform 0.3s;
+/* Títulos */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--primary);
 }
 
-.tarjeta-dashboard:hover {
-    transform: translateY(-5px);
+/* Utilidades */
+.section-padding {
+  padding: 5rem 0;
+}
+
+.shadow-custom {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Animaciones */
+.transition-standard {
+  transition: all 0.3s ease;
+}
+
+/* Estados de reserva */
+.estado-pendiente {
+  background-color: var(--warning);
+}
+
+.estado-confirmada {
+  background-color: var(--success);
+}
+
+.estado-cancelada {
+  background-color: var(--danger);
+}
+
+.estado-completada {
+  background-color: var(--info);
 }

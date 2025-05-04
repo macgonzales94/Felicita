@@ -6,11 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
 /**
- * Controlador para la página principal y otras páginas públicas.
+ * Controlador para gestionar las páginas principales públicas del sistema FELICITA.
+ * Se encarga de manejar las rutas de acceso público como la página principal,
+ * servicios, contacto, y páginas informativas.
  */
 @Controller
 public class HomeController {
@@ -20,40 +23,45 @@ public class HomeController {
 
     /**
      * Muestra la página principal
-     * @param model Modelo para la vista
-     * @return Nombre de la vista
+     * @param model Modelo para pasar datos a la vista
+     * @return Nombre de la plantilla Thymeleaf a renderizar
      */
     @GetMapping("/")
-    public String inicio(Model model) {
+    public String home(Model model) {
         try {
             List<Servicio> serviciosDestacados = servicioService.obtenerTodosActivos();
             model.addAttribute("servicios", serviciosDestacados);
+            return "home";
         } catch (Exception e) {
-            // Si hay error al cargar servicios, no detener el renderizado de la página
-            model.addAttribute("servicios", List.of());
+            // Log del error
+            System.err.println("Error al cargar la página principal: " + e.getMessage());
+            e.printStackTrace();
+            // En caso de error, devuelve una página de error genérica
+            return "error/general";
         }
-        return "home";
     }
 
     /**
      * Muestra la página de servicios
-     * @param model Modelo para la vista
-     * @return Nombre de la vista
+     * @param model Modelo para pasar datos a la vista
+     * @return Nombre de la plantilla Thymeleaf a renderizar
      */
     @GetMapping("/servicios")
     public String servicios(Model model) {
         try {
             List<Servicio> servicios = servicioService.obtenerTodosActivos();
             model.addAttribute("servicios", servicios);
+            return "servicios";
         } catch (Exception e) {
-            model.addAttribute("servicios", List.of());
+            System.err.println("Error al cargar la página de servicios: " + e.getMessage());
+            e.printStackTrace();
+            return "error/general";
         }
-        return "servicios";
     }
 
     /**
      * Muestra la página de contacto
-     * @return Nombre de la vista
+     * @return Nombre de la plantilla Thymeleaf a renderizar
      */
     @GetMapping("/contacto")
     public String contacto() {
@@ -62,7 +70,7 @@ public class HomeController {
 
     /**
      * Muestra la página "Acerca de nosotros"
-     * @return Nombre de la vista
+     * @return Nombre de la plantilla Thymeleaf a renderizar
      */
     @GetMapping("/nosotros")
     public String nosotros() {
@@ -70,11 +78,38 @@ public class HomeController {
     }
     
     /**
-     * Maneja errores 404
-     * @return Nombre de la vista de error
+     * Muestra la página de términos y condiciones
+     * @return Nombre de la plantilla Thymeleaf a renderizar
      */
-    @GetMapping("/error")
-    public String error() {
-        return "error";
+    @GetMapping("/terminos")
+    public String terminos() {
+        return "terminos";
+    }
+    
+    /**
+     * Muestra la página de política de privacidad
+     * @return Nombre de la plantilla Thymeleaf a renderizar
+     */
+    @GetMapping("/privacidad")
+    public String privacidad() {
+        return "privacidad";
+    }
+    
+    /**
+     * Maneja errores HTTP 404 (Página no encontrada)
+     * @return Nombre de la plantilla Thymeleaf a renderizar
+     */
+    @GetMapping("/error/404")
+    public String error404() {
+        return "error/404";
+    }
+    
+    /**
+     * Página de error genérica - Cambiado para evitar conflicto con BasicErrorController
+     * @return Nombre de la plantilla Thymeleaf a renderizar
+     */
+    @GetMapping("/error/general")
+    public String errorGeneral() {
+        return "error/general";
     }
 }

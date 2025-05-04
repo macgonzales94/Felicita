@@ -1,0 +1,240 @@
+/* Estilos específicos para la página principal de FELICITA */
+
+/* Sección Hero */
+.hero-section {
+    background: linear-gradient(rgba(42, 17, 44, 0.8), rgba(42, 17, 44, 0.8)), url('/images/salon-background.jpg');
+    background-size: cover;
+    background-position: center;
+    color: var(--text-light);
+    padding: 8rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: white;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+  
+  .hero-buttons .btn {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Sección de servicios */
+  .services-section {
+    padding: 5rem 0;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .section-title h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .section-title p {
+    color: #6c757d;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .service-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
+    background-color: white;
+    border: none;
+  }
+  
+  .service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  }
+  
+  .service-card img {
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .service-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .service-card .card-title {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+  }
+  
+  .service-card .card-text {
+    color: #6c757d;
+    margin-bottom: 1rem;
+  }
+  
+  .service-card .price {
+    font-weight: 700;
+    color: var(--secondary);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Sección de cómo funciona */
+  .howto-section {
+    padding: 5rem 0;
+    background-color: var(--light);
+  }
+  
+  .step-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .step-icon i {
+    font-size: 2.5rem;
+    color: var(--primary);
+  }
+  
+  .step-title {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--primary);
+  }
+  
+  .step-description {
+    color: #6c757d;
+  }
+  
+  /* Sección de llamada a la acción (CTA) */
+  .cta-section {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, var(--primary), #8a3b91);
+    color: white;
+    text-align: center;
+  }
+  
+  .cta-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: white;
+  }
+  
+  .cta-text {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+  
+  .cta-button {
+    padding: 0.75rem 2.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background-color: white;
+    color: var(--primary);
+    border: none;
+  }
+  
+  .cta-button:hover {
+    background-color: var(--accent);
+    color: var(--primary);
+  }
+  
+  /* Sección de testimonios */
+  .testimonials-section {
+    padding: 5rem 0;
+  }
+  
+  .testimonial-card {
+    padding: 2rem;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
+  
+  .testimonial-text {
+    font-style: italic;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  
+  .testimonial-text:before {
+    content: '"';
+    font-size: 4rem;
+    color: var(--accent);
+    position: absolute;
+    top: -1.5rem;
+    left: -0.5rem;
+    opacity: 0.5;
+  }
+  
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+  }
+  
+  .testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    object-fit: cover;
+  }
+  
+  .testimonial-name {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--primary);
+  }
+  
+  .testimonial-role {
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.25rem;
+    }
+    
+    .section-title h2 {
+      font-size: 2rem;
+    }
+  }

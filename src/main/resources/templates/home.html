@@ -1,18 +1,301 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:include="layout/base :: html">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/base :: html">
 <head>
     <title id="tituloPagina">FELICITA - Sistema de Reservas para Salones de Belleza</title>
+    
+    <div id="estilosAdicionales">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+        <link th:href="@{/css/home.css}" rel="stylesheet">
+    </div>
 </head>
 <body>
     <div id="contenidoPagina">
-        <div class="container py-5">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <h1 class="display-4 fw-bold mb-4">Bienvenido a FELICITA</h1>
-                    <p class="lead">Sistema de reservas para salones de belleza y barberías</p>
+        <!-- Sección Hero -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 hero-content animate__animated animate__fadeIn">
+                        <h1 class="hero-title">Transforma tu experiencia de belleza</h1>
+                        <p class="hero-subtitle">
+                            Reserva tu cita en salones de belleza y barberías 
+                            <span class="typed-text" data-typed-strings="de manera fácil,rápida y segura,con total comodidad,cuando quieras"></span>
+                        </p>
+                        <div class="hero-buttons">
+                            <a th:href="@{/reservas/nueva}" class="btn btn-secondary btn-lg">Reservar ahora</a>
+                            <a th:href="@{/servicios}" class="btn btn-outline-light btn-lg">Ver servicios</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Estadísticas -->
+        <section class="py-4 bg-white">
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <div class="p-3">
+                            <i class="fas fa-users fa-2x mb-2 text-secondary"></i>
+                            <h3 class="counter-number fw-bold" data-count="500">0</h3>
+                            <p class="text-muted mb-0">Clientes satisfechos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <div class="p-3">
+                            <i class="fas fa-cut fa-2x mb-2 text-secondary"></i>
+                            <h3 class="counter-number fw-bold" data-count="30">0</h3>
+                            <p class="text-muted mb-0">Servicios disponibles</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <div class="p-3">
+                            <i class="fas fa-calendar-check fa-2x mb-2 text-secondary"></i>
+                            <h3 class="counter-number fw-bold" data-count="1500">0</h3>
+                            <p class="text-muted mb-0">Reservas realizadas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <i class="fas fa-star fa-2x mb-2 text-secondary"></i>
+                            <h3 class="counter-number fw-bold" data-count="5">0</h3>
+                            <p class="text-muted mb-0">Estrellas de calidad</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Servicios Destacados -->
+        <section class="services-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">Nuestros Servicios Destacados</h2>
+                    <p class="animate-on-scroll" data-animation="animate__fadeInUp">Descubre los mejores servicios en salones de belleza y barberías</p>
+                </div>
+
+                <div class="mb-4 text-center">
+                    <select id="service-filter" class="form-select form-select-sm d-inline-block w-auto">
+                        <option value="all">Todos los servicios</option>
+                        <option value="hair">Cabello</option>
+                        <option value="nails">Uñas</option>
+                        <option value="skin">Piel</option>
+                        <option value="barber">Barbería</option>
+                    </select>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Servicio 1 -->
+                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp">
+                        <div class="service-card" data-category="hair">
+                            <img th:src="@{/images/service-hair-cut.jpg}" alt="Corte de Cabello" class="card-img-top">
+                            <div class="card-body">
+                                <h5 class="card-title">Corte de Cabello</h5>
+                                <p class="card-text">Cortes modernos y personalizados para destacar tu estilo único.</p>
+                                <p class="price">Desde S/. 35.00</p>
+                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Servicio 2 -->
+                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" data-delay="200">
+                        <div class="service-card" data-category="nails">
+                            <img th:src="@{/images/service-manicure.jpg}" alt="Manicure" class="card-img-top">
+                            <div class="card-body">
+                                <h5 class="card-title">Manicure</h5>
+                                <p class="card-text">Cuidado profesional para tus uñas con los mejores productos del mercado.</p>
+                                <p class="price">Desde S/. 40.00</p>
+                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Servicio 3 -->
+                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" data-delay="400">
+                        <div class="service-card" data-category="barber">
+                            <img th:src="@{/images/service-beard.jpg}" alt="Arreglo de Barba" class="card-img-top">
+                            <div class="card-body">
+                                <h5 class="card-title">Arreglo de Barba</h5>
+                                <p class="card-text">Perfilado y tratamiento de barba con toalla caliente y productos premium.</p>
+                                <p class="price">Desde S/. 25.00</p>
+                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <a th:href="@{/servicios}" class="btn btn-outline-primary btn-lg">Ver todos los servicios</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Sección Cómo Funciona -->
+        <section class="howto-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">¿Cómo Funciona?</h2>
+                    <p class="animate-on-scroll" data-animation="animate__fadeInUp">Reserva tu cita en tres simples pasos</p>
+                </div>
+                
+                <div class="row">
+                    <!-- Paso 1 -->
+                    <div class="col-md-4 text-center mb-4 mb-md-0 animate-on-scroll" data-animation="animate__fadeInLeft">
+                        <div class="step-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h4 class="step-title">1. Crea tu cuenta</h4>
+                        <p class="step-description">Regístrate en FELICITA de forma rápida y segura.</p>
+                    </div>
+                    
+                    <!-- Paso 2 -->
+                    <div class="col-md-4 text-center mb-4 mb-md-0 animate-on-scroll" data-animation="animate__fadeInUp">
+                        <div class="step-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h4 class="step-title">2. Elige servicio y fecha</h4>
+                        <p class="step-description">Selecciona el servicio que deseas y la fecha que mejor se adapte a tu agenda.</p>
+                    </div>
+                    
+                    <!-- Paso 3 -->
+                    <div class="col-md-4 text-center animate-on-scroll" data-animation="animate__fadeInRight">
+                        <div class="step-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h4 class="step-title">3. Confirma tu reserva</h4>
+                        <p class="step-description">Recibe la confirmación y asiste a tu cita sin preocupaciones.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Sección de Testimonios -->
+        <section class="testimonials-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">Testimonios de Clientes</h2>
+                    <p class="animate-on-scroll" data-animation="animate__fadeInUp">Lo que nuestros clientes dicen sobre FELICITA</p>
+                </div>
+                
+                <div id="testimonials-carousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <!-- Testimonio 1 -->
+                        <div class="carousel-item active">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8">
+                                    <div class="testimonial-card">
+                                        <p class="testimonial-text">FELICITA ha cambiado por completo mi experiencia al reservar citas de belleza. El proceso es muy sencillo y el recordatorio automático es genial.</p>
+                                        <div class="testimonial-author">
+                                            <img th:src="@{/images/client-1.jpg}" alt="Ana García" class="testimonial-avatar">
+                                            <div>
+                                                <h5 class="testimonial-name">Ana García</h5>
+                                                <p class="testimonial-role">Cliente frecuente</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Testimonio 2 -->
+                        <div class="carousel-item">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8">
+                                    <div class="testimonial-card">
+                                        <p class="testimonial-text">Como dueño de una barbería, FELICITA me ha ayudado a organizar mejor mi negocio y reducir las cancelaciones. Mis clientes están encantados con la facilidad para reservar.</p>
+                                        <div class="testimonial-author">
+                                            <img th:src="@{/images/client-2.jpg}" alt="Carlos Mendoza" class="testimonial-avatar">
+                                            <div>
+                                                <h5 class="testimonial-name">Carlos Mendoza</h5>
+                                                <p class="testimonial-role">Propietario de barbería</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Testimonio 3 -->
+                        <div class="carousel-item">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8">
+                                    <div class="testimonial-card">
+                                        <p class="testimonial-text">La posibilidad de ver la disponibilidad en tiempo real y elegir a mi estilista favorito hace que FELICITA sea mi app imprescindible para reservas de belleza.</p>
+                                        <div class="testimonial-author">
+                                            <img th:src="@{/images/client-3.jpg}" alt="María Torres" class="testimonial-avatar">
+                                            <div>
+                                                <h5 class="testimonial-name">María Torres</h5>
+                                                <p class="testimonial-role">Cliente satisfecha</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="carousel-control-prev" type="button" data-bs-target="#testimonials-carousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#testimonials-carousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Sección CTA -->
+        <section class="cta-section">
+            <div class="container">
+                <h2 class="cta-title animate-on-scroll" data-animation="animate__fadeInUp">¿Listo para mejorar tu experiencia?</h2>
+                <p class="cta-text animate-on-scroll" data-animation="animate__fadeInUp">Únete a los miles de usuarios que ya disfrutan de FELICITA</p>
+                <a th:href="@{/registro}" class="btn btn-light btn-lg cta-button animate-on-scroll" data-animation="animate__fadeInUp">Comenzar Ahora</a>
+            </div>
+        </section>
+        
+        <!-- Botón Volver Arriba -->
+        <a id="back-to-top" class="btn btn-primary btn-lg position-fixed bottom-0 end-0 m-4 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px; opacity: 0; visibility: hidden; transition: all 0.3s ease;" href="#" role="button">
+            <i class="fas fa-arrow-up"></i>
+        </a>
+        
+        <!-- Modal de Login (para botón de reserva rápida) -->
+        <div class="modal fade" id="login-modal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-4">Inicia sesión para continuar con tu reserva:</p>
+                        <form th:action="@{/login}" method="post">
+                            <div class="mb-3">
+                                <label for="modal-username" class="form-label">Nombre de Usuario</label>
+                                <input type="text" id="modal-username" name="username" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modal-password" class="form-label">Contraseña</label>
+                                <input type="password" id="modal-password" name="password" class="form-control" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                            </div>
+                        </form>
+                        <hr>
+                        <div class="text-center">
+                            <p class="mb-0">¿No tienes una cuenta?</p>
+                            <a th:href="@{/registro}" class="btn btn-outline-primary mt-2">Registrarse</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+    
+    <div id="scriptsAdicionales">
+        <script th:src="@{/js/home.js}"></script>
     </div>
 </body>
 </html>

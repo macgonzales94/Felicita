@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/config/SecurityConfig.java
 package com.felicita.felicita.config;
 
 import org.springframework.context.annotation.Bean;
@@ -46,28 +45,42 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                        .requestMatchers("/", "/error", "/contacto", "/nosotros", "/servicios").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/registro").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/api/servicios/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider),
-                        UsernamePasswordAuthenticationFilter.class)
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
-                        .permitAll())
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout")
-                        .permitAll());
-
+            .cors().and().csrf().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .authorizeHttpRequests(authorize -> authorize
+                // Recursos estáticos
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                // Rutas públicas
+                .requestMatchers("/", "/home", "/index").permitAll()
+                .requestMatchers("/servicios", "/contacto", "/nosotros").permitAll()
+                .requestMatchers("/terminos", "/privacidad").permitAll()
+                // Rutas de autenticación
+                .requestMatchers("/login", "/registro").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                // APIs públicas
+                .requestMatchers("/api/servicios/**").permitAll()
+                // Rutas de error
+                .requestMatchers("/error", "/error/**").permitAll()
+                // Rutas protegidas
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/reservas/**").authenticated()
+                .requestMatchers("/api/reservas/**").authenticated()
+                .requestMatchers("/perfil/**").authenticated()
+                // Todo lo demás requiere autenticación
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/", true)
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+            );
+        
         return http.build();
     }
 

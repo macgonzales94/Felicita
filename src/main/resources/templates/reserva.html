@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/base :: html">
+<head>
+    <title id="tituloPagina">Nueva Reserva - FELICITA</title>
+    
+    <div id="estilosAdicionales">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+        <link th:href="@{/css/reserva.css}" rel="stylesheet">
+    </div>
+</head>
+<body>
+    <div id="contenidoPagina">
+        <div class="container py-5">
+            <h1 class="mb-4">Reserva tu cita</h1>
+            
+            <!-- Indicador de Progreso -->
+            <div class="steps-progress mb-5">
+                <div class="step active" data-step="1">
+                    1
+                    <span class="step-label">Servicios</span>
+                </div>
+                <div class="step" data-step="2">
+                    2
+                    <span class="step-label">Fecha y Hora</span>
+                </div>
+                <div class="step" data-step="3">
+                    3
+                    <span class="step-label">Profesional</span>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Contenido Principal -->
+                <div class="col-lg-8">
+                    <!-- Paso 1: Selección de Servicios -->
+                    <div class="step-container" id="step-1">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">Selecciona los servicios</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-8">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-search"></i>
+                                            </span>
+                                            <input type="text" id="search-services" class="form-control" placeholder="Buscar servicios...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select id="category-filter" class="form-select">
+                                            <option value="all">Todas las categorías</option>
+                                            <option value="hair">Cabello</option>
+                                            <option value="nails">Uñas</option>
+                                            <option value="facial">Facial</option>
+                                            <option value="barber">Barbería</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3">
+                                    <!-- Servicio 1 -->
+                                    <div class="col-md-6 service-wrapper">
+                                        <div class="service-card" data-id="1" data-price="35" data-duration="30" data-category="hair">
+                                            <div class="row g-0">
+                                                <div class="col-4">
+                                                    <img th:src="@{/images/service-hair-cut.jpg}" class="img-fluid rounded-start h-100" alt="Corte de Cabello">
+                                                </div>
+                                                <div class="col-8">
+                                                    <div class="card-body">
+                                                        <h6 class="service-title mb-1">Corte de Cabello</h6>
+                                                        <p class="service-description small text-muted mb-2">Cortes modernos y personalizados para destacar tu estilo único.</p>
+                                                        <div class="service-info">
+                                                            <span class="service-price">S/. 35.00</span>
+                                                            <span class="service-duration">30 min</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Servicio 2 -->
+                                    <div class="col-md-6 service-wrapper">
+                                        <div class="service-card" data-id="2" data-price="40" data-duration="45" data-category="nails">
+                                            <div class="row g-0">
+                                                <div class="col-4">
+                                                    <img th:src="@{/images/service-manicure.jpg}" class="img-fluid rounded-start h-100" alt="Manicure">
+                                                </div>
+                                                <div class="col-8">
+                                                    <div class="card-body">
+                                                        <h6 class="service-title mb-1">Manicure</h6>
+                                                        <p class="service-description small text-muted mb-2">Cuidado profesional para tus uñas con los mejores productos.</p>
+                                                        <div class="service-info">
+                                                            <span class="service-price">S/. 40.00</span>
+                                                            <span class="service-duration">45 min</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Servicio 3 -->
+                                    <div class="col-md-6 service-wrapper">
+                                        <div class="service-card" data-id="3" data-price="25" data-duration="25" data-category="barber">
+                                            <div class="row g-0">
+                                                <div class="col-4">
+                                                    <img th:src="@{/images/service-beard.jpg}" class="img-fluid rounded-start h-100" alt="Arreglo de Barba">
+                                                </div>
+                                                <div class="col-8">
+                                                    <div class="card-body">
+                                                        <h6 class="service-title mb-1">Arreglo de Barba</h6>
+                                                        <p class="service-description small text-muted mb-2">Perfilado y tratamiento de barba con productos premium.</p>
+                                                        <div class="service-info">
+                                                            <span class="service-price">S/. 25.00</span>
+                                                            <span class="service-duration">25 min</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Servicio 4 -->
+                                    <div class="col-md-6 service-wrapper">
+                                        <div class="service-card" data-id="4" data-price="60" data-duration="60" data-category="facial">
+                                            <div class="row g-0">
+                                                <div class="col-4">
+                                                    <img th:src="@{/images/service-facial.jpg}" class="img-fluid rounded-start h-100" alt="Tratamiento Facial">
+                                                </div>
+                                                <div class="col-8">
+                                                    <div class="card-body">
+                                                        <h6 class="service-title mb-1">Tratamiento Facial</h6>
+                                                        <p class="service-description small text-muted mb-2">Limpieza profunda e hidratación para una piel radiante.</p>
+                                                        <div class="service-info">
+                                                            <span class="service-price">S/. 60.00</span>
+                                                            <span class="service-duration">60 min</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="button" class="btn btn-primary btn-next">Siguiente <i class="fas fa-arrow-right ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 2: Selección de Fecha y Hora -->
+                    <div class="step-container" id="step-2" style="display: none;">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">Elige fecha y hora</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-7">
+                                        <h6 class="mb-3">Selecciona una fecha</h6>
+                                        <div class="date-picker-wrapper">
+                                            <div class="calendar-header">
+                                                <button type="button" class="btn btn-sm text-white" id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                                                <h6 class="mb-0" id="current-month">Mayo 2025</h6>
+                                                <button type="button" class="btn btn-sm text-white" id="next-month"><i class="fas fa-chevron-right"></i></button>
+                                            </div>
+                                            <div class="calendar-days">
+                                                <div class="calendar-day-name">Lun</div>
+                                                <div class="calendar-day-name">Mar</div>
+                                                <div class="calendar-day-name">Mié</div>
+                                                <div class="calendar-day-name">Jue</div>
+                                                <div class="calendar-day-name">Vie</div>
+                                                <div class="calendar-day-name">Sáb</div>
+                                                <div class="calendar-day-name">Dom</div>
+                                                
+                                                <!-- Primera semana -->
+                                                <div class="calendar-day other-month">28</div>
+                                                <div class="calendar-day other-month">29</div>
+                                                <div class="calendar-day other-month">30</div>
+                                                <div class="calendar-day" data-date="2025-05-01">1</div>
+                                                <div class="calendar-day" data-date="2025-05-02">2</div>
+                                                <div class="calendar-day" data-date="2025-05-03">3</div>
+                                                <div class="calendar-day disabled" data-date="2025-05-04">4</div>
+                                                
+                                                <!-- Segunda semana -->
+                                                <div class="calendar-day" data-date="2025-05-05">5</div>
+                                                <div class="calendar-day" data-date="2025-05-06">6</div>
+                                                <div class="calendar-day" data-date="2025-05-07">7</div>
+                                                <div class="calendar-day" data-date="2025-05-08">8</div>
+                                                <div class="calendar-day" data-date="2025-05-09">9</div>
+                                                <div class="calendar-day" data-date="2025-05-10">10</div>
+                                                <div class="calendar-day disabled" data-date="2025-05-11">11</div>
+                                                
+                                                <!-- Otras semanas... -->
+                                                <div class="calendar-day" data-date="2025-05-12">12</div>
+                                                <div class="calendar-day" data-date="2025-05-13">13</div>
+                                                <div class="calendar-day" data-date="2025-05-14">14</div>
+                                                <div class="calendar-day" data-date="2025-05-15">15</div>
+                                                <div class="calendar-day" data-date="2025-05-16">16</div>
+                                                <div class="calendar-day" data-date="2025-05-17">17</div>
+                                                <div class="calendar-day disabled" data-date="2025-05-18">18</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-5">
+                                        <h6 class="mb-3">Selecciona un horario</h6>
+                                        <div class="time-slots">
+                                            <div class="time-slot" data-time="09:00">09:00</div>
+                                            <div class="time-slot" data-time="10:00">10:00</div>
+                                            <div class="time-slot" data-time="11:00">11:00</div>
+                                            <div class="time-slot disabled" data-time="12:00">12:00</div>
+                                            <div class="time-slot" data-time="13:00">13:00</div>
+                                            <div class="time-slot" data-time="14:00">14:00</div>
+                                            <div class="time-slot" data-time="15:00">15:00</div>
+                                            <div class="time-slot disabled" data-time="16:00">16:00</div>
+                                            <div class="time-slot" data-time="17:00">17:00</div>
+                                            <div class="time-slot" data-time="18:00">18:00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-outline-secondary btn-prev"><i class="fas fa-arrow-left me-1"></i> Anterior</button>
+                                    <button type="button" class="btn btn-primary btn-next">Siguiente <i class="fas fa-arrow-right ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paso 3: Selección de Profesional -->
+                    <div class="step-container" id="step-3" style="display: none;">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="card-title mb-0">Elige un profesional</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-4">Selecciona al profesional que deseas que te atienda:</p>
+                                
+                                <div class="stylist-cards">
+                                    <!-- Profesional 1 -->
+                                    <div class="stylist-card" data-id="1">
+                                        <img th:src="@{/images/stylist-1.jpg}" alt="Ana Rojas" class="stylist-avatar">
+                                        <div class="stylist-info">
+                                            <h6 class="stylist-name">Ana Rojas</h6>
+                                            <p class="stylist-position">Estilista Senior</p>
+                                            <div class="stylist-rating">
+                                                <div class="rating-stars">
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star-half-alt"></i>
+                                                </div>
+                                                <span class="rating-count">4.5 (87 reseñas)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Profesional 2 -->
+                                    <div class="stylist-card" data-id="2">
+                                        <img th:src="@{/images/stylist-2.jpg}" alt="Carmen Silva" class="stylist-avatar">
+                                        <div class="stylist-info">
+                                            <h6 class="stylist-name">Carmen Silva</h6>
+                                            <p class="stylist-position">Especialista en Color</p>
+                                            <div class="stylist-rating">
+                                                <div class="rating-stars">
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="far fa-star"></i>
+                                                </div>
+                                                <span class="rating-count">4.0 (45 reseñas)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Profesional 3 -->
+                                    <div class="stylist-card" data-id="3">
+                                        <img th:src="@{/images/barber-1.jpg}" alt="Luis Mendoza" class="stylist-avatar">
+                                        <div class="stylist-info">
+                                            <h6 class="stylist-name">Luis Mendoza</h6>
+                                            <p class="stylist-position">Barbero Profesional</p>
+                                            <div class="stylist-rating">
+                                                <div class="rating-stars">
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                    <i class="fas fa-star"></i>
+                                                </div>
+                                                <span class="rating-count">5.0 (32 reseñas)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <label for="booking-notes" class="form-label">Notas adicionales (opcional)</label>
+                                    <textarea id="booking-notes" class="form-control" rows="3" placeholder="¿Tienes alguna preferencia o solicitud especial para tu cita?"></textarea>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-outline-secondary btn-prev"><i class="fas fa-arrow-left me-1"></i> Anterior</button>
+                                    <button type="button" class="btn btn-success" id="confirm-booking"><i class="fas fa-check me-1"></i> Confirmar Reserva</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resumen de Reserva -->
+                <div class="col-lg-4">
+                    <div class="booking-summary">
+                        <h5 class="summary-title">Resumen de tu reserva</h5>
+                        
+                        <h6 class="mb-2">Servicios seleccionados</h6>
+                        <div id="summary-services" class="mb-3">
+                            <p class="text-muted">No has seleccionado servicios</p>
+                        </div>
+                        
+                        <h6 class="mb-2">Fecha y hora</h6>
+                        <div class="summary-item">
+                            <span class="summary-label">Fecha:</span>
+                            <span class="summary-value" id="summary-date">-</span>
+                        </div>
+                        <div class="summary-item mb-3">
+                            <span class="summary-label">Hora:</span>
+                            <span class="summary-value" id="summary-time">-</span>
+                        </div>
+                        
+                        <h6 class="mb-2">Profesional</h6>
+                        <div class="summary-item mb-3">
+                            <span class="summary-label">Asignado:</span>
+                            <span class="summary-value" id="summary-stylist">-</span>
+                        </div>
+                        
+                        <div class="summary-total d-flex justify-content-between">
+                            <span>Total:</span>
+                            <span id="summary-total">S/. 0.00</span>
+                        </div>
+                        
+                        <div class="summary-action mt-4">
+                            <button type="button" class="btn btn-success d-none" id="summary-confirm">
+                                Confirmar Reserva
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title">¿Necesitas ayuda?</h5>
+                            <p class="card-text">Si tienes dudas sobre el proceso de reserva, contáctanos:</p>
+                            <div class="d-grid gap-2">
+                                <a href="tel:+51987654321" class="btn btn-outline-primary"><i class="fas fa-phone-alt me-2"></i> Llamar</a>
+                                <a href="https://wa.me/51987654321" target="_blank" class="btn btn-outline-success"><i class="fab fa-whatsapp me-2"></i> WhatsApp</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="scriptsAdicionales">
+        <script th:src="@{/js/reserva.js}"></script>
+    </div>
+</body>
+</html>

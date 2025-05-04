@@ -3,79 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FELICITA</title>
+    <title th:include=":: #tituloPagina">FELICITA</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <!-- CSS Personalizado -->
     <link th:href="@{/css/estilos.css}" rel="stylesheet">
     
-    <!-- Contenido específico para cada página -->
-    <th:block th:replace="${estilosAdicionales}"></th:block>
+    <!-- Estilos adicionales específicos -->
+    <th:block th:include=":: #estilosAdicionales"></th:block>
 </head>
 <body>
     <!-- Cabecera -->
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand" th:href="@{/}">
-                    <i class="fas fa-cut me-2"></i>
-                    FELICITA
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/}">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/servicios}">Servicios</a>
-                        </li>
-                    </ul>
-                    <!-- No autenticado -->
-                    <div sec:authorize="!isAuthenticated()">
-                        <a th:href="@{/login}" class="btn btn-outline-light me-2">Iniciar Sesión</a>
-                        <a th:href="@{/registro}" class="btn btn-primary">Registrarse</a>
-                    </div>
-                    <!-- Autenticado -->
-                    <div sec:authorize="isAuthenticated()">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-outline-light">Cerrar Sesión</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <div th:replace="fragments/header :: cabecera"></div>
     
     <!-- Contenido de la Página -->
     <main>
-        <th:block th:replace="${contenido}"></th:block>
+        <div th:include=":: #contenidoPagina"></div>
     </main>
     
     <!-- Pie de Página -->
-    <footer class="bg-dark text-white py-4 mt-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>FELICITA</h5>
-                    <p>Sistema de reservas para salones de belleza y barberías</p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <p>&copy; 2025 FELICITA. Todos los derechos reservados.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <div th:replace="fragments/footer :: piePagina"></div>
     
-    <!-- Scripts -->
+    <!-- Scripts Bootstrap y jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Scripts adicionales -->
-    <th:block th:replace="${scriptsAdicionales}"></th:block>
+    <!-- Script personalizado global -->
+    <script th:src="@{/js/main.js}"></script>
+    
+    <!-- Scripts adicionales específicos -->
+    <th:block th:include=":: #scriptsAdicionales"></th:block>
 </body>
 </html>
