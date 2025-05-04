@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -24,9 +25,10 @@ public class HomeController {
      * @return Nombre de la vista
      */
     @GetMapping("/")
-    public String inicio(Model model) {
+    public String inicio(HttpServletRequest request, Model model) {
         List<Servicio> serviciosDestacados = servicioService.obtenerTodosActivos();
         model.addAttribute("servicios", serviciosDestacados);
+        model.addAttribute("httpServletRequest", request);
         return "home";
     }
 
@@ -36,9 +38,10 @@ public class HomeController {
      * @return Nombre de la vista
      */
     @GetMapping("/servicios")
-    public String servicios(Model model) {
+    public String servicios(HttpServletRequest request, Model model) {
         List<Servicio> servicios = servicioService.obtenerTodosActivos();
         model.addAttribute("servicios", servicios);
+        model.addAttribute("httpServletRequest", request);
         return "servicios";
     }
 
@@ -47,7 +50,8 @@ public class HomeController {
      * @return Nombre de la vista
      */
     @GetMapping("/contacto")
-    public String contacto() {
+    public String contacto(HttpServletRequest request, Model model) {
+        model.addAttribute("httpServletRequest", request);
         return "contacto";
     }
 
@@ -56,7 +60,8 @@ public class HomeController {
      * @return Nombre de la vista
      */
     @GetMapping("/nosotros")
-    public String nosotros() {
+    public String nosotros(HttpServletRequest request, Model model) {
+        model.addAttribute("httpServletRequest", request);
         return "nosotros";
     }
 }
