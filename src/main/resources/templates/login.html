@@ -2,73 +2,50 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - FELICITA</title>
-    
-    <!-- Bootstrap CSS -->
+    <title>Login - FELICITA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- CSS Personalizado -->
-    <link th:href="@{/css/estilos.css}" rel="stylesheet">
 </head>
 <body>
-    <!-- Cabecera -->
-    <div th:replace="fragments/header :: cabecera"></div>
-    
-    <!-- Contenido de la Página -->
-    <main>
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h4 class="mb-0">Iniciar Sesión</h4>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Iniciar Sesión</h4>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${param.error}" class="alert alert-danger">
+                            Nombre de usuario o contraseña incorrectos.
                         </div>
-                        <div class="card-body">
-                            <div th:if="${param.error}" class="alert alert-danger">
-                                Nombre de usuario o contraseña incorrectos.
-                            </div>
-                            <div th:if="${param.logout}" class="alert alert-success">
-                                Has cerrado sesión exitosamente.
+                        <div th:if="${param.logout}" class="alert alert-success">
+                            Has cerrado sesión exitosamente.
+                        </div>
+                        
+                        <form th:action="@{/login}" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Nombre de Usuario</label>
+                                <input type="text" id="username" name="username" class="form-control" required autofocus>
                             </div>
                             
-                            <form th:action="@{/login}" method="post">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Nombre de Usuario</label>
-                                    <input type="text" id="username" name="username" class="form-control" required autofocus>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Contraseña</label>
-                                    <input type="password" id="password" name="password" class="form-control" required>
-                                </div>
-                                
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" id="remember-me" name="remember-me" class="form-check-input">
-                                    <label for="remember-me" class="form-check-label">Recordarme</label>
-                                </div>
-                                
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-                                </div>
-                            </form>
-                            
-                            <div class="text-center mt-3">
-                                ¿No tienes una cuenta? <a th:href="@{/registro}">Regístrate aquí</a>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" id="password" name="password" class="form-control" required>
                             </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            ¿No tienes una cuenta? <a th:href="@{/registro}">Regístrate aquí</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
     
-    <!-- Pie de Página -->
-    <div th:replace="fragments/footer :: piePagina"></div>
-    
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

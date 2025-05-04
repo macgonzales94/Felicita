@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/model/Reserva.java
 package com.felicita.felicita.model;
 
 import java.time.LocalDateTime;
@@ -90,7 +89,7 @@ public class Reserva {
         this.estado = EstadoReserva.PENDIENTE;
     }
 
-    // Getters y setters (manteniendo los mismos)
+    // Getters y setters
     public Long getId() {
         return id;
     }

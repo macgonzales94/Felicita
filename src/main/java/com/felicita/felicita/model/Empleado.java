@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/model/Empleado.java
 package com.felicita.felicita.model;
 
 import java.util.ArrayList;
@@ -72,7 +71,7 @@ public class Empleado {
         this.cargo = cargo;
     }
 
-    // Getters y setters (manteniendo los mismos)
+    // Getters y setters
     public Long getId() {
         return id;
     }

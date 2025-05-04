@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/model/Usuario.java
 package com.felicita.felicita.model;
 
 import java.time.LocalDateTime;
@@ -106,7 +105,7 @@ public class Usuario {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    // Getters y setters (manteniendo los mismos)
+    // Getters y setters
     public Long getId() {
         return id;
     }

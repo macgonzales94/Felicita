@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - FELICITA</title>
-    
     <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -13,114 +12,96 @@
     <link th:href="@{/css/estilos.css}" rel="stylesheet">
 </head>
 <body>
-    <!-- Cabecera -->
-    <div th:replace="fragments/header :: cabecera"></div>
-    
-    <!-- Contenido de la Página -->
-    <main>
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h4 class="mb-0">Crear Cuenta</h4>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Crear Cuenta</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="mensajeExito" class="alert alert-success" style="display: none;">
+                            Registro exitoso. <a th:href="@{/login}">Iniciar sesión</a>
                         </div>
-                        <div class="card-body">
-                            <form th:action="@{/api/auth/registro}" id="formularioRegistro" method="post">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="nombreUsuario" class="form-label">Nombre de Usuario</label>
-                                        <input type="text" id="nombreUsuario" name="nombreUsuario" class="form-control" required>
-                                        <div class="invalid-feedback">El nombre de usuario es obligatorio (3-20 caracteres)</div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="correo" class="form-label">Correo Electrónico</label>
-                                        <input type="email" id="correo" name="correo" class="form-control" required>
-                                        <div class="invalid-feedback">Ingrese un correo electrónico válido</div>
-                                    </div>
+                        <div id="mensajeError" class="alert alert-danger" style="display: none;">
+                        </div>
+                        
+                        <form id="formularioRegistro">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="nombreUsuario" class="form-label">Nombre de Usuario</label>
+                                    <input type="text" id="nombreUsuario" name="nombreUsuario" class="form-control" required>
                                 </div>
-                                
-                                <div class="mb-3">
-                                    <label for="nombreCompleto" class="form-label">Nombre Completo</label>
-                                    <input type="text" id="nombreCompleto" name="nombreCompleto" class="form-control" required>
-                                    <div class="invalid-feedback">El nombre completo es obligatorio</div>
+                                <div class="col-md-6">
+                                    <label for="correo" class="form-label">Correo Electrónico</label>
+                                    <input type="email" id="correo" name="correo" class="form-control" required>
                                 </div>
-                                
-                                <div class="mb-3">
-                                    <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="tel" id="telefono" name="telefono" class="form-control">
-                                </div>
-                                
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="contraseña" class="form-label">Contraseña</label>
-                                        <input type="password" id="contraseña" name="contraseña" class="form-control" required>
-                                        <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres</div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="confirmarContraseña" class="form-label">Confirmar Contraseña</label>
-                                        <input type="password" id="confirmarContraseña" class="form-control" required>
-                                        <div class="invalid-feedback">Las contraseñas no coinciden</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" id="terminos" class="form-check-input" required>
-                                    <label for="terminos" class="form-check-label">Acepto los términos y condiciones</label>
-                                    <div class="invalid-feedback">Debe aceptar los términos y condiciones</div>
-                                </div>
-                                
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary">Registrar</button>
-                                </div>
-                            </form>
-                            
-                            <div class="text-center mt-3">
-                                ¿Ya tienes una cuenta? <a th:href="@{/login}">Iniciar Sesión</a>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label for="nombreCompleto" class="form-label">Nombre Completo</label>
+                                <input type="text" id="nombreCompleto" name="nombreCompleto" class="form-control" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" id="telefono" name="telefono" class="form-control">
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="contraseña" class="form-label">Contraseña</label>
+                                    <input type="password" id="contraseña" name="contraseña" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="confirmarContraseña" class="form-label">Confirmar Contraseña</label>
+                                    <input type="password" id="confirmarContraseña" class="form-control" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" id="terminos" class="form-check-input" required>
+                                <label for="terminos" class="form-check-label">Acepto los términos y condiciones</label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Registrar</button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            ¿Ya tienes una cuenta? <a th:href="@{/login}">Iniciar Sesión</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
-    
-    <!-- Pie de Página -->
-    <div th:replace="fragments/footer :: piePagina"></div>
-    
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    </div>
+
+    <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // Validación del formulario
         document.addEventListener('DOMContentLoaded', function() {
             const formulario = document.getElementById('formularioRegistro');
             const contraseña = document.getElementById('contraseña');
             const confirmarContraseña = document.getElementById('confirmarContraseña');
+            const mensajeExito = document.getElementById('mensajeExito');
+            const mensajeError = document.getElementById('mensajeError');
             
-            formulario.addEventListener('submit', function(event) {
-                let esValido = true;
-                
-                // Validar coincidencia de contraseñas
-                if (contraseña.value !== confirmarContraseña.value) {
-                    confirmarContraseña.classList.add('is-invalid');
-                    esValido = false;
-                } else {
-                    confirmarContraseña.classList.remove('is-invalid');
-                }
-                
-                // Detener envío si no es válido
-                if (!esValido) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            });
-            
-            // Enviar el formulario mediante AJAX
             formulario.addEventListener('submit', function(event) {
                 event.preventDefault();
                 
-                const datosFormulario = {
+                // Validar contraseñas
+                if (contraseña.value !== confirmarContraseña.value) {
+                    mensajeError.textContent = 'Las contraseñas no coinciden';
+                    mensajeError.style.display = 'block';
+                    confirmarContraseña.focus();
+                    return;
+                }
+                
+                // Construir objeto de datos
+                const datosRegistro = {
                     nombreUsuario: document.getElementById('nombreUsuario').value,
                     correo: document.getElementById('correo').value,
                     nombreCompleto: document.getElementById('nombreCompleto').value,
@@ -128,27 +109,31 @@
                     contraseña: document.getElementById('contraseña').value
                 };
                 
+                // Enviar datos como JSON
                 fetch('/api/auth/registro', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(datosFormulario)
+                    body: JSON.stringify(datosRegistro)
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.exito) {
-                        // Mostrar mensaje de éxito
-                        alert('Registro exitoso. Ahora puedes iniciar sesión.');
-                        window.location.href = '/login';
+                        mensajeExito.style.display = 'block';
+                        mensajeError.style.display = 'none';
+                        formulario.reset();
                     } else {
-                        // Mostrar mensaje de error
-                        alert('Error: ' + data.mensaje);
+                        mensajeError.textContent = data.mensaje || 'Error en el registro';
+                        mensajeError.style.display = 'block';
+                        mensajeExito.style.display = 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error al procesar el registro. Intente nuevamente.');
+                    mensajeError.textContent = 'Error en el servidor. Intente nuevamente más tarde.';
+                    mensajeError.style.display = 'block';
+                    mensajeExito.style.display = 'none';
                 });
             });
         });

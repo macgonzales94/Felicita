@@ -2,117 +2,17 @@
 <html xmlns:th="http://www.thymeleaf.org" th:include="layout/base :: html">
 <head>
     <title id="tituloPagina">FELICITA - Sistema de Reservas para Salones de Belleza</title>
-    <div id="estilosAdicionales">
-        <style>
-            .seccion-hero {
-                background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/images/banner.jpg');
-                background-size: cover;
-                background-position: center;
-                color: white;
-                height: 70vh;
-                display: flex;
-                align-items: center;
-            }
-            .tarjeta-servicio {
-                transition: transform 0.3s;
-                border-radius: 10px;
-                overflow: hidden;
-            }
-            .tarjeta-servicio:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            }
-            .testimonio {
-                background-color: #f8f9fa;
-                border-radius: 10px;
-                padding: 20px;
-            }
-        </style>
-    </div>
 </head>
 <body>
     <div id="contenidoPagina">
-        <!-- Sección Hero -->
-        <section class="seccion-hero">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-8">
-                        <h1 class="display-4 fw-bold mb-4">Reserva tu cita de belleza en segundos</h1>
-                        <p class="lead mb-5">FELICITA te permite gestionar citas con tu salón de belleza o barbería favorita de manera rápida y sencilla.</p>
-                        <a th:href="@{/reservas/nueva}" class="btn btn-primary btn-lg px-5 py-3 me-3">Reservar Ahora</a>
-                        <a th:href="@{/servicios}" class="btn btn-outline-light btn-lg px-5 py-3">Conocer más</a>
-                    </div>
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold mb-4">Bienvenido a FELICITA</h1>
+                    <p class="lead">Sistema de reservas para salones de belleza y barberías</p>
                 </div>
             </div>
-        </section>
-
-        <!-- Sección de Servicios -->
-        <section class="py-5">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="display-5 fw-bold">Nuestros Servicios</h2>
-                    <p class="lead text-muted">Descubre todos los servicios disponibles para reservar</p>
-                </div>
-                <div class="row g-4">
-                    <div class="col-md-4" th:each="servicio : ${servicios}" th:if="${servicio.activo}" th:unless="${servicioStat.index >= 3}">
-                        <div class="card tarjeta-servicio h-100">
-                            <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" class="card-img-top" alt="Servicio">
-                            <div class="card-body">
-                                <h5 class="card-title" th:text="${servicio.nombre}">Nombre del Servicio</h5>
-                                <p class="card-text" th:text="${#strings.abbreviate(servicio.descripcion, 100)}">Descripción del servicio</p>
-                                <p class="fw-bold" th:text="'Desde S/. ' + ${servicio.precio}">Precio</p>
-                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center mt-4">
-                    <a th:href="@{/servicios}" class="btn btn-outline-primary btn-lg">Ver todos los servicios</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Cómo Funciona -->
-        <section class="py-5 bg-light">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="display-5 fw-bold">¿Cómo Funciona?</h2>
-                    <p class="lead text-muted">Reserva en tres sencillos pasos</p>
-                </div>
-                <div class="row g-4">
-                    <div class="col-md-4 text-center">
-                        <div class="bg-white p-4 rounded-circle shadow d-inline-flex mb-3" style="width: 100px; height: 100px;">
-                            <i class="fas fa-user-plus fa-3x m-auto text-primary"></i>
-                        </div>
-                        <h4>1. Crea tu cuenta</h4>
-                        <p>Regístrate gratuitamente en nuestro sistema para comenzar a reservar.</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="bg-white p-4 rounded-circle shadow d-inline-flex mb-3" style="width: 100px; height: 100px;">
-                            <i class="fas fa-calendar-alt fa-3x m-auto text-primary"></i>
-                        </div>
-                        <h4>2. Elige fecha y servicio</h4>
-                        <p>Selecciona el servicio que deseas y la fecha y hora que más te convenga.</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="bg-white p-4 rounded-circle shadow d-inline-flex mb-3" style="width: 100px; height: 100px;">
-                            <i class="fas fa-check-circle fa-3x m-auto text-primary"></i>
-                        </div>
-                        <h4>3. Confirma tu reserva</h4>
-                        <p>Recibe la confirmación y acude a tu cita sin preocupaciones.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Sección CTA -->
-        <section class="py-5 bg-primary text-white">
-            <div class="container text-center">
-                <h2 class="fw-bold mb-3">¿Listo para reservar tu cita?</h2>
-                <p class="lead mb-4">Únete a los miles de clientes satisfechos que ya utilizan FELICITA</p>
-                <a th:href="@{/registro}" class="btn btn-light btn-lg px-5">Comenzar Ahora</a>
-            </div>
-        </section>
+        </div>
     </div>
 </body>
 </html>

@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,6 +38,7 @@ public class JwtTokenProvider {
     /**
      * Inicializa la clave a partir del secreto configurado
      */
+    @PostConstruct
     public void init() {
         this.key = Keys.hmacShaKeyFor(secreto.getBytes());
     }
@@ -91,16 +93,8 @@ public class JwtTokenProvider {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (SignatureException ex) {
-            System.out.println("Firma JWT inválida");
-        } catch (MalformedJwtException ex) {
-            System.out.println("Token JWT mal formado");
-        } catch (ExpiredJwtException ex) {
-            System.out.println("Token JWT expirado");
-        } catch (UnsupportedJwtException ex) {
-            System.out.println("Token JWT no soportado");
-        } catch (IllegalArgumentException ex) {
-            System.out.println("La cadena claims JWT está vacía");
+        } catch (Exception ex) {
+            System.out.println("Error al validar el token JWT: " + ex.getMessage());
         }
         return false;
     }

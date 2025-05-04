@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/dto/RegistroRequest.java (continuación)
 package com.felicita.felicita.dto;
 
 import jakarta.validation.constraints.Email;

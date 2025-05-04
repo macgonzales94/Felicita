@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/model/Servicio.java
 package com.felicita.felicita.model;
 
 import java.math.BigDecimal;
@@ -87,7 +86,7 @@ public class Servicio {
         this.duracion = duracion;
     }
 
-    // Getters y setters (manteniendo los mismos)
+    // Getters y setters
     public Long getId() {
         return id;
     }

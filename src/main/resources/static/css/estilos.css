@@ -1,0 +1,80 @@
+/* Estilos generales */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Header */
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Tarjetas y elementos */
+.tarjeta-servicio {
+    transition: all 0.3s;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.tarjeta-servicio:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Hero section */
+.seccion-hero {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/images/banner.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    height: 70vh;
+    display: flex;
+    align-items: center;
+}
+
+/* Footer */
+footer {
+    margin-top: 2rem;
+}
+
+/* Formularios */
+.form-label {
+    font-weight: 500;
+}
+
+/* Botones */
+.btn-primary {
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Página de administración */
+.barra-lateral {
+    min-height: calc(100vh - 56px);
+    background-color: #343a40;
+    color: white;
+}
+
+.nav-link {
+    color: rgba(255,255,255,.75);
+    border-radius: 0;
+    padding: 0.5rem 1rem;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: white;
+    background-color: rgba(255,255,255,.1);
+}
+
+.tarjeta-dashboard {
+    border-left: 4px solid;
+    transition: transform 0.3s;
+}
+
+.tarjeta-dashboard:hover {
+    transform: translateY(-5px);
+}

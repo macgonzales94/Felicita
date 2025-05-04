@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/security/JwtAuthorizationFilter.java
 package com.felicita.felicita.security;
 
 import org.springframework.security.core.Authentication;

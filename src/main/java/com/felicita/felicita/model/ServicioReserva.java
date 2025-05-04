@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/model/ServicioReserva.java
 package com.felicita.felicita.model;
 
 import jakarta.persistence.*;
@@ -45,7 +44,7 @@ public class ServicioReserva {
         this.servicio = servicio;
     }
 
-    // Getters y setters (manteniendo los mismos)
+    // Getters y setters
     public Long getId() {
         return id;
     }

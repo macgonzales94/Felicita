@@ -19,16 +19,16 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/' ? 'active' : ''}" th:href="@{/}">Inicio</a>
+                            <a class="nav-link" th:classappend="${#request.requestURI == '/' ? 'active' : ''}" th:href="@{/}">Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/servicios' ? 'active' : ''}" th:href="@{/servicios}">Servicios</a>
+                            <a class="nav-link" th:classappend="${#request.requestURI == '/servicios' ? 'active' : ''}" th:href="@{/servicios}">Servicios</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/nosotros' ? 'active' : ''}" th:href="@{/nosotros}">Nosotros</a>
+                            <a class="nav-link" th:classappend="${#request.requestURI == '/nosotros' ? 'active' : ''}" th:href="@{/nosotros}">Nosotros</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/contacto' ? 'active' : ''}" th:href="@{/contacto}">Contacto</a>
+                            <a class="nav-link" th:classappend="${#request.requestURI == '/contacto' ? 'active' : ''}" th:href="@{/contacto}">Contacto</a>
                         </li>
                     </ul>
                     <!-- No autenticado -->

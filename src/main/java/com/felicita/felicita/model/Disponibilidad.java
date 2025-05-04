@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/model/Disponibilidad.java
 package com.felicita.felicita.model;
 
 import java.time.LocalDate;
@@ -71,7 +70,7 @@ public class Disponibilidad {
         this.horaFin = horaFin;
     }
 
-    // Getters y setters (manteniendo los mismos)
+    // Getters y setters
     public Long getId() {
         return id;
     }

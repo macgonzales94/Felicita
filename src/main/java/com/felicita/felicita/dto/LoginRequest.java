@@ -1,4 +1,3 @@
-// src/main/java/com/felicita/felicita/dto/LoginRequest.java
 package com.felicita.felicita.dto;
 
 import jakarta.validation.constraints.NotBlank;
