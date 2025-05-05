@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/base :: html">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
 <head>
     <title id="tituloPagina">FELICITA - Sistema de Reservas para Salones de Belleza</title>
-    
-    <div id="estilosAdicionales">
+
+    <th:block th:fragment="estilosAdicionales">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
         <link th:href="@{/css/home.css}" rel="stylesheet">
-    </div>
+    </th:block>
 </head>
 <body>
-    <div id="contenidoPagina">
-        <!-- Sección Hero -->
+    <div th:fragment="contenidoPagina">
         <section class="hero-section">
             <div class="container">
                 <div class="row">
@@ -29,7 +28,6 @@
             </div>
         </section>
 
-        <!-- Sección de Estadísticas -->
         <section class="py-4 bg-white">
             <div class="container">
                 <div class="row text-center">
@@ -65,7 +63,6 @@
             </div>
         </section>
 
-        <!-- Sección de Servicios Destacados -->
         <section class="services-section">
             <div class="container">
                 <div class="section-title">
@@ -82,9 +79,8 @@
                         <option value="barber">Barbería</option>
                     </select>
                 </div>
-                
+
                 <div class="row g-4">
-                    <!-- Servicio 1 -->
                     <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp">
                         <div class="service-card" data-category="hair">
                             <img th:src="@{/images/service-hair-cut.jpg}" alt="Corte de Cabello" class="card-img-top">
@@ -96,8 +92,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Servicio 2 -->
                     <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" data-delay="200">
                         <div class="service-card" data-category="nails">
                             <img th:src="@{/images/service-manicure.jpg}" alt="Manicure" class="card-img-top">
@@ -109,8 +103,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Servicio 3 -->
                     <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" data-delay="400">
                         <div class="service-card" data-category="barber">
                             <img th:src="@{/images/service-beard.jpg}" alt="Arreglo de Barba" class="card-img-top">
@@ -123,23 +115,20 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="text-center mt-5">
                     <a th:href="@{/servicios}" class="btn btn-outline-primary btn-lg">Ver todos los servicios</a>
                 </div>
             </div>
         </section>
-        
-        <!-- Sección Cómo Funciona -->
+
         <section class="howto-section">
             <div class="container">
                 <div class="section-title">
                     <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">¿Cómo Funciona?</h2>
                     <p class="animate-on-scroll" data-animation="animate__fadeInUp">Reserva tu cita en tres simples pasos</p>
                 </div>
-                
                 <div class="row">
-                    <!-- Paso 1 -->
                     <div class="col-md-4 text-center mb-4 mb-md-0 animate-on-scroll" data-animation="animate__fadeInLeft">
                         <div class="step-icon">
                             <i class="fas fa-user-plus"></i>
@@ -147,8 +136,6 @@
                         <h4 class="step-title">1. Crea tu cuenta</h4>
                         <p class="step-description">Regístrate en FELICITA de forma rápida y segura.</p>
                     </div>
-                    
-                    <!-- Paso 2 -->
                     <div class="col-md-4 text-center mb-4 mb-md-0 animate-on-scroll" data-animation="animate__fadeInUp">
                         <div class="step-icon">
                             <i class="fas fa-calendar-alt"></i>
@@ -156,8 +143,6 @@
                         <h4 class="step-title">2. Elige servicio y fecha</h4>
                         <p class="step-description">Selecciona el servicio que deseas y la fecha que mejor se adapte a tu agenda.</p>
                     </div>
-                    
-                    <!-- Paso 3 -->
                     <div class="col-md-4 text-center animate-on-scroll" data-animation="animate__fadeInRight">
                         <div class="step-icon">
                             <i class="fas fa-check-circle"></i>
@@ -168,85 +153,7 @@
                 </div>
             </div>
         </section>
-        
-        <!-- Sección de Testimonios -->
-        <section class="testimonials-section">
-            <div class="container">
-                <div class="section-title">
-                    <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">Testimonios de Clientes</h2>
-                    <p class="animate-on-scroll" data-animation="animate__fadeInUp">Lo que nuestros clientes dicen sobre FELICITA</p>
-                </div>
-                
-                <div id="testimonials-carousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        <!-- Testimonio 1 -->
-                        <div class="carousel-item active">
-                            <div class="row justify-content-center">
-                                <div class="col-lg-8">
-                                    <div class="testimonial-card">
-                                        <p class="testimonial-text">FELICITA ha cambiado por completo mi experiencia al reservar citas de belleza. El proceso es muy sencillo y el recordatorio automático es genial.</p>
-                                        <div class="testimonial-author">
-                                            <img th:src="@{/images/client-1.jpg}" alt="Ana García" class="testimonial-avatar">
-                                            <div>
-                                                <h5 class="testimonial-name">Ana García</h5>
-                                                <p class="testimonial-role">Cliente frecuente</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Testimonio 2 -->
-                        <div class="carousel-item">
-                            <div class="row justify-content-center">
-                                <div class="col-lg-8">
-                                    <div class="testimonial-card">
-                                        <p class="testimonial-text">Como dueño de una barbería, FELICITA me ha ayudado a organizar mejor mi negocio y reducir las cancelaciones. Mis clientes están encantados con la facilidad para reservar.</p>
-                                        <div class="testimonial-author">
-                                            <img th:src="@{/images/client-2.jpg}" alt="Carlos Mendoza" class="testimonial-avatar">
-                                            <div>
-                                                <h5 class="testimonial-name">Carlos Mendoza</h5>
-                                                <p class="testimonial-role">Propietario de barbería</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Testimonio 3 -->
-                        <div class="carousel-item">
-                            <div class="row justify-content-center">
-                                <div class="col-lg-8">
-                                    <div class="testimonial-card">
-                                        <p class="testimonial-text">La posibilidad de ver la disponibilidad en tiempo real y elegir a mi estilista favorito hace que FELICITA sea mi app imprescindible para reservas de belleza.</p>
-                                        <div class="testimonial-author">
-                                            <img th:src="@{/images/client-3.jpg}" alt="María Torres" class="testimonial-avatar">
-                                            <div>
-                                                <h5 class="testimonial-name">María Torres</h5>
-                                                <p class="testimonial-role">Cliente satisfecha</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button class="carousel-control-prev" type="button" data-bs-target="#testimonials-carousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#testimonials-carousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Sección CTA -->
+
         <section class="cta-section">
             <div class="container">
                 <h2 class="cta-title animate-on-scroll" data-animation="animate__fadeInUp">¿Listo para mejorar tu experiencia?</h2>
@@ -254,48 +161,14 @@
                 <a th:href="@{/registro}" class="btn btn-light btn-lg cta-button animate-on-scroll" data-animation="animate__fadeInUp">Comenzar Ahora</a>
             </div>
         </section>
-        
-        <!-- Botón Volver Arriba -->
+
         <a id="back-to-top" class="btn btn-primary btn-lg position-fixed bottom-0 end-0 m-4 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px; opacity: 0; visibility: hidden; transition: all 0.3s ease;" href="#" role="button">
             <i class="fas fa-arrow-up"></i>
         </a>
-        
-        <!-- Modal de Login (para botón de reserva rápida) -->
-        <div class="modal fade" id="login-modal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-4">Inicia sesión para continuar con tu reserva:</p>
-                        <form th:action="@{/login}" method="post">
-                            <div class="mb-3">
-                                <label for="modal-username" class="form-label">Nombre de Usuario</label>
-                                <input type="text" id="modal-username" name="username" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="modal-password" class="form-label">Contraseña</label>
-                                <input type="password" id="modal-password" name="password" class="form-control" required>
-                            </div>
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-                            </div>
-                        </form>
-                        <hr>
-                        <div class="text-center">
-                            <p class="mb-0">¿No tienes una cuenta?</p>
-                            <a th:href="@{/registro}" class="btn btn-outline-primary mt-2">Registrarse</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-    
-    <div id="scriptsAdicionales">
+
+    <th:block th:fragment="scriptsAdicionales">
         <script th:src="@{/js/home.js}"></script>
-    </div>
+    </th:block>
 </body>
 </html>

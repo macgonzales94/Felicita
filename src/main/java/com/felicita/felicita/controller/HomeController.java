@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,9 +28,16 @@ public class HomeController {
      * @return Nombre de la plantilla Thymeleaf a renderizar
      */
     @GetMapping("/")
-    public String home(Model model) {
+    public String index(Model model) {
         try {
-            List<Servicio> serviciosDestacados = servicioService.obtenerTodosActivos();
+            // Para evitar errores en la fase inicial, usar una lista vacía si hay problemas con la base de datos
+            List<Servicio> serviciosDestacados = new ArrayList<>();
+            try {
+                serviciosDestacados = servicioService.obtenerTodosActivos();
+            } catch (Exception e) {
+                // Log del error pero continuar con una lista vacía
+                System.err.println("Error al cargar servicios: " + e.getMessage());
+            }
             model.addAttribute("servicios", serviciosDestacados);
             return "home";
         } catch (Exception e) {
@@ -37,8 +45,18 @@ public class HomeController {
             System.err.println("Error al cargar la página principal: " + e.getMessage());
             e.printStackTrace();
             // En caso de error, devuelve una página de error genérica
-            return "error/general";
+            return "error";
         }
+    }
+
+    /**
+     * Muestra la página principal (alias para /)
+     * @param model Modelo para pasar datos a la vista
+     * @return Nombre de la plantilla Thymeleaf a renderizar
+     */
+    @GetMapping("/home")
+    public String home(Model model) {
+        return index(model);
     }
 
     /**
@@ -49,13 +67,18 @@ public class HomeController {
     @GetMapping("/servicios")
     public String servicios(Model model) {
         try {
-            List<Servicio> servicios = servicioService.obtenerTodosActivos();
+            List<Servicio> servicios = new ArrayList<>();
+            try {
+                servicios = servicioService.obtenerTodosActivos();
+            } catch (Exception e) {
+                System.err.println("Error al cargar servicios: " + e.getMessage());
+            }
             model.addAttribute("servicios", servicios);
             return "servicios";
         } catch (Exception e) {
             System.err.println("Error al cargar la página de servicios: " + e.getMessage());
             e.printStackTrace();
-            return "error/general";
+            return "error";
         }
     }
 
@@ -75,41 +98,5 @@ public class HomeController {
     @GetMapping("/nosotros")
     public String nosotros() {
         return "nosotros";
-    }
-    
-    /**
-     * Muestra la página de términos y condiciones
-     * @return Nombre de la plantilla Thymeleaf a renderizar
-     */
-    @GetMapping("/terminos")
-    public String terminos() {
-        return "terminos";
-    }
-    
-    /**
-     * Muestra la página de política de privacidad
-     * @return Nombre de la plantilla Thymeleaf a renderizar
-     */
-    @GetMapping("/privacidad")
-    public String privacidad() {
-        return "privacidad";
-    }
-    
-    /**
-     * Maneja errores HTTP 404 (Página no encontrada)
-     * @return Nombre de la plantilla Thymeleaf a renderizar
-     */
-    @GetMapping("/error/404")
-    public String error404() {
-        return "error/404";
-    }
-    
-    /**
-     * Página de error genérica - Cambiado para evitar conflicto con BasicErrorController
-     * @return Nombre de la plantilla Thymeleaf a renderizar
-     */
-    @GetMapping("/error/general")
-    public String errorGeneral() {
-        return "error/general";
     }
 }
