@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/base :: html">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="tituloPagina">Nueva Reserva - FELICITA</title>
     
-    <div id="estilosAdicionales">
+    <th:block th:fragment="estilosAdicionales">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
         <link th:href="@{/css/reserva.css}" rel="stylesheet">
-    </div>
+    </th:block>
 </head>
 <body>
-    <div id="contenidoPagina">
+    <div th:fragment="contenidoPagina">
         <div class="container py-5">
             <h1 class="mb-4">Reserva tu cita</h1>
             
@@ -367,8 +369,8 @@
         </div>
     </div>
     
-    <div id="scriptsAdicionales">
+    <th:block th:fragment="scriptsAdicionales">
         <script th:src="@{/js/reserva.js}"></script>
-    </div>
+    </th:block>
 </body>
 </html>

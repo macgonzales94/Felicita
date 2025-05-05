@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es" th:fragment="html">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:include=":: #tituloPagina">FELICITA</title>
@@ -20,7 +21,7 @@
     <link th:href="@{/css/estilos.css}" rel="stylesheet">
     
     <!-- Estilos adicionales específicos -->
-    <th:block th:include=":: #estilosAdicionales"></th:block>
+    <th:block th:replace=":: #estilosAdicionales"></th:block>
 </head>
 <body>
     <!-- Cabecera -->
@@ -28,7 +29,7 @@
     
     <!-- Contenido de la Página -->
     <main>
-        <div th:include=":: #contenidoPagina"></div>
+        <div th:replace=":: #contenidoPagina"></div>
     </main>
     
     <!-- Pie de Página -->
@@ -42,6 +43,6 @@
     <script th:src="@{/js/main.js}"></script>
     
     <!-- Scripts adicionales específicos -->
-    <th:block th:include=":: #scriptsAdicionales"></th:block>
+    <th:block th:replace=":: #scriptsAdicionales"></th:block>
 </body>
 </html>

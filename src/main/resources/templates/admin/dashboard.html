@@ -73,294 +73,296 @@
     </style>
 </head>
 <body>
-    <!-- Barra de Navegación -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" th:href="@{/}">
-                <i class="fas fa-cut me-2"></i>
-                FELICITA Admin
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item d-lg-none">
-                        <a class="nav-link active" th:href="@{/admin}"><i class="fas fa-tachometer-alt me-2"></i> Panel</a>
-                    </li>
-                    <li class="nav-item d-lg-none">
-                        <a class="nav-link" th:href="@{/admin/reservas}"><i class="fas fa-calendar-check me-2"></i> Reservas</a>
-                    </li>
-                    <li class="nav-item d-lg-none">
-                        <a class="nav-link" th:href="@{/admin/usuarios}"><i class="fas fa-users me-2"></i> Clientes</a>
-                    </li>
-                    <li class="nav-item d-lg-none">
-                        <a class="nav-link" th:href="@{/admin/servicios}"><i class="fas fa-concierge-bell me-2"></i> Servicios</a>
-                    </li>
-                    <li class="nav-item d-lg-none">
-                        <a class="nav-link" th:href="@{/admin/empleados}"><i class="fas fa-user-tie me-2"></i> Empleados</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-bell me-2"></i>
-                            <span class="badge bg-danger rounded-pill">3</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><h6 class="dropdown-header">Notificaciones</h6></li>
-                            <li><a class="dropdown-item" href="#">Nueva reserva: María García</a></li>
-                            <li><a class="dropdown-item" href="#">Cancelación: Carlos Mendoza</a></li>
-                            <li><a class="dropdown-item" href="#">Nueva reseña: 5 estrellas</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center" href="#">Ver todas</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i> <span sec:authentication="name"></span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" th:href="@{/perfil}"><i class="fas fa-user me-2"></i> Mi Perfil</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form th:action="@{/logout}" method="post">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Barra Lateral -->
-            <div class="col-lg-2 d-none d-lg-block barra-lateral px-0">
-                <div class="py-4 px-3 mb-4 bg-dark">
-                    <div class="text-center">
-                        <div class="d-inline-flex rounded-circle bg-secondary p-3 mb-2">
-                            <i class="fas fa-user-shield fa-2x text-white"></i>
-                        </div>
-                        <h5 class="mb-0" sec:authentication="name">Admin</h5>
-                        <small>Administrador</small>
-                    </div>
+    <div th:fragment="contenidoPagina">
+        <!-- Barra de Navegación -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" th:href="@{/}">
+                    <i class="fas fa-cut me-2"></i>
+                    FELICITA Admin
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item d-lg-none">
+                            <a class="nav-link active" th:href="@{/admin}"><i class="fas fa-tachometer-alt me-2"></i> Panel</a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="nav-link" th:href="@{/admin/reservas}"><i class="fas fa-calendar-check me-2"></i> Reservas</a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="nav-link" th:href="@{/admin/usuarios}"><i class="fas fa-users me-2"></i> Clientes</a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="nav-link" th:href="@{/admin/servicios}"><i class="fas fa-concierge-bell me-2"></i> Servicios</a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="nav-link" th:href="@{/admin/empleados}"><i class="fas fa-user-tie me-2"></i> Empleados</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell me-2"></i>
+                                <span class="badge bg-danger rounded-pill">3</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                                <li><a class="dropdown-item" href="#">Nueva reserva: María García</a></li>
+                                <li><a class="dropdown-item" href="#">Cancelación: Carlos Mendoza</a></li>
+                                <li><a class="dropdown-item" href="#">Nueva reseña: 5 estrellas</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-center" href="#">Ver todas</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i> <span sec:authentication="name"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" th:href="@{/perfil}"><i class="fas fa-user me-2"></i> Mi Perfil</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form th:action="@{/logout}" method="post">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a th:href="@{/admin}" class="nav-link active">
-                            <i class="fas fa-tachometer-alt me-2"></i> Panel
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:href="@{/admin/reservas}" class="nav-link">
-                            <i class="fas fa-calendar-check me-2"></i> Reservas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:href="@{/admin/usuarios}" class="nav-link">
-                            <i class="fas fa-users me-2"></i> Clientes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:href="@{/admin/servicios}" class="nav-link">
-                            <i class="fas fa-concierge-bell me-2"></i> Servicios
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:href="@{/admin/empleados}" class="nav-link">
-                            <i class="fas fa-user-tie me-2"></i> Empleados
-                        </a>
-                    </li>
-                </ul>
             </div>
+        </nav>
 
-            <!-- Contenido Principal -->
-            <div class="col-lg-10 col-12 py-4">
-                <div class="container-fluid">
-                    <!-- Encabezado de Página -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Panel de Control</h1>
-                        <div>
-                            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm me-2">
-                                <i class="fas fa-download fa-sm text-white-50 me-1"></i> Generar Reporte
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Barra Lateral -->
+                <div class="col-lg-2 d-none d-lg-block barra-lateral px-0">
+                    <div class="py-4 px-3 mb-4 bg-dark">
+                        <div class="text-center">
+                            <div class="d-inline-flex rounded-circle bg-secondary p-3 mb-2">
+                                <i class="fas fa-user-shield fa-2x text-white"></i>
+                            </div>
+                            <h5 class="mb-0" sec:authentication="name">Admin</h5>
+                            <small>Administrador</small>
+                        </div>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a th:href="@{/admin}" class="nav-link active">
+                                <i class="fas fa-tachometer-alt me-2"></i> Panel
                             </a>
-                            <a th:href="@{/admin/reservas/nueva}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
-                                <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Nueva Reserva
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/reservas}" class="nav-link">
+                                <i class="fas fa-calendar-check me-2"></i> Reservas
                             </a>
-                        </div>
-                    </div>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/usuarios}" class="nav-link">
+                                <i class="fas fa-users me-2"></i> Clientes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/servicios}" class="nav-link">
+                                <i class="fas fa-concierge-bell me-2"></i> Servicios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/admin/empleados}" class="nav-link">
+                                <i class="fas fa-user-tie me-2"></i> Empleados
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-                    <!-- Estadísticas del Dashboard -->
-                    <div class="row">
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card tarjeta-dashboard tarjeta-reservas shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Reservas (Mes)
+                <!-- Contenido Principal -->
+                <div class="col-lg-10 col-12 py-4">
+                    <div class="container-fluid">
+                        <!-- Encabezado de Página -->
+                        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                            <h1 class="h3 mb-0 text-gray-800">Panel de Control</h1>
+                            <div>
+                                <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm me-2">
+                                    <i class="fas fa-download fa-sm text-white-50 me-1"></i> Generar Reporte
+                                </a>
+                                <a th:href="@{/admin/reservas/nueva}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
+                                    <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Nueva Reserva
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Estadísticas del Dashboard -->
+                        <div class="row">
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card tarjeta-dashboard tarjeta-reservas shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Reservas (Mes)
+                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalReservas}">132</div>
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalReservas}">132</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card tarjeta-dashboard tarjeta-usuarios shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Clientes
+                                            <div class="col-auto">
+                                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalClientes}">578</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-users fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card tarjeta-dashboard tarjeta-servicios shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Servicios Activos
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card tarjeta-dashboard tarjeta-usuarios shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                    Clientes
+                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalClientes}">578</div>
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalServiciosActivos}">24</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-concierge-bell fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card tarjeta-dashboard tarjeta-ingresos shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                Ingresos (Mes)
+                                            <div class="col-auto">
+                                                <i class="fas fa-users fa-2x text-gray-300"></i>
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="'S/. ' + ${ingresosTotales}">S/. 8,450</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Fila de Gráficos -->
-                    <div class="row">
-                        <!-- Gráfico de Reservas Mensuales -->
-                        <div class="col-xl-8 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Reservas por Día de la Semana</h6>
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card tarjeta-dashboard tarjeta-servicios shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                    Servicios Activos
+                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalServiciosActivos}">24</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-concierge-bell fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas id="graficoReservasSemanal"></canvas>
+                            </div>
+
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card tarjeta-dashboard tarjeta-ingresos shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                    Ingresos (Mes)
+                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="'S/. ' + ${ingresosTotales}">S/. 8,450</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Distribución de Estados -->
-                        <div class="col-xl-4 col-lg-5">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Estado de Reservas</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="chart-pie">
-                                        <canvas id="graficoEstados"></canvas>
+                        <!-- Fila de Gráficos -->
+                        <div class="row">
+                            <!-- Gráfico de Reservas Mensuales -->
+                            <div class="col-xl-8 col-lg-7">
+                                <div class="card shadow mb-4">
+                                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                        <h6 class="m-0 font-weight-bold text-primary">Reservas por Día de la Semana</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-area">
+                                            <canvas id="graficoReservasSemanal"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Fila de Contenido -->
-                    <div class="row">
-                        <!-- Reservas Recientes -->
-                        <div class="col-lg-8">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Reservas Recientes</h6>
-                                    <a th:href="@{/admin/reservas}" class="btn btn-sm btn-primary">Ver Todas</a>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>ID</th>
-                                                    <th>Cliente</th>
-                                                    <th>Fecha</th>
-                                                    <th>Hora</th>
-                                                    <th>Estado</th>
-                                                    <th>Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr th:each="reserva : ${reservasRecientes}">
-                                                    <td th:text="${'#' + reserva.id}">ID</td>
-                                                    <td th:text="${reserva.usuario.nombreCompleto}">Cliente</td>
-                                                    <td th:text="${#temporals.format(reserva.horaInicio, 'dd/MM/yyyy')}">Fecha</td>
-                                                    <td th:text="${#temporals.format(reserva.horaInicio, 'HH:mm')}">Hora</td>
-                                                    <td>
-                                                        <span th:class="'estado-reserva estado-' + ${#strings.toLowerCase(reserva.estado)}"></span>
-                                                        <span th:text="${reserva.estado}">Estado</span>
-                                                    </td>
-                                                    <td>
-                                                        <a th:href="@{/admin/reservas/{id}(id=${reserva.id})}" class="btn btn-sm btn-info">Ver</a>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                            <!-- Distribución de Estados -->
+                            <div class="col-xl-4 col-lg-5">
+                                <div class="card shadow mb-4">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Estado de Reservas</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-pie">
+                                            <canvas id="graficoEstados"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Servicios Populares -->
-                        <div class="col-lg-4">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Servicios Populares</h6>
+                        <!-- Fila de Contenido -->
+                        <div class="row">
+                            <!-- Reservas Recientes -->
+                            <div class="col-lg-8">
+                                <div class="card shadow mb-4">
+                                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                        <h6 class="m-0 font-weight-bold text-primary">Reservas Recientes</h6>
+                                        <a th:href="@{/admin/reservas}" class="btn btn-sm btn-primary">Ver Todas</a>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Cliente</th>
+                                                        <th>Fecha</th>
+                                                        <th>Hora</th>
+                                                        <th>Estado</th>
+                                                        <th>Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr th:each="reserva : ${reservasRecientes}">
+                                                        <td th:text="${'#' + reserva.id}">ID</td>
+                                                        <td th:text="${reserva.usuario.nombreCompleto}">Cliente</td>
+                                                        <td th:text="${#temporals.format(reserva.horaInicio, 'dd/MM/yyyy')}">Fecha</td>
+                                                        <td th:text="${#temporals.format(reserva.horaInicio, 'HH:mm')}">Hora</td>
+                                                        <td>
+                                                            <span th:class="'estado-reserva estado-' + ${#strings.toLowerCase(reserva.estado)}"></span>
+                                                            <span th:text="${reserva.estado}">Estado</span>
+                                                        </td>
+                                                        <td>
+                                                            <a th:href="@{/admin/reservas/{id}(id=${reserva.id})}" class="btn btn-sm btn-info">Ver</a>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div th:each="entry, stat : ${serviciosPopulares}" class="mb-3">
-                                        <h6 class="small font-weight-bold">
-                                            <span th:text="${entry.key.nombre}">Servicio</span>
-                                            <span class="float-end" th:text="${entry.value + ' reservas'}">Cantidad</span>
-                                        </h6>
-                                        <div class="progress mb-4">
-                                            <div th:class="'progress-bar bg-' + (${stat.index} % 5 == 0 ? 'danger' : ${stat.index} % 5 == 1 ? 'warning' : ${stat.index} % 5 == 2 ? 'primary' : ${stat.index} % 5 == 3 ? 'info' : 'success')"
-                                                 role="progressbar" 
-                                                 th:style="'width: ' + ${entry.value * 100 / #aggregates.max(serviciosPopulares.values())} + '%'" 
-                                                 th:attr="aria-valuenow=${entry.value}, aria-valuemin='0', aria-valuemax='100'">
+                            </div>
+
+                            <!-- Servicios Populares -->
+                            <div class="col-lg-4">
+                                <div class="card shadow mb-4">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Servicios Populares</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div th:each="entry, stat : ${serviciosPopulares}" class="mb-3">
+                                            <h6 class="small font-weight-bold">
+                                                <span th:text="${entry.key.nombre}">Servicio</span>
+                                                <span class="float-end" th:text="${entry.value + ' reservas'}">Cantidad</span>
+                                            </h6>
+                                            <div class="progress mb-4">
+                                                <div th:class="'progress-bar bg-' + (${stat.index} % 5 == 0 ? 'danger' : ${stat.index} % 5 == 1 ? 'warning' : ${stat.index} % 5 == 2 ? 'primary' : ${stat.index} % 5 == 3 ? 'info' : 'success')"
+                                                    role="progressbar" 
+                                                    th:style="'width: ' + ${entry.value * 100 / #aggregates.max(serviciosPopulares.values())} + '%'" 
+                                                    th:attr="aria-valuenow=${entry.value}, aria-valuemin='0', aria-valuemax='100'">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -372,93 +374,94 @@
             </div>
         </div>
     </div>
-
-    <!-- Bootstrap & jQuery JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    
-    <!-- Inicialización de Gráficos -->
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            // Datos para gráfica de reservas por día
-            const datosReservasDias = /*[[${reservasPorDia}]]*/ {
-                'Lunes': 20,
-                'Martes': 15,
-                'Miércoles': 25,
-                'Jueves': 18,
-                'Viernes': 30,
-                'Sábado': 35,
-                'Domingo': 0
-            };
-            
-            // Datos para gráfica de estados
-            const distribucionEstados = /*[[${distribucionEstados}]]*/ {
-                'PENDIENTE': 15,
-                'CONFIRMADA': 25,
-                'CANCELADA': 5,
-                'COMPLETADA': 30
-            };
-            
-            // Configurar gráfica de reservas por día
-            const ctxSemanal = document.getElementById('graficoReservasSemanal').getContext('2d');
-            new Chart(ctxSemanal, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(datosReservasDias),
-                    datasets: [{
-                        label: 'Reservas',
-                        data: Object.values(datosReservasDias),
-                        backgroundColor: 'rgba(13, 110, 253, 0.5)',
-                        borderColor: '#0d6efd',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
+    <th:block th:fragment="scriptsAdicionales">
+        <!-- Bootstrap & jQuery JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        
+        <!-- Inicialización de Gráficos -->
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Datos para gráfica de reservas por día
+                const datosReservasDias = /*[[${reservasPorDia}]]*/ {
+                    'Lunes': 20,
+                    'Martes': 15,
+                    'Miércoles': 25,
+                    'Jueves': 18,
+                    'Viernes': 30,
+                    'Sábado': 35,
+                    'Domingo': 0
+                };
+                
+                // Datos para gráfica de estados
+                const distribucionEstados = /*[[${distribucionEstados}]]*/ {
+                    'PENDIENTE': 15,
+                    'CONFIRMADA': 25,
+                    'CANCELADA': 5,
+                    'COMPLETADA': 30
+                };
+                
+                // Configurar gráfica de reservas por día
+                const ctxSemanal = document.getElementById('graficoReservasSemanal').getContext('2d');
+                new Chart(ctxSemanal, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(datosReservasDias),
+                        datasets: [{
+                            label: 'Reservas',
+                            data: Object.values(datosReservasDias),
+                            backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                            borderColor: '#0d6efd',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
                             }
                         }
                     }
-                }
+                });
+                
+                // Configurar gráfica de estados
+                const ctxEstados = document.getElementById('graficoEstados').getContext('2d');
+                new Chart(ctxEstados, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(distribucionEstados).map(key => {
+                            const etiquetas = {
+                                'PENDIENTE': 'Pendiente',
+                                'CONFIRMADA': 'Confirmada',
+                                'CANCELADA': 'Cancelada',
+                                'COMPLETADA': 'Completada'
+                            };
+                            return etiquetas[key] || key;
+                        }),
+                        datasets: [{
+                            data: Object.values(distribucionEstados),
+                            backgroundColor: [
+                                '#ffc107', // Pendiente
+                                '#20c997', // Confirmada
+                                '#dc3545', // Cancelada
+                                '#0d6efd'  // Completada
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
             });
-            
-            // Configurar gráfica de estados
-            const ctxEstados = document.getElementById('graficoEstados').getContext('2d');
-            new Chart(ctxEstados, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(distribucionEstados).map(key => {
-                        const etiquetas = {
-                            'PENDIENTE': 'Pendiente',
-                            'CONFIRMADA': 'Confirmada',
-                            'CANCELADA': 'Cancelada',
-                            'COMPLETADA': 'Completada'
-                        };
-                        return etiquetas[key] || key;
-                    }),
-                    datasets: [{
-                        data: Object.values(distribucionEstados),
-                        backgroundColor: [
-                            '#ffc107', // Pendiente
-                            '#20c997', // Confirmada
-                            '#dc3545', // Cancelada
-                            '#0d6efd'  // Completada
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        });
-    </script>
+        </script>
+    </th:block>
 </body>
 </html>

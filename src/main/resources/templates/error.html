@@ -3,22 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - FELICITA</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link th:href="@{/css/estilos.css}" rel="stylesheet">
+    <title id="tituloPagina">Error - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+        <link th:href="@{/css/estilos.css}" rel="stylesheet">
+    </th:block>
 </head>
 <body>
-    <div class="container py-5 text-center">
-        <div class="mb-4">
-            <i class="fas fa-exclamation-triangle text-warning display-1"></i>
+    <div th:fragment="contenidoPagina">
+        <div class="container py-5 text-center">
+            <div class="mb-4">
+                <i class="fas fa-exclamation-triangle text-warning display-1"></i>
+            </div>
+            <h1 class="display-4">¡Ups! Algo salió mal</h1>
+            <p class="lead" th:if="${statusCode != null}">Error: <span th:text="${statusCode}">500</span></p>
+            <p class="lead" th:if="${errorMessage != null}">Mensaje: <span th:text="${errorMessage}">Error interno del servidor</span></p>
+            <p class="mt-3">Lo sentimos, pero ocurrió un error al procesar tu solicitud.</p>
+            <a th:href="@{/}" class="btn btn-primary mt-3">
+                <i class="fas fa-home me-2"></i> Volver al inicio
+            </a>
         </div>
-        <h1 class="display-4">¡Ups! Algo salió mal</h1>
-        <p class="lead" th:if="${statusCode != null}">Error: <span th:text="${statusCode}">500</span></p>
-        <p class="lead" th:if="${errorMessage != null}">Mensaje: <span th:text="${errorMessage}">Error interno del servidor</span></p>
-        <p class="mt-3">Lo sentimos, pero ocurrió un error al procesar tu solicitud.</p>
-        <a th:href="@{/}" class="btn btn-primary mt-3">
-            <i class="fas fa-home me-2"></i> Volver al inicio
-        </a>
     </div>
+    
+    <th:block th:fragment="scriptsAdicionales">
+        <!-- Scripts específicos para la página de error si los hubiera -->
+    </th:block>
 </body>
 </html>
