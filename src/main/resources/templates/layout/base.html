@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:include=":: #tituloPagina">FELICITA</title>
+    <title th:replace="~{:: title}">FELICITA</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
@@ -21,19 +21,19 @@
     <link th:href="@{/css/estilos.css}" rel="stylesheet">
     
     <!-- Estilos adicionales específicos -->
-    <th:block th:replace=":: #estilosAdicionales"></th:block>
+    <th:block th:replace="~{:: estilosAdicionales}"></th:block>
 </head>
 <body>
     <!-- Cabecera -->
-    <div th:replace="fragments/header :: cabecera"></div>
+    <div th:replace="~{fragments/header :: cabecera}"></div>
     
     <!-- Contenido de la Página -->
     <main>
-        <div th:replace=":: #contenidoPagina"></div>
+        <div th:replace="~{:: contenidoPagina}"></div>
     </main>
     
     <!-- Pie de Página -->
-    <div th:replace="fragments/footer :: piePagina"></div>
+    <div th:replace="~{fragments/footer :: piePagina}"></div>
     
     <!-- Scripts Bootstrap y jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -43,6 +43,6 @@
     <script th:src="@{/js/main.js}"></script>
     
     <!-- Scripts adicionales específicos -->
-    <th:block th:replace=":: #scriptsAdicionales"></th:block>
+    <th:block th:replace="~{:: scriptsAdicionales}"></th:block>
 </body>
 </html>

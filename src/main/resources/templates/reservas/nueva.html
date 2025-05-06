@@ -57,6 +57,7 @@
     </div>
 </head>
 <body>
+<div th:fragment="contenidoPagina">
     <div id="contenidoPagina">
         <div class="container py-5">
             <h1 class="mb-4">Reserva tu cita</h1>
@@ -268,8 +269,7 @@
     </div>
 
 
-<th:block th:fragment="scriptsAdicionales">
-    
+<th:block th:fragment="scriptsAdicionales"> 
     <div id="scriptsAdicionales">
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script>
