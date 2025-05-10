@@ -52,7 +52,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const animObserver = new IntersectionObserver(function(entries) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('animate__animated', entry.target.dataset.animation || 'animate__fadeIn');
+                    // Obtener la animación del atributo data
+                    const animation = entry.target.dataset.animation || 'animate__fadeIn';
+                    
+                    // Obtener el retraso si existe
+                    const delay = entry.target.dataset.delay || 0;
+                    
+                    // Aplicar retraso si es necesario
+                    if (delay > 0) {
+                        setTimeout(() => {
+                            entry.target.classList.add('animate__animated', animation);
+                        }, delay);
+                    } else {
+                        entry.target.classList.add('animate__animated', animation);
+                    }
+                    
                     animObserver.unobserve(entry.target);
                 }
             });
@@ -67,8 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const testimonialsCarousel = document.getElementById('testimonials-carousel');
     if (testimonialsCarousel) {
         new bootstrap.Carousel(testimonialsCarousel, {
-            interval: 5000,
-            touch: true
+            interval: 5000,  // 5 segundos entre diapositivas
+            touch: true,     // Permitir deslizamiento táctil
+            pause: 'hover'   // Pausar al pasar el ratón
         });
     }
     
@@ -84,7 +99,12 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Mostrar modal de login o registro
                 const loginModal = new bootstrap.Modal(document.getElementById('login-modal'));
-                loginModal.show();
+                if (loginModal) {
+                    loginModal.show();
+                } else {
+                    // Si no hay modal, redireccionar al login
+                    window.location.href = '/login?redirect=/reservas/nueva';
+                }
             }
         });
     }
@@ -97,10 +117,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.service-card');
             
             cards.forEach(card => {
-                if (category === 'all' || card.dataset.category === category) {
-                    card.closest('.service-item').style.display = 'block';
+                const cardCategory = card.dataset.category;
+                const serviceItem = card.closest('.service-item');
+                
+                if (category === 'all' || cardCategory === category) {
+                    if (serviceItem) {
+                        serviceItem.style.display = 'block';
+                    }
                 } else {
-                    card.closest('.service-item').style.display = 'none';
+                    if (serviceItem) {
+                        serviceItem.style.display = 'none';
+                    }
                 }
             });
         });
@@ -150,5 +177,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         typeEffect();
+    }
+    
+    // Botón Volver Arriba
+    const backToTopBtn = document.getElementById('back-to-top');
+    if (backToTopBtn) {
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.visibility = 'visible';
+            } else {
+                backToTopBtn.style.opacity = '0';
+                backToTopBtn.style.visibility = 'hidden';
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+    
+    // Login Modal (si existe)
+    const loginModal = document.getElementById('login-modal');
+    if (loginModal) {
+        // Cambiar entre formularios de login y registro
+        const loginForm = loginModal.querySelector('#login-form');
+        const registerForm = loginModal.querySelector('#register-form');
+        const switchToRegister = loginModal.querySelector('#switch-to-register');
+        const switchToLogin = loginModal.querySelector('#switch-to-login');
+        
+        if (switchToRegister && loginForm && registerForm) {
+            switchToRegister.addEventListener('click', function(e) {
+                e.preventDefault();
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            });
+        }
+        
+        if (switchToLogin && loginForm && registerForm) {
+            switchToLogin.addEventListener('click', function(e) {
+                e.preventDefault();
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+        }
     }
 });

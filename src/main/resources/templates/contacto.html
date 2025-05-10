@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - FELICITA</title>
+
+    <th:block th:fragment="estilosAdicionales">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Banner de título -->
+        <div class="bg-primary text-white py-5">
+            <div class="container">
+                <h1 class="display-4">Contacto</h1>
+                <p class="lead">Estamos aquí para responder tus preguntas</p>
+            </div>
+        </div>
+
+        <div class="container py-5">
+            <!-- Mensajes de alerta -->
+            <div th:if="${mensajeExito != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}">Mensaje de éxito</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}">Mensaje de error</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="row">
+                <!-- Formulario de contacto -->
+                <div class="col-lg-7 mb-5 mb-lg-0">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            <h2 class="card-title mb-4">Envíanos un mensaje</h2>
+                            
+                            <form th:action="@{/contacto}" method="post" th:object="${contactForm}" id="contactForm" class="needs-validation" novalidate>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nombre" class="form-label">Nombre completo <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nombre" name="nombre" th:field="*{nombre}" required>
+                                        <div class="invalid-feedback">
+                                            Por favor, ingresa tu nombre completo.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="email" th:field="*{email}" required>
+                                        <div class="invalid-feedback">
+                                            Por favor, ingresa un correo electrónico válido.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="telefono" class="form-label">Teléfono</label>
+                                        <input type="tel" class="form-control" id="telefono" name="telefono" th:field="*{telefono}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="asunto" class="form-label">Asunto <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="asunto" name="asunto" th:field="*{asunto}" required>
+                                        <div class="invalid-feedback">
+                                            Por favor, ingresa el asunto de tu mensaje.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="mensaje" class="form-label">Mensaje <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="mensaje" name="mensaje" rows="5" th:field="*{mensaje}" required></textarea>
+                                    <div class="invalid-feedback">
+                                        Por favor, escribe tu mensaje.
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="privacidad" required>
+                                    <label class="form-check-label" for="privacidad">Acepto la <a th:href="@{/privacidad}" target="_blank">política de privacidad</a> <span class="text-danger">*</span></label>
+                                    <div class="invalid-feedback">
+                                        Debes aceptar la política de privacidad.
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i> Enviar mensaje
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información de contacto -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body p-4">
+                            <h2 class="card-title mb-4">Información de contacto</h2>
+                            
+                            <div class="d-flex mb-4">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-primary rounded-circle p-3 text-white">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>Dirección</h5>
+                                    <p class="mb-0" th:text="${direccion}">Av. Arequipa 1234, Lima</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex mb-4">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-primary rounded-circle p-3 text-white">
+                                        <i class="fas fa-phone-alt"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>Teléfono</h5>
+                                    <p class="mb-0"><a th:href="'tel:' + ${telefono}" class="text-decoration-none" th:text="${telefono}">+51 987 654 321</a></p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex mb-4">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-primary rounded-circle p-3 text-white">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>Correo electrónico</h5>
+                                    <p class="mb-0"><a th:href="'mailto:' + ${email}" class="text-decoration-none" th:text="${email}">info@felicita.pe</a></p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex mb-4">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-primary rounded-circle p-3 text-white">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>Horario de atención</h5>
+                                    <p class="mb-0" th:text="${horario}">Lun-Sáb: 9:00 - 19:00</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Redes sociales -->
+                            <div class="mt-4">
+                                <h5>Síguenos</h5>
+                                <div class="d-flex gap-3 fs-3">
+                                    <a href="#" class="text-primary"><i class="fab fa-facebook"></i></a>
+                                    <a href="#" class="text-danger"><i class="fab fa-instagram"></i></a>
+                                    <a href="#" class="text-info"><i class="fab fa-twitter"></i></a>
+                                    <a href="#" class="text-dark"><i class="fab fa-tiktok"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mapa de ubicación -->
+            <div class="card mt-5 shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4">Nuestra ubicación</h2>
+                    <div id="mapa" style="height: 400px;" 
+                         th:data-latitud="${latitud}" 
+                         th:data-longitud="${longitud}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script th:src="@{/js/contacto.js}"></script>
+    </th:block>
+</body>
+</html>

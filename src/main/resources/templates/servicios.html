@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios - FELICITA</title>
+
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .category-tabs .nav-link {
+                color: var(--text-dark);
+                border-radius: 30px;
+                padding: 8px 20px;
+                margin: 0 5px;
+                transition: all 0.3s;
+            }
+            
+            .category-tabs .nav-link.active {
+                background-color: var(--primary);
+                color: white;
+            }
+            
+            .service-card {
+                transition: transform 0.3s, box-shadow 0.3s;
+                height: 100%;
+                border: none;
+                overflow: hidden;
+            }
+            
+            .service-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            }
+            
+            .service-image {
+                height: 200px;
+                object-fit: cover;
+            }
+            
+            .service-rating .checked {
+                color: #ffc107;
+            }
+            
+            .service-duration {
+                display: inline-block;
+                background-color: rgba(0, 0, 0, 0.05);
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+            }
+            
+            .service-price {
+                font-weight: 700;
+                color: var(--primary);
+                font-size: 1.2rem;
+            }
+            
+            .popular-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: var(--primary);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                z-index: 1;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Banner de título -->
+        <div class="bg-primary text-white py-5">
+            <div class="container">
+                <h1 class="display-4">Nuestros Servicios</h1>
+                <p class="lead">Descubre todos los servicios de belleza disponibles para ti</p>
+            </div>
+        </div>
+
+        <div class="container py-5">
+            <!-- Buscador y filtros -->
+            <div class="row mb-4">
+                <div class="col-md-8 mb-3 mb-md-0">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" id="serviceBuscador" class="form-control border-start-0" placeholder="Buscar servicios...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2">
+                        <select id="filtroCategoria" class="form-select">
+                            <option value="todas">Todas las categorías</option>
+                            <option th:each="categoria : ${categorias}" th:value="${categoria}" th:text="${categoria}">Categoría</option>
+                        </select>
+                        <select id="filtroPrecio" class="form-select">
+                            <option value="todos">Todos los precios</option>
+                            <option value="0-50">S/. 0 - S/. 50</option>
+                            <option value="50-100">S/. 50 - S/. 100</option>
+                            <option value="100-200">S/. 100 - S/. 200</option>
+                            <option value="200+">S/. 200+</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs de categorías -->
+            <ul class="nav nav-pills category-tabs mb-4 justify-content-center flex-wrap">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" data-categoria="todas">Todos</a>
+                </li>
+                <li class="nav-item" th:each="categoria : ${categorias}">
+                    <a class="nav-link" href="#" th:data-categoria="${categoria}" th:text="${categoria}">Categoría</a>
+                </li>
+            </ul>
+
+            <!-- Servicios más populares -->
+            <div class="mb-5">
+                <h2 class="mb-4">Servicios más populares</h2>
+                <div class="row g-4">
+                    <div class="col-md-4" th:each="servicio : ${serviciosPopulares}">
+                        <div class="card service-card shadow-sm">
+                            <span class="popular-badge">
+                                <i class="fas fa-star me-1"></i> Popular
+                            </span>
+                            <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" 
+                                 class="card-img-top service-image" th:alt="${servicio.nombre}">
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${servicio.nombre}">Nombre del Servicio</h5>
+                                <div class="service-rating mb-2">
+                                    <i class="fas fa-star checked"></i>
+                                    <i class="fas fa-star checked"></i>
+                                    <i class="fas fa-star checked"></i>
+                                    <i class="fas fa-star checked"></i>
+                                    <i class="fas fa-star-half-alt checked"></i>
+                                    <small class="text-muted ms-1">(4.5)</small>
+                                </div>
+                                <p class="card-text text-muted" th:text="${servicio.descripcion}">Descripción del servicio...</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="service-duration">
+                                        <i class="far fa-clock me-1"></i> <span th:text="${servicio.duracion} + ' min'">60 min</span>
+                                    </span>
+                                    <span class="service-price" th:text="'S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">S/. 35.00</span>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar ahora</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de todos los servicios -->
+            <h2 class="mb-4">Todos los servicios</h2>
+            <div class="row g-4" id="contenedorServicios">
+                <div class="col-md-4 mb-4 service-item" th:each="servicio : ${servicios}" 
+                     th:data-categoria="${servicio.categoria != null ? servicio.categoria : 'Todos'}" 
+                     th:data-precio="${servicio.precio}">
+                    <div class="card service-card shadow-sm h-100">
+                        <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" 
+                             class="card-img-top service-image" th:alt="${servicio.nombre}">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${servicio.nombre}">Nombre del Servicio</h5>
+                            <div class="service-rating mb-2">
+                                <i class="fas fa-star checked"></i>
+                                <i class="fas fa-star checked"></i>
+                                <i class="fas fa-star checked"></i>
+                                <i class="fas fa-star checked"></i>
+                                <i class="far fa-star checked"></i>
+                                <small class="text-muted ms-1">(4.0)</small>
+                            </div>
+                            <p class="card-text text-muted" th:text="${servicio.descripcion}">Descripción del servicio...</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="service-duration">
+                                    <i class="far fa-clock me-1"></i> <span th:text="${servicio.duracion} + ' min'">60 min</span>
+                                </span>
+                                <span class="service-price" th:text="'S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">S/. 35.00</span>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar ahora</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mensaje si no hay servicios -->
+                <div class="col-12 text-center" th:if="${#lists.isEmpty(servicios)}">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> No hay servicios disponibles en este momento.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje de no hay resultados (oculto inicialmente) -->
+            <div id="noResultados" class="alert alert-info text-center my-4" style="display: none;">
+                <i class="fas fa-search me-2"></i> No se encontraron servicios que coincidan con tu búsqueda.
+            </div>
+            
+            <!-- Banner CTA -->
+            <div class="bg-light rounded-3 p-5 mt-5 text-center">
+                <h2>¿No encuentras lo que buscas?</h2>
+                <p class="lead">Contáctanos para servicios personalizados o consultas específicas.</p>
+                <a th:href="@{/contacto}" class="btn btn-primary btn-lg mt-3">Contáctanos</a>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Filtro por categoría (pestañas)
+                const categoryTabs = document.querySelectorAll('.category-tabs .nav-link');
+                categoryTabs.forEach(tab => {
+                    tab.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Remover clase activa de todas las pestañas
+                        categoryTabs.forEach(t => t.classList.remove('active'));
+                        
+                        // Añadir clase activa a la pestaña actual
+                        this.classList.add('active');
+                        
+                        // Obtener categoría seleccionada
+                        const categoriaSeleccionada = this.getAttribute('data-categoria');
+                        
+                        // Filtrar servicios
+                        filtrarServicios();
+                    });
+                });
+                
+                // Filtros de categoría y precio
+                document.getElementById('filtroCategoria').addEventListener('change', filtrarServicios);
+                document.getElementById('filtroPrecio').addEventListener('change', filtrarServicios);
+                
+                // Búsqueda de servicios
+                document.getElementById('serviceBuscador').addEventListener('input', filtrarServicios);
+                
+                // Función para filtrar servicios
+                function filtrarServicios() {
+                    const textoBusqueda = document.getElementById('serviceBuscador').value.toLowerCase();
+                    const categoriaSeleccionada = document.querySelector('.category-tabs .nav-link.active').getAttribute('data-categoria');
+                    const categoriaFiltro = document.getElementById('filtroCategoria').value;
+                    const precioFiltro = document.getElementById('filtroPrecio').value;
+                    
+                    const servicios = document.querySelectorAll('.service-item');
+                    let hayResultados = false;
+                    
+                    servicios.forEach(servicio => {
+                        const nombre = servicio.querySelector('.card-title').textContent.toLowerCase();
+                        const descripcion = servicio.querySelector('.card-text').textContent.toLowerCase();
+                        const categoria = servicio.getAttribute('data-categoria');
+                        const precio = parseFloat(servicio.getAttribute('data-precio'));
+                        
+                        // Verificar filtro de texto
+                        const coincideTexto = nombre.includes(textoBusqueda) || descripcion.includes(textoBusqueda);
+                        
+                        // Verificar filtro de categoría por tab
+                        const coincideCategoriaPestaña = categoriaSeleccionada === 'todas' || categoria === categoriaSeleccionada;
+                        
+                        // Verificar filtro de categoría por select
+                        const coincideCategoriaSelect = categoriaFiltro === 'todas' || categoria === categoriaFiltro;
+                        
+                        // Verificar filtro de precio
+                        let coincidePrecio = true;
+                        if (precioFiltro === '0-50') {
+                            coincidePrecio = precio <= 50;
+                        } else if (precioFiltro === '50-100') {
+                            coincidePrecio = precio > 50 && precio <= 100;
+                        } else if (precioFiltro === '100-200') {
+                            coincidePrecio = precio > 100 && precio <= 200;
+                        } else if (precioFiltro === '200+') {
+                            coincidePrecio = precio > 200;
+                        }
+                        
+                        // Mostrar u ocultar servicio
+                        if (coincideTexto && coincideCategoriaPestaña && coincideCategoriaSelect && coincidePrecio) {
+                            servicio.style.display = 'block';
+                            hayResultados = true;
+                        } else {
+                            servicio.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mostrar mensaje si no hay resultados
+                    document.getElementById('noResultados').style.display = hayResultados ? 'none' : 'block';
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>

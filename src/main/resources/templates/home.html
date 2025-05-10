@@ -12,6 +12,7 @@
 </head>
 <body>
     <div th:fragment="contenidoPagina">
+        <!-- Sección Hero -->
         <section class="hero-section">
             <div class="container">
                 <div class="row">
@@ -30,27 +31,28 @@
             </div>
         </section>
 
+        <!-- Sección de Estadísticas -->
         <section class="py-4 bg-white">
             <div class="container">
                 <div class="row text-center">
                     <div class="col-md-3 mb-3 mb-md-0">
                         <div class="p-3">
                             <i class="fas fa-users fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="500">0</h3>
+                            <h3 class="counter-number fw-bold" data-count="500" th:attr="data-count=${totalClientes}">0</h3>
                             <p class="text-muted mb-0">Clientes satisfechos</p>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3 mb-md-0">
                         <div class="p-3">
                             <i class="fas fa-cut fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="30">0</h3>
+                            <h3 class="counter-number fw-bold" data-count="30" th:attr="data-count=${totalServicios}">0</h3>
                             <p class="text-muted mb-0">Servicios disponibles</p>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3 mb-md-0">
                         <div class="p-3">
                             <i class="fas fa-calendar-check fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="1500">0</h3>
+                            <h3 class="counter-number fw-bold" data-count="1500" th:attr="data-count=${totalReservas}">0</h3>
                             <p class="text-muted mb-0">Reservas realizadas</p>
                         </div>
                     </div>
@@ -65,6 +67,7 @@
             </div>
         </section>
 
+        <!-- Sección de Servicios -->
         <section class="services-section">
             <div class="container">
                 <div class="section-title">
@@ -83,37 +86,24 @@
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp">
-                        <div class="service-card" data-category="hair">
-                            <img th:src="@{/images/service-hair-cut.jpg}" alt="Corte de Cabello" class="card-img-top">
+                    <!-- Iteramos sobre los servicios disponibles -->
+                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" 
+                         th:each="servicio, stat : ${servicios}" th:data-delay="${stat.index * 100}">
+                        <div class="service-card" th:data-category="${servicio.categoria != null ? servicio.categoria : 'all'}">
+                            <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" th:alt="${servicio.nombre}" class="card-img-top">
                             <div class="card-body">
-                                <h5 class="card-title">Corte de Cabello</h5>
-                                <p class="card-text">Cortes modernos y personalizados para destacar tu estilo único.</p>
-                                <p class="price">Desde S/. 35.00</p>
+                                <h5 class="card-title" th:text="${servicio.nombre}">Nombre del Servicio</h5>
+                                <p class="card-text" th:text="${servicio.descripcion}">Descripción del servicio</p>
+                                <p class="price" th:text="'Desde S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">Desde S/. 35.00</p>
                                 <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" data-delay="200">
-                        <div class="service-card" data-category="nails">
-                            <img th:src="@{/images/service-manicure.jpg}" alt="Manicure" class="card-img-top">
-                            <div class="card-body">
-                                <h5 class="card-title">Manicure</h5>
-                                <p class="card-text">Cuidado profesional para tus uñas con los mejores productos del mercado.</p>
-                                <p class="price">Desde S/. 40.00</p>
-                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" data-delay="400">
-                        <div class="service-card" data-category="barber">
-                            <img th:src="@{/images/service-beard.jpg}" alt="Arreglo de Barba" class="card-img-top">
-                            <div class="card-body">
-                                <h5 class="card-title">Arreglo de Barba</h5>
-                                <p class="card-text">Perfilado y tratamiento de barba con toalla caliente y productos premium.</p>
-                                <p class="price">Desde S/. 25.00</p>
-                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
-                            </div>
+                    
+                    <!-- Si no hay servicios, mostramos mensaje -->
+                    <div class="col-12 text-center" th:if="${#lists.isEmpty(servicios)}">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No hay servicios disponibles en este momento.
                         </div>
                     </div>
                 </div>
@@ -124,6 +114,7 @@
             </div>
         </section>
 
+        <!-- Sección Cómo Funciona -->
         <section class="howto-section">
             <div class="container">
                 <div class="section-title">
@@ -156,6 +147,135 @@
             </div>
         </section>
 
+        <!-- Sección Profesionales -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <div class="section-title">
+                    <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">Nuestros Profesionales</h2>
+                    <p class="animate-on-scroll" data-animation="animate__fadeInUp">Expertos dedicados a brindarte el mejor servicio</p>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Iteramos sobre los profesionales disponibles -->
+                    <div class="col-md-4 animate-on-scroll" data-animation="animate__fadeInUp"
+                         th:each="profesional, stat : ${profesionales}" th:data-delay="${stat.index * 100}">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <img th:src="${profesional.foto != null ? profesional.foto : '/images/profesional-default.jpg'}" 
+                                 class="card-img-top" th:alt="${profesional.nombre}" style="height: 250px; object-fit: cover;">
+                            <div class="card-body text-center">
+                                <h5 class="card-title" th:text="${profesional.nombre}">Nombre del Profesional</h5>
+                                <p class="card-text text-muted" th:text="${profesional.cargo}">Cargo</p>
+                                <div class="rating mb-2">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                </div>
+                                <a th:href="@{/reservas/nueva}" class="btn btn-outline-primary">Reservar con este profesional</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Si no hay profesionales, mostramos mensaje -->
+                    <div class="col-12 text-center" th:if="${#lists.isEmpty(profesionales)}">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No hay profesionales disponibles en este momento.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Testimonios -->
+        <section class="testimonials-section py-5">
+            <div class="container">
+                <div class="section-title">
+                    <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">Lo que dicen nuestros clientes</h2>
+                    <p class="animate-on-scroll" data-animation="animate__fadeInUp">Experiencias reales de quienes confían en nosotros</p>
+                </div>
+                
+                <!-- Carrusel de testimonios -->
+                <div id="testimonials-carousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <!-- Iteramos sobre los testimonios -->
+                        <div th:each="testimonio, stat : ${testimonios}" 
+                             th:class="${stat.first ? 'carousel-item active' : 'carousel-item'}">
+                            <div class="testimonial-card mx-auto" style="max-width: 700px;">
+                                <div class="testimonial-text mb-4">
+                                    <p th:text="${testimonio.mensaje}">Testimonio del cliente</p>
+                                </div>
+                                <div class="testimonial-author d-flex align-items-center">
+                                    <img th:src="${testimonio.imagenCliente != null ? testimonio.imagenCliente : '/images/avatar-default.jpg'}" 
+                                         class="testimonial-avatar" alt="Avatar">
+                                    <div>
+                                        <h5 class="testimonial-name mb-0" th:text="${testimonio.nombreCliente}">Nombre del Cliente</h5>
+                                        <p class="testimonial-role mb-0" th:text="${testimonio.cargoCliente}">Cargo</p>
+                                        <div class="rating">
+                                            <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                                <i th:class="${i <= testimonio.valoracion ? 'fas fa-star text-warning' : 
+                                                              (i > testimonio.valoracion && i - testimonio.valoracion < 1 ? 
+                                                               'fas fa-star-half-alt text-warning' : 'far fa-star text-warning')}"></i>
+                                            </th:block>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Si no hay testimonios, mostramos uno por defecto -->
+                        <div class="carousel-item" th:if="${#lists.isEmpty(testimonios)}" th:class="${#lists.isEmpty(testimonios) ? 'carousel-item active' : 'carousel-item'}">
+                            <div class="testimonial-card mx-auto" style="max-width: 700px;">
+                                <div class="testimonial-text mb-4">
+                                    <p>¡FELICITA ha revolucionado la forma en que reservo mis citas de belleza! La plataforma es súper fácil de usar y me permite encontrar los mejores profesionales en cualquier momento.</p>
+                                </div>
+                                <div class="testimonial-author d-flex align-items-center">
+                                    <img th:src="@{/images/avatar-default.jpg}" class="testimonial-avatar" alt="Avatar">
+                                    <div>
+                                        <h5 class="testimonial-name mb-0">María García</h5>
+                                        <p class="testimonial-role mb-0">Cliente frecuente</p>
+                                        <div class="rating">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Controles del carrusel -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#testimonials-carousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#testimonials-carousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
+                    
+                    <!-- Indicadores -->
+                    <div class="carousel-indicators">
+                        <th:block th:each="testimonio, stat : ${testimonios}">
+                            <button type="button" data-bs-target="#testimonials-carousel" 
+                                    th:data-bs-slide-to="${stat.index}" 
+                                    th:class="${stat.first ? 'active' : ''}" 
+                                    aria-current="true" th:aria-label="'Slide ' + ${stat.count}"></button>
+                        </th:block>
+                        <!-- Si no hay testimonios, mostramos un indicador por defecto -->
+                        <button type="button" data-bs-target="#testimonials-carousel" 
+                                data-bs-slide-to="0" class="active" 
+                                th:if="${#lists.isEmpty(testimonios)}"
+                                aria-current="true" aria-label="Slide 1"></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección CTA -->
         <section class="cta-section">
             <div class="container">
                 <h2 class="cta-title animate-on-scroll" data-animation="animate__fadeInUp">¿Listo para mejorar tu experiencia?</h2>
@@ -164,6 +284,7 @@
             </div>
         </section>
 
+        <!-- Botón volver arriba -->
         <a id="back-to-top" class="btn btn-primary btn-lg position-fixed bottom-0 end-0 m-4 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px; opacity: 0; visibility: hidden; transition: all 0.3s ease;" href="#" role="button">
             <i class="fas fa-arrow-up"></i>
         </a>

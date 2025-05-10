@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosotros - FELICITA</title>
+
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .timeline {
+                position: relative;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            
+            .timeline::after {
+                content: '';
+                position: absolute;
+                width: 6px;
+                background-color: var(--primary);
+                top: 0;
+                bottom: 0;
+                left: 50%;
+                margin-left: -3px;
+            }
+            
+            .timeline-item {
+                padding: 10px 40px;
+                position: relative;
+                background-color: inherit;
+                width: 50%;
+            }
+            
+            .timeline-item::after {
+                content: '';
+                position: absolute;
+                width: 25px;
+                height: 25px;
+                right: -12px;
+                background-color: white;
+                border: 4px solid var(--primary);
+                top: 15px;
+                border-radius: 50%;
+                z-index: 1;
+            }
+            
+            .left {
+                left: 0;
+            }
+            
+            .right {
+                left: 50%;
+            }
+            
+            .right::after {
+                left: -12px;
+            }
+            
+            .timeline-content {
+                padding: 20px 30px;
+                background-color: white;
+                position: relative;
+                border-radius: 6px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .valor-card {
+                border-radius: 10px;
+                overflow: hidden;
+                transition: transform 0.3s;
+                box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            }
+            
+            .valor-card:hover {
+                transform: translateY(-10px);
+            }
+            
+            .valor-icon {
+                height: 100px;
+                width: 100px;
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background-color: rgba(106, 44, 112, 0.1);
+                color: var(--primary);
+                font-size: 2.5rem;
+            }
+            
+            .team-card {
+                border: none;
+                transition: transform 0.3s;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            .team-card:hover {
+                transform: translateY(-10px);
+            }
+            
+            .team-img {
+                height: 300px;
+                object-fit: cover;
+            }
+            
+            .social-icons a {
+                display: inline-flex;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background-color: rgba(106, 44, 112, 0.1);
+                color: var(--primary);
+                align-items: center;
+                justify-content: center;
+                margin: 0 5px;
+                transition: all 0.3s;
+            }
+            
+            .social-icons a:hover {
+                background-color: var(--primary);
+                color: white;
+            }
+            
+            @media screen and (max-width: 768px) {
+                .timeline::after {
+                    left: 31px;
+                }
+                
+                .timeline-item {
+                    width: 100%;
+                    padding-left: 70px;
+                    padding-right: 25px;
+                }
+                
+                .timeline-item::after {
+                    left: 18px;
+                    right: auto;
+                }
+                
+                .left {
+                    left: 0;
+                }
+                
+                .right {
+                    left: 0;
+                }
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Banner de título -->
+        <div class="bg-primary text-white py-5">
+            <div class="container">
+                <h1 class="display-4">Acerca de Nosotros</h1>
+                <p class="lead">Conoce nuestra historia, valores y equipo</p>
+            </div>
+        </div>
+
+        <div class="container py-5">
+            <!-- Sección de historia -->
+            <section class="mb-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <h2 class="mb-4">Nuestra historia</h2>
+                        <p class="mb-4" th:text="${historia}">FELICITA nació con la visión de transformar la forma en que las personas acceden a servicios de belleza...</p>
+                        <p class="mb-4">Desde <strong th:text="${anioFundacion}">2022</strong>, nos hemos dedicado a crear un sistema que conecta a los mejores profesionales de belleza con clientes que buscan calidad y excelencia en cada servicio.</p>
+                        <p>Hoy, FELICITA se ha convertido en la plataforma preferida para reservas en salones de belleza y barberías, simplificando el proceso tanto para clientes como para negocios.</p>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="/images/historia.jpg" alt="Historia de FELICITA" class="img-fluid rounded shadow-sm">
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Línea de tiempo -->
+            <section class="mb-5 py-5">
+                <h2 class="text-center mb-5">Nuestra evolución</h2>
+                
+                <div class="timeline">
+                    <div class="timeline-item left">
+                        <div class="timeline-content">
+                            <h4>2022</h4>
+                            <p>Nacimiento de FELICITA como una idea innovadora para transformar la industria de la belleza.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item right">
+                        <div class="timeline-content">
+                            <h4>2023</h4>
+                            <p>Lanzamiento de la primera versión de nuestra plataforma con funcionalidades básicas de reserva.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item left">
+                        <div class="timeline-content">
+                            <h4>2024</h4>
+                            <p>Expansión a más de 50 salones en todo el país y mejora de características de la aplicación.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item right">
+                        <div class="timeline-content">
+                            <h4>2025</h4>
+                            <p>Consolidación como líder en el mercado de reservas para salones de belleza y barberías.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Sección de valores -->
+            <section class="mb-5 py-3">
+                <h2 class="text-center mb-5">Nuestros valores</h2>
+                
+                <div class="row g-4">
+                    <div class="col-md-3" th:each="valor, stat : ${valores}">
+                        <div class="valor-card h-100 p-4 text-center">
+                            <div class="valor-icon mb-4">
+                                <i th:class="${stat.index == 0 ? 'fas fa-award' : 
+                                              (stat.index == 1 ? 'fas fa-lightbulb' : 
+                                              (stat.index == 2 ? 'fas fa-handshake' : 'fas fa-balance-scale'))}"></i>
+                            </div>
+                            <h4 class="mb-3" th:text="${valor}">Valor</h4>
+                            <p class="text-muted">
+                                <span th:if="${stat.index == 0}">Nos esforzamos por ofrecer el más alto nivel de servicio en cada interacción.</span>
+                                <span th:if="${stat.index == 1}">Constantemente buscamos nuevas formas de mejorar la experiencia de nuestros usuarios.</span>
+                                <span th:if="${stat.index == 2}">Nos comprometemos con la satisfacción de nuestros clientes y colaboradores.</span>
+                                <span th:if="${stat.index == 3}">Actuamos con honestidad y transparencia en todas nuestras operaciones.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Sección de equipo -->
+            <section class="mb-5">
+                <h2 class="text-center mb-5">Nuestro equipo directivo</h2>
+                
+                <div class="row g-4">
+                    <div class="col-md-4" th:each="miembro : ${equipoDirectivo}">
+                        <div class="card team-card shadow-sm h-100">
+                            <img th:src="${miembro.foto != null ? miembro.foto : '/images/profesional-default.jpg'}" 
+                                 class="card-img-top team-img" th:alt="${miembro.nombre}">
+                            <div class="card-body text-center">
+                                <h5 class="card-title mb-1" th:text="${miembro.nombre}">Nombre del Directivo</h5>
+                                <p class="text-muted mb-3" th:text="${miembro.cargo}">Cargo</p>
+                                <div class="social-icons">
+                                    <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                                    <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                                    <a href="#" title="Email"><i class="fas fa-envelope"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Si no hay equipo directivo, mostrar mensaje -->
+                    <div class="col-12 text-center" th:if="${#lists.isEmpty(equipoDirectivo)}">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Información del equipo directivo no disponible.
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Banner CTA -->
+            <div class="bg-primary text-white rounded-3 p-5 mt-5 text-center">
+                <h2>¿Quieres unirte a nuestro equipo?</h2>
+                <p class="lead">Estamos en constante búsqueda de talento para seguir creciendo</p>
+                <a th:href="@{/contacto}" class="btn btn-light btn-lg mt-3">Contáctanos</a>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Animación al hacer scroll
+                const observerOptions = {
+                    threshold: 0.1
+                };
+                
+                const observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, observerOptions);
+                
+                // Observar elementos a animar
+                document.querySelectorAll('.timeline-item, .valor-card, .team-card').forEach(el => {
+                    observer.observe(el);
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

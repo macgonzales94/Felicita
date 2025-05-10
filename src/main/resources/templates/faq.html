@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntas Frecuentes - FELICITA</title>
+
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .faq-accordion .accordion-button:not(.collapsed) {
+                background-color: rgba(106, 44, 112, 0.1);
+                color: var(--primary);
+                box-shadow: none;
+            }
+            
+            .faq-accordion .accordion-button:focus {
+                box-shadow: none;
+                border-color: rgba(106, 44, 112, 0.25);
+            }
+            
+            .faq-accordion .accordion-button::after {
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236A2C70'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+            }
+            
+            .faq-card {
+                transition: transform 0.3s, box-shadow 0.3s;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            .faq-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            }
+            
+            .faq-icon {
+                font-size: 2rem;
+                color: var(--primary);
+                background-color: rgba(106, 44, 112, 0.1);
+                width: 70px;
+                height: 70px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                margin: 0 auto 1rem;
+            }
+            
+            .search-container {
+                position: relative;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .search-container .form-control {
+                padding-left: 3rem;
+                border-radius: 50px;
+                height: 54px;
+            }
+            
+            .search-icon {
+                position: absolute;
+                left: 1.25rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #adb5bd;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Banner de título -->
+        <div class="bg-primary text-white py-5">
+            <div class="container">
+                <h1 class="display-4">Preguntas Frecuentes</h1>
+                <p class="lead">Encuentra respuestas a las dudas más comunes</p>
+                
+                <!-- Búsqueda -->
+                <div class="search-container mt-4">
+                    <input type="text" id="faqSearch" class="form-control form-control-lg" placeholder="Buscar en preguntas frecuentes...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="container py-5">
+            <!-- Categorías de preguntas frecuentes -->
+            <div class="row mb-5">
+                <div class="col-md-4 mb-4">
+                    <div class="card faq-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="faq-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h4 class="card-title">Reservas</h4>
+                            <p class="card-text text-muted">Todo lo que necesitas saber sobre cómo hacer, modificar o cancelar reservas.</p>
+                            <a href="#reservas" class="btn btn-outline-primary">Ver preguntas</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card faq-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="faq-icon">
+                                <i class="fas fa-user-alt"></i>
+                            </div>
+                            <h4 class="card-title">Cuenta</h4>
+                            <p class="card-text text-muted">Información sobre registro, inicio de sesión y gestión de tu perfil.</p>
+                            <a href="#cuenta" class="btn btn-outline-primary">Ver preguntas</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card faq-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="faq-icon">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <h4 class="card-title">Pagos</h4>
+                            <p class="card-text text-muted">Respuestas sobre métodos de pago, facturas y política de cancelaciones.</p>
+                            <a href="#pagos" class="btn btn-outline-primary">Ver preguntas</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Acordeón de preguntas frecuentes -->
+            <div class="accordion faq-accordion" id="faqAccordion">
+                <!-- Sección Reservas -->
+                <h3 id="reservas" class="mb-4">Reservas</h3>
+                <div class="accordion-item mb-3 border">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                            ¿Cómo puedo cancelar mi reserva?
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Puedes cancelar tu reserva hasta 24 horas antes sin penalidad desde tu perfil en 'Mis Reservas'. Selecciona la reserva que deseas cancelar y haz clic en el botón 'Cancelar'. Recibirás un correo electrónico confirmando la cancelación.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3 border">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            ¿Qué pasa si llego tarde a mi cita?
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Te recomendamos llegar 5-10 minutos antes. Si llegas hasta 15 minutos tarde, podemos atenderte pero con tiempo reducido. Si llegas más de 15 minutos tarde, el salón puede considerar la cita como perdida y reasignarla a otro cliente.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección Cuenta -->
+                <h3 id="cuenta" class="mb-4 mt-5">Cuenta</h3>
+                <div class="accordion-item mb-3 border">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            ¿Cómo puedo cambiar mi contraseña?
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Para cambiar tu contraseña, ve a tu perfil haciendo clic en tu nombre en la esquina superior derecha. Selecciona "Ajustes de cuenta" y luego "Cambiar contraseña". Recibirás un enlace en tu correo electrónico para crear una nueva contraseña.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3 border">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            ¿Cómo actualizo mi información de contacto?
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Puedes actualizar tu información de contacto desde tu perfil. Haz clic en tu nombre en la esquina superior derecha, selecciona "Ajustes de cuenta" y luego "Información personal". Allí podrás actualizar tu teléfono, correo electrónico y otros datos.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección Pagos -->
+                <h3 id="pagos" class="mb-4 mt-5">Pagos</h3>
+                <div class="accordion-item mb-3 border">
+                    <h2 class="accordion-header" id="headingFive">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                            ¿Cómo puedo pagar mis servicios?
+                        </button>
+                    </h2>
+                    <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Aceptamos pagos en efectivo, tarjetas de crédito/débito y transferencias bancarias. Al realizar tu reserva puedes seleccionar tu método de pago preferido. Para servicios premium, podemos solicitar un adelanto para confirmar la reserva.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3 border">
+                    <h2 class="accordion-header" id="headingSix">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                            ¿Puedo solicitar factura por mis servicios?
+                        </button>
+                    </h2>
+                    <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Sí, puedes solicitar factura por tus servicios. Solo debes indicarlo al momento de realizar tu reserva o al llegar al salón. Necesitarás proporcionar tus datos fiscales para la emisión de la factura.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preguntas dinámicas del controlador -->
+                <div class="mt-5" th:if="${!#lists.isEmpty(preguntasFrecuentes)}">
+                    <h3 class="mb-4">Otras preguntas</h3>
+                    
+                    <div class="accordion-item mb-3 border" th:each="item, stat : ${preguntasFrecuentes}">
+                        <h2 class="accordion-header" th:id="'headingExtra' + ${stat.index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    th:data-bs-target="'#collapseExtra' + ${stat.index}" aria-expanded="false" 
+                                    th:aria-controls="'collapseExtra' + ${stat.index}" th:text="${item.pregunta}">
+                                Pregunta dinámica
+                            </button>
+                        </h2>
+                        <div th:id="'collapseExtra' + ${stat.index}" class="accordion-collapse collapse" 
+                             th:aria-labelledby="'headingExtra' + ${stat.index}" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body" th:text="${item.respuesta}">
+                                Respuesta dinámica
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección no encuentras tu pregunta -->
+            <div class="bg-light rounded-3 p-5 mt-5 text-center">
+                <h2>¿No encuentras lo que buscas?</h2>
+                <p class="lead">Contáctanos directamente y te responderemos a la brevedad</p>
+                <a th:href="@{/contacto}" class="btn btn-primary btn-lg mt-3">Contáctanos</a>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Búsqueda en preguntas frecuentes
+                const searchInput = document.getElementById('faqSearch');
+                const accordionItems = document.querySelectorAll('.accordion-item');
+                
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchText = this.value.toLowerCase();
+                        
+                        // Si está vacío, mostrar todo
+                        if (searchText.trim() === '') {
+                            accordionItems.forEach(item => {
+                                item.style.display = 'block';
+                            });
+                            
+                            // Mostrar todas las secciones
+                            document.querySelectorAll('h3[id]').forEach(header => {
+                                header.style.display = 'block';
+                            });
+                            
+                            return;
+                        }
+                        
+                        // Ocultar encabezados de sección inicialmente
+                        document.querySelectorAll('h3[id]').forEach(header => {
+                            header.style.display = 'none';
+                        });
+                        
+                        // Filtrar elementos del acordeón
+                        let resultFound = false;
+                        
+                        accordionItems.forEach(item => {
+                            const question = item.querySelector('.accordion-button').textContent.toLowerCase();
+                            const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+                            
+                            if (question.includes(searchText) || answer.includes(searchText)) {
+                                item.style.display = 'block';
+                                resultFound = true;
+                                
+                                // Destacar el texto coincidente (opcional)
+                                // Esto requeriría más trabajo para implementar correctamente
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+                
+                // Comportamiento de anclas suaves
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const targetId = this.getAttribute('href');
+                        
+                        if (targetId === '#') return;
+                        
+                        const targetElement = document.querySelector(targetId);
+                        if (targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 100,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

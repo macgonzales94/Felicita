@@ -65,10 +65,41 @@ public class Servicio {
     private boolean activo = true;
     
     /**
+     * Categoría a la que pertenece el servicio
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_categoria")
+    private Categoria categoria;
+    
+    /**
+     * Indica si el servicio es destacado para mostrarlo en página principal
+     */
+    @Column(name = "destacado")
+    private boolean destacado = false;
+    
+    /**
+     * Calificación promedio del servicio (1-5 estrellas)
+     */
+    @Column(name = "calificacion")
+    private Float calificacion;
+    
+    /**
+     * Número de calificaciones recibidas
+     */
+    @Column(name = "num_calificaciones")
+    private Integer numCalificaciones = 0;
+    
+    /**
      * Lista de reservas que incluyen este servicio
      */
     @OneToMany(mappedBy = "servicio")
     private List<ServicioReserva> serviciosReservas = new ArrayList<>();
+    
+    /**
+     * Lista de testimonios del servicio
+     */
+    @OneToMany(mappedBy = "servicio")
+    private List<Testimonio> testimonios = new ArrayList<>();
 
     /**
      * Constructor por defecto
@@ -149,5 +180,64 @@ public class Servicio {
 
     public void setServiciosReservas(List<ServicioReserva> serviciosReservas) {
         this.serviciosReservas = serviciosReservas;
+    }
+    
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
+
+    public boolean isDestacado() {
+        return destacado;
+    }
+
+    public void setDestacado(boolean destacado) {
+        this.destacado = destacado;
+    }
+
+    public Float getCalificacion() {
+        return calificacion;
+    }
+
+    public void setCalificacion(Float calificacion) {
+        this.calificacion = calificacion;
+    }
+
+    public Integer getNumCalificaciones() {
+        return numCalificaciones;
+    }
+
+    public void setNumCalificaciones(Integer numCalificaciones) {
+        this.numCalificaciones = numCalificaciones;
+    }
+    
+    public List<Testimonio> getTestimonios() {
+        return testimonios;
+    }
+
+    public void setTestimonios(List<Testimonio> testimonios) {
+        this.testimonios = testimonios;
+    }
+    
+    /**
+     * Añade una nueva calificación al servicio y actualiza la calificación promedio
+     * @param nuevaCalificacion Valor de la nueva calificación (1-5)
+     */
+    public void agregarCalificacion(int nuevaCalificacion) {
+        if (nuevaCalificacion < 1 || nuevaCalificacion > 5) {
+            throw new IllegalArgumentException("La calificación debe estar entre 1 y 5");
+        }
+        
+        if (this.calificacion == null) {
+            this.calificacion = (float) nuevaCalificacion;
+            this.numCalificaciones = 1;
+        } else {
+            float totalActual = this.calificacion * this.numCalificaciones;
+            this.numCalificaciones++;
+            this.calificacion = (totalActual + nuevaCalificacion) / this.numCalificaciones;
+        }
     }
 }

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <!-- Cambios iniciales para la estructura de la base de datos -->
+    <changeSet id="1" author="felicita-dev">
+        <comment>Creación de tabla usuarios</comment>
+        <createTable tableName="usuarios">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre_usuario" type="VARCHAR(20)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="correo" type="VARCHAR(50)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="contraseña" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nombre_completo" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="telefono" type="VARCHAR(20)"/>
+            <column name="rol" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_creacion" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="felicita-dev">
+        <comment>Creación de tabla categorias</comment>
+        <createTable tableName="categorias">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="descripcion" type="VARCHAR(255)"/>
+            <column name="icono" type="VARCHAR(50)"/>
+            <column name="orden" type="INT"/>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="felicita-dev">
+        <comment>Creación de tabla servicios</comment>
+        <createTable tableName="servicios">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="descripcion" type="TEXT"/>
+            <column name="precio" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duracion" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="imagen" type="VARCHAR(255)"/>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="id_categoria" type="BIGINT">
+                <constraints foreignKeyName="fk_servicio_categoria" references="categorias(id)"/>
+            </column>
+            <column name="destacado" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calificacion" type="FLOAT"/>
+            <column name="num_calificaciones" type="INT" defaultValue="0"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="felicita-dev">
+        <comment>Creación de tabla empleados</comment>
+        <createTable tableName="empleados">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cargo" type="VARCHAR(50)"/>
+            <column name="foto" type="VARCHAR(255)"/>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="felicita-dev">
+        <comment>Creación de tabla disponibilidades</comment>
+        <createTable tableName="disponibilidades">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id_empleado" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_disponibilidad_empleado" references="empleados(id)"/>
+            </column>
+            <column name="dia" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hora_inicio" type="TIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hora_fin" type="TIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="disponible" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="6" author="felicita-dev">
+        <comment>Creación de tabla reservas</comment>
+        <createTable tableName="reservas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id_usuario" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_reserva_usuario" references="usuarios(id)"/>
+            </column>
+            <column name="id_empleado" type="BIGINT">
+                <constraints foreignKeyName="fk_reserva_empleado" references="empleados(id)"/>
+            </column>
+            <column name="hora_inicio" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hora_fin" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="estado" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notas" type="TEXT"/>
+            <column name="fecha_creacion" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7" author="felicita-dev">
+        <comment>Creación de tabla servicios_reservas</comment>
+        <createTable tableName="servicios_reservas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id_reserva" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_sr_reserva" references="reservas(id)"/>
+            </column>
+            <column name="id_servicio" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_sr_servicio" references="servicios(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="8" author="felicita-dev">
+        <comment>Creación de tabla testimonios</comment>
+        <createTable tableName="testimonios">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre_cliente" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="id_usuario" type="BIGINT">
+                <constraints foreignKeyName="fk_testimonio_usuario" references="usuarios(id)"/>
+            </column>
+            <column name="mensaje" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valoracion" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="id_servicio" type="BIGINT">
+                <constraints foreignKeyName="fk_testimonio_servicio" references="servicios(id)"/>
+            </column>
+            <column name="cargo_cliente" type="VARCHAR(100)"/>
+            <column name="imagen_cliente" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    
+    <!-- Inserción de datos iniciales -->
+    <changeSet id="9" author="felicita-dev">
+        <comment>Inserción de datos iniciales</comment>
+        <sqlFile path="classpath:db/migration/import-test-data.sql"/>
+    </changeSet>
+
+</databaseChangeLog>

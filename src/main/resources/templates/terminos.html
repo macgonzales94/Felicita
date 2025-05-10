@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones - FELICITA</title>
+
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .legal-section {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            .legal-section h2 {
+                color: var(--primary);
+                margin-top: 2rem;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid rgba(106, 44, 112, 0.2);
+            }
+            
+            .legal-section h3 {
+                color: var(--primary);
+                margin-top: 1.5rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .legal-section p, .legal-section ul {
+                margin-bottom: 1rem;
+                color: #444;
+            }
+            
+            .legal-section ul li {
+                margin-bottom: 0.5rem;
+            }
+            
+            .table-of-contents {
+                background-color: #f8f9fa;
+                border-radius: 10px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+            }
+            
+            .table-of-contents h3 {
+                color: var(--primary);
+                border-bottom: 1px solid rgba(106, 44, 112, 0.2);
+                padding-bottom: 0.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            .table-of-contents ul {
+                list-style-type: none;
+                padding-left: 0;
+            }
+            
+            .table-of-contents ul li {
+                margin-bottom: 0.75rem;
+            }
+            
+            .table-of-contents a {
+                color: var(--primary);
+                text-decoration: none;
+            }
+            
+            .table-of-contents a:hover {
+                text-decoration: underline;
+            }
+            
+            .last-updated {
+                font-style: italic;
+                color: #6c757d;
+                margin-top: 2rem;
+                text-align: right;
+                font-size: 0.9rem;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Banner de título -->
+        <div class="bg-primary text-white py-5">
+            <div class="container">
+                <h1 class="display-4">Términos y Condiciones</h1>
+                <p class="lead">Condiciones de uso del servicio FELICITA</p>
+            </div>
+        </div>
+
+        <div class="container py-5">
+            <div class="legal-section">
+                <!-- Tabla de contenidos -->
+                <div class="table-of-contents">
+                    <h3>Contenido</h3>
+                    <ul>
+                        <li><a href="#introduccion">1. Introducción</a></li>
+                        <li><a href="#definiciones">2. Definiciones</a></li>
+                        <li><a href="#cuenta">3. Cuenta de Usuario</a></li>
+                        <li><a href="#reservas">4. Reservas</a></li>
+                        <li><a href="#pagos">5. Pagos y Cancelaciones</a></li>
+                        <li><a href="#propiedad">6. Propiedad Intelectual</a></li>
+                        <li><a href="#limitaciones">7. Limitaciones de Responsabilidad</a></li>
+                        <li><a href="#modificaciones">8. Modificaciones a los Términos</a></li>
+                        <li><a href="#ley">9. Ley Aplicable</a></li>
+                        <li><a href="#contacto">10. Contacto</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contenido de los términos -->
+                <section id="introduccion">
+                    <h2>1. Introducción</h2>
+                    <p>Bienvenido a FELICITA, un sistema de reservas para salones de belleza y barberías. El acceso y uso de la plataforma está sujeto a la aceptación y cumplimiento de los Términos y Condiciones que se describen a continuación, así como a todas las leyes aplicables.</p>
+                    <p>Al acceder o utilizar nuestros servicios, usted acepta estar legalmente vinculado por estos Términos. Si no está de acuerdo con alguno de estos términos, no debe utilizar nuestros servicios.</p>
+                </section>
+
+                <section id="definiciones">
+                    <h2>2. Definiciones</h2>
+                    <p>En estos Términos y Condiciones:</p>
+                    <ul>
+                        <li><strong>FELICITA</strong>: Se refiere a la plataforma de reservas operada por FELICITA S.A.C.</li>
+                        <li><strong>Usuario</strong>: Persona natural o jurídica que se registra y utiliza la plataforma.</li>
+                        <li><strong>Establecimientos</strong>: Salones de belleza, barberías y otros negocios afiliados que ofrecen sus servicios a través de FELICITA.</li>
+                        <li><strong>Reserva</strong>: Solicitud realizada por un Usuario para agendar un servicio en una fecha y hora específica.</li>
+                        <li><strong>Servicios</strong>: Prestaciones ofrecidas por los Establecimientos a través de FELICITA.</li>
+                    </ul>
+                </section>
+
+                <section id="cuenta">
+                    <h2>3. Cuenta de Usuario</h2>
+                    <h3>3.1. Registro</h3>
+                    <p>Para utilizar ciertas funciones de FELICITA, deberá registrarse y crear una cuenta. Al hacerlo, usted se compromete a proporcionar información precisa, actualizada y completa.</p>
+                    
+                    <h3>3.2. Seguridad de la Cuenta</h3>
+                    <p>Es responsabilidad del Usuario mantener la confidencialidad de sus credenciales de acceso y todas las actividades realizadas bajo su cuenta. El Usuario deberá notificar inmediatamente a FELICITA si sospecha de cualquier uso no autorizado o brecha de seguridad.</p>
+                    
+                    <h3>3.3. Restricciones</h3>
+                    <p>El Usuario se compromete a no:</p>
+                    <ul>
+                        <li>Proporcionar información falsa o engañosa</li>
+                        <li>Crear varias cuentas para el mismo Usuario</li>
+                        <li>Acceder a la cuenta de otro Usuario sin autorización</li>
+                        <li>Utilizar la plataforma con fines ilegales o no autorizados</li>
+                    </ul>
+                </section>
+
+                <section id="reservas">
+                    <h2>4. Reservas</h2>
+                    <h3>4.1. Proceso de Reserva</h3>
+                    <p>El Usuario puede realizar reservas seleccionando los servicios, fecha, hora y profesional disponibles. FELICITA confirmará la reserva a través de correo electrónico o notificación en la plataforma.</p>
+                    
+                    <h3>4.2. Modificaciones</h3>
+                    <p>Las reservas pueden ser modificadas hasta 24 horas antes de la hora programada, sujeto a disponibilidad y a políticas específicas del Establecimiento.</p>
+                    
+                    <h3>4.3. Puntualidad</h3>
+                    <p>Se recomienda al Usuario llegar al menos 5-10 minutos antes de la hora programada. Un retraso superior a 15 minutos puede resultar en la cancelación de la reserva sin derecho a reembolso.</p>
+                </section>
+
+                <section id="pagos">
+                    <h2>5. Pagos y Cancelaciones</h2>
+                    <h3>5.1. Tarifas</h3>
+                    <p>Los precios de los servicios se muestran en la plataforma y pueden estar sujetos a cambios. El Usuario acepta pagar por todos los servicios reservados según las tarifas vigentes al momento de la reserva.</p>
+                    
+                    <h3>5.2. Métodos de Pago</h3>
+                    <p>FELICITA acepta diversos métodos de pago, incluyendo tarjetas de crédito/débito, transferencias bancarias y efectivo en el establecimiento.</p>
+                    
+                    <h3>5.3. Política de Cancelación</h3>
+                    <p>Las cancelaciones realizadas con más de 24 horas de anticipación no tendrán penalidad. Las cancelaciones con menos de 24 horas pueden estar sujetas a un cargo de cancelación equivalente al 50% del valor del servicio reservado.</p>
+                    
+                    <h3>5.4. No Presentación</h3>
+                    <p>Si el Usuario no se presenta a su cita sin cancelar previamente, se considerará "No presentación" y podrá aplicarse un cargo equivalente al 100% del valor del servicio reservado.</p>
+                </section>
+
+                <section id="propiedad">
+                    <h2>6. Propiedad Intelectual</h2>
+                    <p>Todos los derechos de propiedad intelectual relacionados con FELICITA, incluyendo pero no limitado a derechos de autor, marcas comerciales, nombres de dominio, diseños, bases de datos, código fuente y contenido, son propiedad exclusiva de FELICITA S.A.C. o sus licenciantes.</p>
+                    <p>El Usuario no puede copiar, modificar, distribuir, vender, alquilar o realizar trabajos derivados basados en el contenido de la plataforma sin autorización previa por escrito.</p>
+                </section>
+
+                <section id="limitaciones">
+                    <h2>7. Limitaciones de Responsabilidad</h2>
+                    <p>FELICITA actúa como intermediario entre Usuarios y Establecimientos, y no es responsable por:</p>
+                    <ul>
+                        <li>La calidad de los servicios prestados por los Establecimientos</li>
+                        <li>Errores, interrupciones o indisponibilidad temporal de la plataforma</li>
+                        <li>Daños directos, indirectos, incidentales o consecuentes que puedan surgir del uso de la plataforma</li>
+                        <li>Contenido generado por los usuarios o los Establecimientos</li>
+                    </ul>
+                    <p>En la medida máxima permitida por la ley, la responsabilidad total de FELICITA está limitada al monto pagado por el Usuario por los servicios en cuestión.</p>
+                </section>
+
+                <section id="modificaciones">
+                    <h2>8. Modificaciones a los Términos</h2>
+                    <p>FELICITA se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. Las modificaciones entrarán en vigor inmediatamente después de su publicación en la plataforma.</p>
+                    <p>Es responsabilidad del Usuario revisar periódicamente estos Términos. El uso continuado de la plataforma después de cualquier modificación constituye la aceptación de los nuevos Términos.</p>
+                </section>
+
+                <section id="ley">
+                    <h2>9. Ley Aplicable</h2>
+                    <p>Estos Términos y Condiciones se rigen por las leyes de la República del Perú. Cualquier disputa relacionada con estos Términos será resuelta por los tribunales competentes de Lima, Perú.</p>
+                </section>
+
+                <section id="contacto">
+                    <h2>10. Contacto</h2>
+                    <p>Para cualquier consulta relacionada con estos Términos y Condiciones, puede contactarnos a través de:</p>
+                    <ul>
+                        <li>Correo electrónico: legal@felicita.pe</li>
+                        <li>Teléfono: +51 987 654 321</li>
+                        <li>Dirección: Av. Arequipa 1234, Lima, Perú</li>
+                    </ul>
+                </section>
+
+                <p class="last-updated">Última actualización: 10 de mayo, 2025</p>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Comportamiento de anclas suaves
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const targetId = this.getAttribute('href');
+                        
+                        if (targetId === '#') return;
+                        
+                        const targetElement = document.querySelector(targetId);
+                        if (targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 100,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

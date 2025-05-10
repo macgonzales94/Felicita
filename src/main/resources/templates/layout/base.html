@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:replace="~{:: title}">FELICITA</title>
+    <title th:include=":: title">FELICITA</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
@@ -21,7 +21,7 @@
     <link th:href="@{/css/estilos.css}" rel="stylesheet">
     
     <!-- Estilos adicionales específicos -->
-    <th:block th:replace="~{:: estilosAdicionales}"></th:block>
+    <th:block th:include=":: estilosAdicionales"></th:block>
 </head>
 <body>
     <!-- Cabecera -->
@@ -29,7 +29,7 @@
     
     <!-- Contenido de la Página -->
     <main>
-        <div th:replace="~{:: contenidoPagina}"></div>
+        <div th:include=":: contenidoPagina"></div>
     </main>
     
     <!-- Pie de Página -->
@@ -43,6 +43,6 @@
     <script th:src="@{/js/main.js}"></script>
     
     <!-- Scripts adicionales específicos -->
-    <th:block th:replace="~{:: scriptsAdicionales}"></th:block>
+    <th:block th:include=":: scriptsAdicionales"></th:block>
 </body>
 </html>
