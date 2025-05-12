@@ -16,7 +16,7 @@
         <section class="hero-section">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-8 hero-content animate__animated animate__fadeIn">
+                    <div class="col-lg-8 hero-content">
                         <h1 class="hero-title">Transforma tu experiencia de belleza</h1>
                         <p class="hero-subtitle">
                             Reserva tu cita en salones de belleza y barberías 
@@ -32,35 +32,35 @@
         </section>
 
         <!-- Sección de Estadísticas -->
-        <section class="py-4 bg-white">
+        <section class="stats-section py-4">
             <div class="container">
                 <div class="row text-center">
                     <div class="col-md-3 mb-3 mb-md-0">
-                        <div class="p-3">
-                            <i class="fas fa-users fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="500" th:attr="data-count=${totalClientes}">0</h3>
-                            <p class="text-muted mb-0">Clientes satisfechos</p>
+                        <div class="stats-item">
+                            <i class="fas fa-users stats-icon"></i>
+                            <h3 class="counter-number" data-count="500" th:attr="data-count=${totalClientes}">0</h3>
+                            <p class="stats-label mb-0">Clientes satisfechos</p>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3 mb-md-0">
-                        <div class="p-3">
-                            <i class="fas fa-cut fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="30" th:attr="data-count=${totalServicios}">0</h3>
-                            <p class="text-muted mb-0">Servicios disponibles</p>
+                        <div class="stats-item">
+                            <i class="fas fa-cut stats-icon"></i>
+                            <h3 class="counter-number" data-count="30" th:attr="data-count=${totalServicios}">0</h3>
+                            <p class="stats-label mb-0">Servicios disponibles</p>
                         </div>
                     </div>
                     <div class="col-md-3 mb-3 mb-md-0">
-                        <div class="p-3">
-                            <i class="fas fa-calendar-check fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="1500" th:attr="data-count=${totalReservas}">0</h3>
-                            <p class="text-muted mb-0">Reservas realizadas</p>
+                        <div class="stats-item">
+                            <i class="fas fa-calendar-check stats-icon"></i>
+                            <h3 class="counter-number" data-count="1500" th:attr="data-count=${totalReservas}">0</h3>
+                            <p class="stats-label mb-0">Reservas realizadas</p>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="p-3">
-                            <i class="fas fa-star fa-2x mb-2 text-secondary"></i>
-                            <h3 class="counter-number fw-bold" data-count="5">0</h3>
-                            <p class="text-muted mb-0">Estrellas de calidad</p>
+                        <div class="stats-item">
+                            <i class="fas fa-star stats-icon"></i>
+                            <h3 class="counter-number" data-count="5">0</h3>
+                            <p class="stats-label mb-0">Estrellas de calidad</p>
                         </div>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
                     <p class="animate-on-scroll" data-animation="animate__fadeInUp">Descubre los mejores servicios en salones de belleza y barberías</p>
                 </div>
 
-                <div class="mb-4 text-center">
+                <div class="mb-4 text-center service-filter">
                     <select id="service-filter" class="form-select form-select-sm d-inline-block w-auto">
                         <option value="all">Todos los servicios</option>
                         <option value="hair">Cabello</option>
@@ -85,17 +85,28 @@
                     </select>
                 </div>
 
-                <div class="row g-4">
+                <div class="row g-4" id="servicios-container">
                     <!-- Iteramos sobre los servicios disponibles -->
                     <div class="col-md-4 service-item animate-on-scroll" data-animation="animate__fadeInUp" 
                          th:each="servicio, stat : ${servicios}" th:data-delay="${stat.index * 100}">
                         <div class="service-card" th:data-category="${servicio.categoria != null ? servicio.categoria : 'all'}">
-                            <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" th:alt="${servicio.nombre}" class="card-img-top">
+                            <span class="popular-badge" th:if="${servicio.destacado}">
+                                <i class="fas fa-star me-1"></i> Popular
+                            </span>
+                            <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" 
+                                 class="card-img-top" th:alt="${servicio.nombre}">
                             <div class="card-body">
                                 <h5 class="card-title" th:text="${servicio.nombre}">Nombre del Servicio</h5>
                                 <p class="card-text" th:text="${servicio.descripcion}">Descripción del servicio</p>
-                                <p class="price" th:text="'Desde S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">Desde S/. 35.00</p>
-                                <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="service-duration">
+                                        <i class="far fa-clock me-1"></i> <span th:text="${servicio.duracion} + ' min'">30 min</span>
+                                    </span>
+                                    <span class="price" th:text="'S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">S/. 35.00</span>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -148,7 +159,7 @@
         </section>
 
         <!-- Sección Profesionales -->
-        <section class="py-5 bg-light">
+        <section class="professionals-section py-5">
             <div class="container">
                 <div class="section-title">
                     <h2 class="animate-on-scroll" data-animation="animate__fadeInUp">Nuestros Profesionales</h2>
@@ -159,13 +170,13 @@
                     <!-- Iteramos sobre los profesionales disponibles -->
                     <div class="col-md-4 animate-on-scroll" data-animation="animate__fadeInUp"
                          th:each="profesional, stat : ${profesionales}" th:data-delay="${stat.index * 100}">
-                        <div class="card h-100 border-0 shadow-sm">
+                        <div class="professional-card card h-100">
                             <img th:src="${profesional.foto != null ? profesional.foto : '/images/profesional-default.jpg'}" 
-                                 class="card-img-top" th:alt="${profesional.nombre}" style="height: 250px; object-fit: cover;">
+                                 class="card-img-top" th:alt="${profesional.nombre}">
                             <div class="card-body text-center">
                                 <h5 class="card-title" th:text="${profesional.nombre}">Nombre del Profesional</h5>
-                                <p class="card-text text-muted" th:text="${profesional.cargo}">Cargo</p>
-                                <div class="rating mb-2">
+                                <p class="card-text" th:text="${profesional.cargo}">Cargo</p>
+                                <div class="rating mb-3">
                                     <i class="fas fa-star text-warning"></i>
                                     <i class="fas fa-star text-warning"></i>
                                     <i class="fas fa-star text-warning"></i>
@@ -201,16 +212,16 @@
                         <!-- Iteramos sobre los testimonios -->
                         <div th:each="testimonio, stat : ${testimonios}" 
                              th:class="${stat.first ? 'carousel-item active' : 'carousel-item'}">
-                            <div class="testimonial-card mx-auto" style="max-width: 700px;">
-                                <div class="testimonial-text mb-4">
+                            <div class="testimonial-card">
+                                <div class="testimonial-text">
                                     <p th:text="${testimonio.mensaje}">Testimonio del cliente</p>
                                 </div>
                                 <div class="testimonial-author d-flex align-items-center">
                                     <img th:src="${testimonio.imagenCliente != null ? testimonio.imagenCliente : '/images/avatar-default.jpg'}" 
                                          class="testimonial-avatar" alt="Avatar">
                                     <div>
-                                        <h5 class="testimonial-name mb-0" th:text="${testimonio.nombreCliente}">Nombre del Cliente</h5>
-                                        <p class="testimonial-role mb-0" th:text="${testimonio.cargoCliente}">Cargo</p>
+                                        <h5 class="testimonial-name" th:text="${testimonio.nombreCliente}">Nombre del Cliente</h5>
+                                        <p class="testimonial-role" th:text="${testimonio.cargoCliente}">Cargo</p>
                                         <div class="rating">
                                             <th:block th:each="i : ${#numbers.sequence(1, 5)}">
                                                 <i th:class="${i <= testimonio.valoracion ? 'fas fa-star text-warning' : 
@@ -225,15 +236,15 @@
                         
                         <!-- Si no hay testimonios, mostramos uno por defecto -->
                         <div class="carousel-item" th:if="${#lists.isEmpty(testimonios)}" th:class="${#lists.isEmpty(testimonios) ? 'carousel-item active' : 'carousel-item'}">
-                            <div class="testimonial-card mx-auto" style="max-width: 700px;">
-                                <div class="testimonial-text mb-4">
+                            <div class="testimonial-card">
+                                <div class="testimonial-text">
                                     <p>¡FELICITA ha revolucionado la forma en que reservo mis citas de belleza! La plataforma es súper fácil de usar y me permite encontrar los mejores profesionales en cualquier momento.</p>
                                 </div>
                                 <div class="testimonial-author d-flex align-items-center">
                                     <img th:src="@{/images/avatar-default.jpg}" class="testimonial-avatar" alt="Avatar">
                                     <div>
-                                        <h5 class="testimonial-name mb-0">María García</h5>
-                                        <p class="testimonial-role mb-0">Cliente frecuente</p>
+                                        <h5 class="testimonial-name">María García</h5>
+                                        <p class="testimonial-role">Cliente frecuente</p>
                                         <div class="rating">
                                             <i class="fas fa-star text-warning"></i>
                                             <i class="fas fa-star text-warning"></i>
@@ -280,12 +291,12 @@
             <div class="container">
                 <h2 class="cta-title animate-on-scroll" data-animation="animate__fadeInUp">¿Listo para mejorar tu experiencia?</h2>
                 <p class="cta-text animate-on-scroll" data-animation="animate__fadeInUp">Únete a los miles de usuarios que ya disfrutan de FELICITA</p>
-                <a th:href="@{/registro}" class="btn btn-light btn-lg cta-button animate-on-scroll" data-animation="animate__fadeInUp">Comenzar Ahora</a>
+                <a th:href="@{/registro}" class="btn cta-button animate-on-scroll" data-animation="animate__fadeInUp">Comenzar Ahora</a>
             </div>
         </section>
 
         <!-- Botón volver arriba -->
-        <a id="back-to-top" class="btn btn-primary btn-lg position-fixed bottom-0 end-0 m-4 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px; opacity: 0; visibility: hidden; transition: all 0.3s ease;" href="#" role="button">
+        <a id="back-to-top" class="btn position-fixed" href="#" role="button">
             <i class="fas fa-arrow-up"></i>
         </a>
     </div>
