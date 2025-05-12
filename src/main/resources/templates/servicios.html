@@ -7,7 +7,7 @@
 
     <th:block th:fragment="estilosAdicionales">
         <style>
-            /* Estilos específicos inline para esta página */
+            /* Estilos específicos inline */
             .service-badge {
                 position: absolute;
                 top: 10px;
@@ -66,128 +66,6 @@
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" id="serviceBuscador" class="form-control" placeholder="Buscar servicios...">
                         </div>
-                </div>
-                
-                <!-- Mensaje si no hay servicios -->
-                <div class="no-services" th:if="${#lists.isEmpty(servicios)}">
-                    <i class="fas fa-info-circle"></i>
-                    <h3>No hay servicios disponibles</h3>
-                    <p>No se encontraron servicios disponibles en este momento. Por favor, inténtalo de nuevo más tarde o contacta con nosotros para más información.</p>
-                </div>
-            </div>
-
-            <!-- Mensaje de no hay resultados (oculto inicialmente) -->
-            <div id="noResultados" class="alert alert-info text-center my-4" style="display: none;">
-                <i class="fas fa-search me-2"></i> No se encontraron servicios que coincidan con tu búsqueda.
-            </div>
-            
-            <!-- Banner CTA -->
-            <div class="cta-banner">
-                <h2>¿No encuentras lo que buscas?</h2>
-                <p>Contáctanos para servicios personalizados o consultas específicas.</p>
-                <a th:href="@{/contacto}" class="btn btn-primary btn-lg">Contáctanos</a>
-            </div>
-        </div>
-    </div>
-
-    <th:block th:fragment="scriptsAdicionales">
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Filtro por categoría (pestañas)
-                const categoryTabs = document.querySelectorAll('.category-tabs .nav-link, .categories-list a');
-                categoryTabs.forEach(tab => {
-                    tab.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        
-                        // Remover clase activa de todas las pestañas
-                        document.querySelectorAll('.category-tabs .nav-link').forEach(t => t.classList.remove('active'));
-                        
-                        // Añadir clase activa a la pestaña correspondiente en el menú principal
-                        document.querySelector('.category-tabs .nav-link[data-categoria="' + this.getAttribute('data-categoria') + '"]').classList.add('active');
-                        
-                        // Filtrar servicios
-                        filtrarServicios();
-                    });
-                });
-                
-                // Filtros de categoría y precio
-                document.getElementById('filtroCategoria').addEventListener('change', filtrarServicios);
-                document.getElementById('filtroPrecio').addEventListener('change', filtrarServicios);
-                
-                // Búsqueda de servicios
-                document.getElementById('serviceBuscador').addEventListener('input', filtrarServicios);
-                
-                // Función para filtrar servicios
-                function filtrarServicios() {
-                    const textoBusqueda = document.getElementById('serviceBuscador').value.toLowerCase();
-                    const categoriaSeleccionada = document.querySelector('.category-tabs .nav-link.active').getAttribute('data-categoria');
-                    const categoriaFiltro = document.getElementById('filtroCategoria').value;
-                    const precioFiltro = document.getElementById('filtroPrecio').value;
-                    
-                    const servicios = document.querySelectorAll('#contenedorServicios .service-card');
-                    let hayResultados = false;
-                    
-                    servicios.forEach(servicio => {
-                        const nombre = servicio.querySelector('.card-title').textContent.toLowerCase();
-                        const descripcion = servicio.querySelector('.card-text').textContent.toLowerCase();
-                        const categoria = servicio.getAttribute('data-categoria');
-                        const precio = parseFloat(servicio.getAttribute('data-precio'));
-                        
-                        // Verificar filtro de texto
-                        const coincideTexto = nombre.includes(textoBusqueda) || descripcion.includes(textoBusqueda);
-                        
-                        // Verificar filtro de categoría por tab
-                        const coincideCategoriaPestaña = categoriaSeleccionada === 'todas' || categoria === categoriaSeleccionada;
-                        
-                        // Verificar filtro de categoría por select
-                        const coincideCategoriaSelect = categoriaFiltro === 'todas' || categoria === categoriaFiltro;
-                        
-                        // Verificar filtro de precio
-                        let coincidePrecio = true;
-                        if (precioFiltro === '0-50') {
-                            coincidePrecio = precio <= 50;
-                        } else if (precioFiltro === '50-100') {
-                            coincidePrecio = precio > 50 && precio <= 100;
-                        } else if (precioFiltro === '100-200') {
-                            coincidePrecio = precio > 100 && precio <= 200;
-                        } else if (precioFiltro === '200+') {
-                            coincidePrecio = precio > 200;
-                        }
-                        
-                        // Mostrar u ocultar servicio
-                        if (coincideTexto && coincideCategoriaPestaña && coincideCategoriaSelect && coincidePrecio) {
-                            servicio.style.display = 'block';
-                            hayResultados = true;
-                        } else {
-                            servicio.style.display = 'none';
-                        }
-                    });
-                    
-                    // Mostrar mensaje si no hay resultados
-                    document.getElementById('noResultados').style.display = hayResultados ? 'none' : 'block';
-                }
-                
-                // Inicializar efectos de hover
-                const serviceCards = document.querySelectorAll('.service-card');
-                serviceCards.forEach(card => {
-                    const imageContainer = card.querySelector('.service-image-container');
-                    const actions = card.querySelector('.service-actions');
-                    
-                    if (imageContainer && actions) {
-                        imageContainer.addEventListener('mouseenter', function() {
-                            actions.style.bottom = '0';
-                        });
-                        
-                        imageContainer.addEventListener('mouseleave', function() {
-                            actions.style.bottom = '-50px';
-                        });
-                    }
-                });
-            });
-        </script>
-    </th:block>
-</body>
-</html>
                     </div>
                     <div class="col-md-4">
                         <div class="filters-container">
@@ -332,3 +210,144 @@
                             <a th:href="@{/reservas/nueva}" class="btn btn-primary">Reservar</a>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Mensaje de no hay resultados (oculto inicialmente) -->
+            <div id="noResultados" class="alert alert-info text-center my-4" style="display: none;">
+                <i class="fas fa-search me-2"></i> No se encontraron servicios que coincidan con tu búsqueda.
+            </div>
+            
+            <!-- Banner CTA -->
+            <div class="cta-banner">
+                <h2>¿No encuentras lo que buscas?</h2>
+                <p>Contáctanos para servicios personalizados o consultas específicas.</p>
+                <a th:href="@{/contacto}" class="btn btn-primary btn-lg">Contáctanos</a>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Filtro por categoría (pestañas)
+                const categoryTabs = document.querySelectorAll('.category-tabs .nav-link, .categories-list a');
+                const servicioCards = document.querySelectorAll('#contenedorServicios .service-card');
+                const serviceBuscador = document.getElementById('serviceBuscador');
+                const filtroCategoria = document.getElementById('filtroCategoria');
+                const filtroPrecio = document.getElementById('filtroPrecio');
+                const noResultados = document.getElementById('noResultados');
+    
+                // Inicializar filtros
+                initFilters();
+                
+                // Inicializar efectos de hover
+                initHoverEffects();
+                
+                /**
+                 * Inicializa los eventos de filtrado
+                 */
+                function initFilters() {
+                    // Filtro por categoría (pestañas)
+                    categoryTabs.forEach(tab => {
+                        tab.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            
+                            // Remover clase activa de todas las pestañas
+                            document.querySelectorAll('.category-tabs .nav-link').forEach(t => t.classList.remove('active'));
+                            
+                            // Añadir clase activa a la pestaña correspondiente en el menú principal
+                            document.querySelector('.category-tabs .nav-link[data-categoria="' + this.getAttribute('data-categoria') + '"]').classList.add('active');
+                            
+                            // Filtrar servicios
+                            filtrarServicios();
+                        });
+                    });
+                    
+                    // Filtros de categoría y precio
+                    if (filtroCategoria) filtroCategoria.addEventListener('change', filtrarServicios);
+                    if (filtroPrecio) filtroPrecio.addEventListener('change', filtrarServicios);
+                    
+                    // Búsqueda de servicios
+                    if (serviceBuscador) {
+                        serviceBuscador.addEventListener('input', filtrarServicios);
+                    }
+                }
+                
+                /**
+                 * Filtra los servicios según los criterios seleccionados
+                 */
+                function filtrarServicios() {
+                    const textoBusqueda = serviceBuscador ? serviceBuscador.value.toLowerCase() : '';
+                    const categoriaSeleccionada = document.querySelector('.category-tabs .nav-link.active')?.getAttribute('data-categoria') || 'todas';
+                    const categoriaFiltro = filtroCategoria ? filtroCategoria.value : 'todas';
+                    const precioFiltro = filtroPrecio ? filtroPrecio.value : 'todos';
+                    
+                    let hayResultados = false;
+                    
+                    servicioCards.forEach(servicio => {
+                        const nombre = servicio.querySelector('.card-title')?.textContent.toLowerCase() || '';
+                        const descripcion = servicio.querySelector('.card-text')?.textContent.toLowerCase() || '';
+                        const categoria = servicio.getAttribute('data-categoria') || 'otras';
+                        const precio = parseFloat(servicio.getAttribute('data-precio') || '0');
+                        
+                        // Verificar filtro de texto
+                        const coincideTexto = nombre.includes(textoBusqueda) || descripcion.includes(textoBusqueda);
+                        
+                        // Verificar filtro de categoría por tab
+                        const coincideCategoriaPestaña = categoriaSeleccionada === 'todas' || categoria === categoriaSeleccionada;
+                        
+                        // Verificar filtro de categoría por select
+                        const coincideCategoriaSelect = categoriaFiltro === 'todas' || categoria === categoriaFiltro;
+                        
+                        // Verificar filtro de precio
+                        let coincidePrecio = true;
+                        if (precioFiltro === '0-50') {
+                            coincidePrecio = precio <= 50;
+                        } else if (precioFiltro === '50-100') {
+                            coincidePrecio = precio > 50 && precio <= 100;
+                        } else if (precioFiltro === '100-200') {
+                            coincidePrecio = precio > 100 && precio <= 200;
+                        } else if (precioFiltro === '200+') {
+                            coincidePrecio = precio > 200;
+                        }
+                        
+                        // Mostrar u ocultar servicio
+                        if (coincideTexto && coincideCategoriaPestaña && coincideCategoriaSelect && coincidePrecio) {
+                            servicio.style.display = 'block';
+                            hayResultados = true;
+                        } else {
+                            servicio.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mostrar mensaje si no hay resultados
+                    if (noResultados) {
+                        noResultados.style.display = hayResultados ? 'none' : 'block';
+                    }
+                }
+                
+                /**
+                 * Inicializa los efectos de hover en las tarjetas de servicio
+                 */
+                function initHoverEffects() {
+                    servicioCards.forEach(card => {
+                        const imageContainer = card.querySelector('.service-image-container');
+                        const actions = card.querySelector('.service-actions');
+                        
+                        if (imageContainer && actions) {
+                            imageContainer.addEventListener('mouseenter', function() {
+                                actions.style.bottom = '0';
+                            });
+                            
+                            imageContainer.addEventListener('mouseleave', function() {
+                                actions.style.bottom = '-50px';
+                            });
+                        }
+                    });
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>

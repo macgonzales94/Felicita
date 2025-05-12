@@ -113,28 +113,21 @@ public class HomeController {
             // Obtener todas las categorías para el filtro
             List<String> categorias = servicioService.obtenerCategorias();
             model.addAttribute("categorias", categorias);
+            System.out.println("Categorías: " + categorias);
             
             // Obtener todos los servicios activos
-            List<Servicio> servicios = new ArrayList<>();
-            try {
-                servicios = servicioService.obtenerTodosActivos();
-            } catch (Exception e) {
-                System.err.println("Error al cargar servicios: " + e.getMessage());
-            }
+            List<Servicio> servicios = servicioService.obtenerTodosActivos();
+            System.out.println("Total servicios encontrados: " + servicios.size());
             model.addAttribute("servicios", servicios);
             
             // Obtener servicios más populares
-            List<Servicio> serviciosPopulares = new ArrayList<>();
-            try {
-                serviciosPopulares = servicioService.obtenerServiciosMasPopulares(5);
-            } catch (Exception e) {
-                System.err.println("Error al cargar servicios populares: " + e.getMessage());
-            }
+            List<Servicio> serviciosPopulares = servicioService.obtenerServiciosMasPopulares(5);
+            System.out.println("Servicios populares encontrados: " + serviciosPopulares.size());
             model.addAttribute("serviciosPopulares", serviciosPopulares);
             
             return "servicios";
         } catch (Exception e) {
-            System.err.println("Error al cargar la página de servicios: " + e.getMessage());
+            System.err.println("Error en servicios(): " + e.getMessage());
             e.printStackTrace();
             return "error";
         }

@@ -45,11 +45,17 @@ public class ServicioService {
      */
     public List<Servicio> obtenerTodosActivos() {
         try {
-            return servicioRepository.findByActivoTrue();
+            List<Servicio> servicios = servicioRepository.findByActivoTrue();
+            System.out.println("Servicios activos encontrados: " + servicios.size());
+            if (servicios.isEmpty()) {
+                System.out.println("No se encontraron servicios activos en la base de datos");
+            } else {
+                System.out.println("Primer servicio: " + servicios.get(0).getNombre());
+            }
+            return servicios;
         } catch (Exception e) {
             System.err.println("Error en obtenerTodosActivos: " + e.toString());
             e.printStackTrace();
-            // Devuelve una lista vacía en lugar de lanzar excepción
             return new ArrayList<>();
         }
     }
