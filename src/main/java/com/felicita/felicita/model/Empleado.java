@@ -1,14 +1,15 @@
 package com.felicita.felicita.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-
 /**
- * Clase que representa a los empleados del salón de belleza o barbería.
- * Almacena información como nombre, cargo y disponibilidad.
+ * Clase que representa los empleados del salón de belleza o barbería.
+ * Permite organizar los servicios en grupos para su mejor visualización y filtrado.
  */
 @Entity
 @Table(name = "empleados")
@@ -40,11 +41,43 @@ public class Empleado {
     private String foto;
 
     /**
-     * Indica si el empleado está activo en el sistema
+     * Indica si el empleado está activo
      */
     @Column(name = "activo")
     private boolean activo = true;
     
+    /**
+     * Descripción o biografía del empleado
+     */
+    @Column(name = "biografia", columnDefinition = "TEXT")
+    private String biografia;
+    
+    /**
+     * Calificación promedio del empleado (1-5 estrellas)
+     */
+    @Column(name = "calificacion")
+    private Float calificacion;
+    
+    /**
+     * Correo electrónico del empleado
+     */
+    @Column(name = "correo")
+    private String correo;
+    
+    /**
+     * Teléfono del empleado
+     */
+    @Column(name = "telefono")
+    @Size(max = 20)
+    private String telefono;
+    
+    /**
+     * Negocio al que pertenece el empleado
+     */
+    @ManyToOne
+    @JoinColumn(name = "id_negocio")
+    private Negocio negocio;
+
     /**
      * Lista de reservas asignadas al empleado
      */
@@ -126,5 +159,45 @@ public class Empleado {
 
     public void setDisponibilidades(List<Disponibilidad> disponibilidades) {
         this.disponibilidades = disponibilidades;
+    }
+    
+    public String getBiografia() {
+        return biografia;
+    }
+
+    public void setBiografia(String biografia) {
+        this.biografia = biografia;
+    }
+
+    public Float getCalificacion() {
+        return calificacion;
+    }
+
+    public void setCalificacion(Float calificacion) {
+        this.calificacion = calificacion;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public Negocio getNegocio() {
+        return negocio;
+    }
+
+    public void setNegocio(Negocio negocio) {
+        this.negocio = negocio;
     }
 }

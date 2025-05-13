@@ -1,10 +1,16 @@
 package com.felicita.felicita.controller;
 
 import com.felicita.felicita.model.Empleado;
+import com.felicita.felicita.model.Negocio;
 import com.felicita.felicita.model.Reserva;
 import com.felicita.felicita.model.Servicio;
 import com.felicita.felicita.model.Usuario;
-import com.felicita.felicita.service.*;
+import com.felicita.felicita.service.DashboardService;
+import com.felicita.felicita.service.EmpleadoService;
+import com.felicita.felicita.service.NegocioService;
+import com.felicita.felicita.service.ReservaService;
+import com.felicita.felicita.service.ServicioService;
+import com.felicita.felicita.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,6 +50,9 @@ public class AdminController {
     
     @Autowired
     private DashboardService dashboardService;
+    
+    @Autowired
+    private NegocioService negocioService;
 
     /**
      * Muestra el dashboard administrativo
@@ -61,6 +70,12 @@ public class AdminController {
         long totalServiciosActivos = dashboardService.obtenerTotalServiciosActivos();
         BigDecimal ingresosTotales = dashboardService.calcularIngresosTotales(haceMes, ahora);
         
+        // Obtener total de negocios
+        long totalNegocios = negocioService.obtenerTodos().size();
+        long negociosPendientes = negocioService.obtenerTodos().stream()
+            .filter(n -> !n.isVerificado())
+            .count();
+        
         // Obtener reservas recientes
         List<Reserva> reservasRecientes = dashboardService.obtenerReservasRecientes(5);
         
@@ -76,6 +91,8 @@ public class AdminController {
         model.addAttribute("totalReservas", totalReservas);
         model.addAttribute("totalClientes", totalClientes);
         model.addAttribute("totalServiciosActivos", totalServiciosActivos);
+        model.addAttribute("totalNegocios", totalNegocios);
+        model.addAttribute("negociosPendientes", negociosPendientes);
         model.addAttribute("ingresosTotales", ingresosTotales);
         model.addAttribute("reservasRecientes", reservasRecientes);
         model.addAttribute("serviciosPopulares", serviciosPopulares);
@@ -95,6 +112,36 @@ public class AdminController {
         List<Usuario> usuarios = usuarioService.obtenerTodos();
         model.addAttribute("usuarios", usuarios);
         return "admin/usuarios";
+    }
+    
+    /**
+     * Ver detalles de un usuario
+     * @param id ID del usuario
+     * @param model Modelo para la vista
+     * @return Nombre de la vista
+     */
+    @GetMapping("/usuarios/{id}")
+    public String detallesUsuario(@PathVariable Long id, Model model) {
+        Optional<Usuario> usuarioOpt = usuarioService.obtenerPorId(id);
+        
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            model.addAttribute("usuario", usuario);
+            
+            // Si el usuario es PROADMIN, obtener su negocio
+            if (usuario.isProAdmin()) {
+                Optional<Negocio> negocioOpt = negocioService.obtenerPorUsuario(id);
+                negocioOpt.ifPresent(negocio -> model.addAttribute("negocio", negocio));
+            }
+            
+            // Obtener reservas del usuario
+            List<Reserva> reservas = reservaService.buscarPorUsuario(id);
+            model.addAttribute("reservas", reservas);
+            
+            return "admin/usuario-detalles";
+        } else {
+            return "redirect:/admin/usuarios";
+        }
     }
 
     /**
@@ -154,5 +201,65 @@ public class AdminController {
         } else {
             return "redirect:/admin/reservas";
         }
+    }
+    
+    /**
+     * Gestión de negocios
+     * @param model Modelo para la vista
+     * @return Nombre de la vista
+     */
+    @GetMapping("/negocios")
+    public String negocios(Model model) {
+        List<Negocio> negocios = negocioService.obtenerTodos();
+        model.addAttribute("negocios", negocios);
+        return "admin/negocios";
+    }
+    
+    /**
+     * Detalles de un negocio
+     * @param id ID del negocio
+     * @param model Modelo para la vista
+     * @return Nombre de la vista
+     */
+    @GetMapping("/negocios/{id}")
+    public String detallesNegocio(@PathVariable Long id, Model model) {
+        Optional<Negocio> negocioOpt = negocioService.obtenerPorId(id);
+        
+        if (negocioOpt.isPresent()) {
+            Negocio negocio = negocioOpt.get();
+            model.addAttribute("negocio", negocio);
+            
+            // Obtener servicios del negocio
+            List<Servicio> servicios = servicioService.obtenerPorNegocio(id);
+            model.addAttribute("servicios", servicios);
+            
+            // Obtener empleados del negocio
+            List<Empleado> empleados = empleadoService.obtenerPorNegocio(id);
+            model.addAttribute("empleados", empleados);
+            
+            return "admin/negocio-detalles";
+        } else {
+            return "redirect:/admin/negocios";
+        }
+    }
+    
+    /**
+     * Muestra la página de reportes
+     * @param model Modelo para la vista
+     * @return Nombre de la vista
+     */
+    @GetMapping("/reportes")
+    public String reportes(Model model) {
+        return "admin/reportes";
+    }
+    
+    /**
+     * Muestra la página de configuración del sistema
+     * @param model Modelo para la vista
+     * @return Nombre de la vista
+     */
+    @GetMapping("/configuracion")
+    public String configuracion(Model model) {
+        return "admin/configuracion";
     }
 }

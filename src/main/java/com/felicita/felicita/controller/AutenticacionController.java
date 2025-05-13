@@ -1,8 +1,8 @@
-// src/main/java/com/felicita/felicita/controller/AutenticacionController.java
 package com.felicita.felicita.controller;
 
 import com.felicita.felicita.dto.LoginRequest;
 import com.felicita.felicita.dto.RegistroRequest;
+import com.felicita.felicita.dto.RegistroNegocioRequest;
 import com.felicita.felicita.dto.JwtResponse;
 import com.felicita.felicita.dto.MensajeResponse;
 import com.felicita.felicita.service.AutenticacionService;
@@ -38,13 +38,28 @@ public class AutenticacionController {
     }
 
     /**
-     * Endpoint para registrar un nuevo usuario
+     * Endpoint para registrar un nuevo usuario cliente
      * @param registroRequest Datos de registro
      * @return Mensaje indicando el resultado del registro
      */
     @PostMapping("/registro")
     public ResponseEntity<MensajeResponse> registrarUsuario(@Valid @RequestBody RegistroRequest registroRequest) {
         MensajeResponse mensaje = autenticacionService.registrarUsuario(registroRequest);
+        if (mensaje.isExito()) {
+            return ResponseEntity.ok(mensaje);
+        } else {
+            return ResponseEntity.badRequest().body(mensaje);
+        }
+    }
+    
+    /**
+     * Endpoint para registrar un nuevo negocio
+     * @param registroRequest Datos de registro del negocio
+     * @return Mensaje indicando el resultado del registro
+     */
+    @PostMapping("/registro-negocio")
+    public ResponseEntity<MensajeResponse> registrarNegocio(@Valid @RequestBody RegistroNegocioRequest registroRequest) {
+        MensajeResponse mensaje = autenticacionService.registrarNegocio(registroRequest);
         if (mensaje.isExito()) {
             return ResponseEntity.ok(mensaje);
         } else {

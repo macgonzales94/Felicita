@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Clase que representa a los usuarios del sistema FELICITA.
- * Almacena la información de clientes y administradores.
+ * Almacena la información de clientes, administradores y negocios.
  */
 @Entity
 @Table(name = "usuarios", 
@@ -68,7 +68,7 @@ public class Usuario {
     private String telefono;
     
     /**
-     * Rol del usuario (ADMIN o CLIENTE)
+     * Rol del usuario (ADMIN, CLIENTE, PROADMIN)
      */
     @NotBlank
     @Column(name = "rol")
@@ -85,6 +85,12 @@ public class Usuario {
      */
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reserva> reservas = new ArrayList<>();
+    
+    /**
+     * Negocio asociado al usuario (solo para PROADMIN)
+     */
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Negocio negocio;
 
     /**
      * Constructor por defecto
@@ -176,5 +182,37 @@ public class Usuario {
 
     public void setReservas(List<Reserva> reservas) {
         this.reservas = reservas;
+    }
+    
+    public Negocio getNegocio() {
+        return negocio;
+    }
+
+    public void setNegocio(Negocio negocio) {
+        this.negocio = negocio;
+    }
+    
+    /**
+     * Verifica si el usuario es administrador
+     * @return true si el rol es ADMIN
+     */
+    public boolean isAdmin() {
+        return "ADMIN".equals(this.rol);
+    }
+    
+    /**
+     * Verifica si el usuario es cliente
+     * @return true si el rol es CLIENTE
+     */
+    public boolean isCliente() {
+        return "CLIENTE".equals(this.rol);
+    }
+    
+    /**
+     * Verifica si el usuario es un negocio (ProAdmin)
+     * @return true si el rol es PROADMIN
+     */
+    public boolean isProAdmin() {
+        return "PROADMIN".equals(this.rol);
     }
 }

@@ -100,6 +100,13 @@ public class Servicio {
      */
     @OneToMany(mappedBy = "servicio")
     private List<Testimonio> testimonios = new ArrayList<>();
+    
+    /**
+     * Negocio que ofrece este servicio
+     */
+    @ManyToOne
+    @JoinColumn(name = "id_negocio")
+    private Negocio negocio;
 
     /**
      * Constructor por defecto
@@ -115,6 +122,16 @@ public class Servicio {
         this.descripcion = descripcion;
         this.precio = precio;
         this.duracion = duracion;
+    }
+
+    // Getters y setters existentes...
+    
+    public Negocio getNegocio() {
+        return negocio;
+    }
+
+    public void setNegocio(Negocio negocio) {
+        this.negocio = negocio;
     }
 
     // Getters y setters

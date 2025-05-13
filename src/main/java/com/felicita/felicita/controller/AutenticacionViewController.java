@@ -26,4 +26,13 @@ public class AutenticacionViewController {
     public String mostrarPaginaRegistro() {
         return "registro";
     }
+    
+    /**
+     * Muestra la página de registro de negocio
+     * @return Nombre de la vista de registro de negocio
+     */
+    @GetMapping("/registro-negocio")
+    public String mostrarPaginaRegistroNegocio() {
+        return "registro-negocio";
+    }
 }
