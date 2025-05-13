@@ -48,11 +48,4 @@ public interface ServicioRepository extends JpaRepository<Servicio, Long> {
      * @return Lista de servicios del negocio especificado
      */
     List<Servicio> findByNegocio(Negocio negocio);
-    
-    /**
-     * Busca servicios activos por negocio
-     * @param negocio El negocio cuyos servicios activos se quieren obtener
-     * @return Lista de servicios activos del negocio especificado
-     */
-    List<Servicio> findByNegocioAndActivoTrue(Negocio negocio);
 }

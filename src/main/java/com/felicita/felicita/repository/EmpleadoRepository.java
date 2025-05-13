@@ -40,11 +40,4 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
      * @return Lista de empleados del negocio especificado
      */
     List<Empleado> findByNegocio(Negocio negocio);
-    
-    /**
-     * Busca empleados activos por negocio
-     * @param negocio El negocio cuyos empleados activos se quieren obtener
-     * @return Lista de empleados activos del negocio especificado
-     */
-    List<Empleado> findByNegocioAndActivoTrue(Negocio negocio);
 }

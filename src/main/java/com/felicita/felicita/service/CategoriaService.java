@@ -193,4 +193,7 @@ public class CategoriaService {
         
         return categoriasPredeterminadas;
     }
+
+    
+
 }

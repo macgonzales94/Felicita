@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
@@ -73,11 +74,15 @@ public class ProAdminController {
                 
                 // Contar empleados
                 List<Empleado> empleados = empleadoService.obtenerPorNegocio(negocio.getId());
-                long empleadosActivos = empleados.stream().filter(Empleado::isActivo).count();
+                long empleadosActivos = empleados.stream()
+                    .filter(Empleado::isActivo)
+                    .count();
                 
                 // Contar servicios
                 List<Servicio> servicios = servicioService.obtenerPorNegocio(negocio.getId());
-                long serviciosActivos = servicios.stream().filter(Servicio::isActivo).count();
+                long serviciosActivos = servicios.stream()
+                    .filter(Servicio::isActivo)
+                    .count();
                 
                 // Obtener reservas recientes
                 List<Reserva> reservasRecientes = reservaService.obtenerReservasRecientesPorNegocio(negocio, 5);
@@ -152,7 +157,7 @@ public class ProAdminController {
             servicio.setActivo(true);
             
             // Guardar el servicio
-            Servicio servicioCreado = servicioService.crear(servicio);
+            Servicio servicioCreado = servicioService.crearServicio(servicio);
             
             redirectAttributes.addFlashAttribute("mensajeExito", 
                 "Servicio '" + servicioCreado.getNombre() + "' creado exitosamente");
@@ -196,7 +201,7 @@ public class ProAdminController {
     
     /**
      * Gestión de empleados del negocio
-     */
+    */
     @GetMapping("/empleados")
     public String empleados(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         Optional<Negocio> negocioOpt = obtenerNegocioActual(userDetails);
@@ -235,7 +240,7 @@ public class ProAdminController {
             empleado.setActivo(true);
             
             // Guardar el empleado
-            Empleado empleadoCreado = empleadoService.crear(empleado);
+            Empleado empleadoCreado = empleadoService.crearEmpleado(empleado);
             
             redirectAttributes.addFlashAttribute("mensajeExito", 
                 "Empleado '" + empleadoCreado.getNombre() + "' creado exitosamente");
@@ -249,7 +254,7 @@ public class ProAdminController {
     
     /**
      * Gestión de reservas del negocio
-     */
+    */
     @GetMapping("/reservas")
     public String reservas(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         Optional<Negocio> negocioOpt = obtenerNegocioActual(userDetails);
@@ -271,7 +276,7 @@ public class ProAdminController {
         
         return "redirect:/error";
     }
-    
+        
     /**
      * Ver detalles de una reserva
      */
@@ -412,7 +417,9 @@ public class ProAdminController {
             // Procesar horarios
             try {
                 Map<String, Map<String, String>> horarios = new HashMap<>();
-                for (String dia : Arrays.asList("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")) {
+                String[] dias = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+                
+                for (String dia : dias) {
                     String desde = formParams.get("horario[" + dia + "].desde");
                     String hasta = formParams.get("horario[" + dia + "].hasta");
                     

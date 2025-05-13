@@ -27,7 +27,7 @@ public class ServicioService {
 
     @Autowired
     private ServicioRepository servicioRepository;
-    
+
     @Autowired
     private ServicioReservaRepository servicioReservaRepository;
 
@@ -149,7 +149,7 @@ public class ServicioService {
                 })
                 .orElse(new MensajeResponse("No se encontró el servicio con ID: " + id, false));
     }
-    
+
     /**
      * Obtiene los servicios más populares basados en la cantidad de reservas
      * 
@@ -160,33 +160,33 @@ public class ServicioService {
         try {
             // Obtener todas las relaciones servicio-reserva
             List<ServicioReserva> todasRelaciones = servicioReservaRepository.findAll();
-            
+
             // Contar frecuencia de cada servicio y crear mapa
             Map<Servicio, Long> frecuenciaServicios = new HashMap<>();
-            
+
             for (ServicioReserva sr : todasRelaciones) {
                 Servicio servicio = sr.getServicio();
-                
+
                 // Solo considerar servicios activos
                 if (servicio.isActivo()) {
-                    frecuenciaServicios.put(servicio, 
-                        frecuenciaServicios.getOrDefault(servicio, 0L) + 1);
+                    frecuenciaServicios.put(servicio,
+                            frecuenciaServicios.getOrDefault(servicio, 0L) + 1);
                 }
             }
-            
+
             // Ordenar por frecuencia descendente y limitar
             return frecuenciaServicios.entrySet().stream()
-                .sorted(Map.Entry.<Servicio, Long>comparingByValue().reversed())
-                .limit(limite)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-            
+                    .sorted(Map.Entry.<Servicio, Long>comparingByValue().reversed())
+                    .limit(limite)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+
         } catch (Exception e) {
             System.err.println("Error al obtener servicios populares: " + e.getMessage());
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Busca servicios por rango de precio
      * 
@@ -202,7 +202,7 @@ public class ServicioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Busca servicios con duración menor o igual a un valor dado
      * 
@@ -217,49 +217,52 @@ public class ServicioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Obtiene categorías disponibles de servicios
      * 
      * @return Lista de categorías
      */
     public List<String> obtenerCategorias() {
-        // Nota: Esto debe actualizarse si se agrega campo categoria a la entidad Servicio
+        // Nota: Esto debe actualizarse si se agrega campo categoria a la entidad
+        // Servicio
         List<String> categorias = new ArrayList<>();
         categorias.add("Cabello");
         categorias.add("Uñas");
         categorias.add("Facial");
         categorias.add("Barbería");
         categorias.add("Spa");
-        
+
         return categorias;
     }
 
-/**
- * Obtiene servicios por negocio
- * @param negocioId ID del negocio
- * @return Lista de servicios del negocio
- */
-public List<Servicio> obtenerPorNegocio(Long negocioId) {
-    Optional<Negocio> negocio = negocioRepository.findById(negocioId);
-    if (negocio.isPresent()) {
-        return servicioRepository.findByNegocio(negocio.get());
-    }
-    return new ArrayList<>();
-}
+    /**
+     * Obtiene servicios por negocio
+     * 
+     * @param negocioId ID del negocio
+     * @return Lista de servicios del negocio
+     */
 
-public Servicio crear(Servicio servicio) {
-    // Valida datos
-    if (servicio.getNombre() == null || servicio.getNombre().isEmpty()) {
-        throw new IllegalArgumentException("El nombre del servicio es obligatorio");
+    public List<Servicio> obtenerPorNegocio(Long negocioId) {
+        Optional<Negocio> negocio = negocioRepository.findById(negocioId);
+        if (negocio.isPresent()) {
+            return servicioRepository.findByNegocio(negocio.get());
+        }
+        return new ArrayList<>();
     }
-    
-    if (servicio.getPrecio() == null || servicio.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
-        throw new IllegalArgumentException("El precio debe ser mayor que cero");
+
+    public Servicio crear(Servicio servicio) {
+        // Valida datos
+        if (servicio.getNombre() == null || servicio.getNombre().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del servicio es obligatorio");
+        }
+
+        if (servicio.getPrecio() == null || servicio.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El precio debe ser mayor que cero");
+        }
+
+        // Guarda y retorna
+        return servicioRepository.save(servicio);
     }
-    
-    // Guarda y retorna
-    return servicioRepository.save(servicio);
-}
 
 }

@@ -101,4 +101,14 @@ public class UsuarioService {
             })
             .orElse(new MensajeResponse("No se encontró el usuario con ID: " + id, false));
     }
+
+    /**
+ * Busca un usuario por su nombre de usuario
+ * @param username El nombre de usuario a buscar
+ * @return Usuario si existe, vacío si no
+ */
+public Optional<Usuario> findByUsername(String username) {
+    return usuarioRepository.findByNombreUsuario(username);
+}
+
 }

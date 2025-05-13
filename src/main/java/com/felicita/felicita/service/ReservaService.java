@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
  * Servicio que gestiona las operaciones relacionadas con las reservas.
@@ -346,6 +347,7 @@ public class ReservaService {
      * @param negocioId ID del negocio
      * @return Mapa con contadores por estado
      */
+
     public Map<Reserva.EstadoReserva, Long> obtenerEstadisticasReservasPorNegocio(Long negocioId) {
         List<Reserva> reservasNegocio = buscarPorNegocio(negocioId);
 
@@ -353,31 +355,31 @@ public class ReservaService {
                 .collect(Collectors.groupingBy(Reserva::getEstado, Collectors.counting()));
     }
 
-
     public List<Reserva> obtenerPorNegocio(Negocio negocio) {
         List<Empleado> empleados = empleadoRepository.findByNegocio(negocio);
         return reservaRepository.findByEmpleadoIn(empleados);
     }
-    
+
     public List<Reserva> obtenerReservasRecientesPorNegocio(Negocio negocio, int limite) {
         List<Reserva> todasReservas = obtenerPorNegocio(negocio);
         return todasReservas.stream()
-            .sorted(Comparator.comparing(Reserva::getFechaCreacion).reversed())
-            .limit(limite)
-            .collect(Collectors.toList());
+                .sorted(Comparator.comparing(Reserva::getFechaCreacion).reversed())
+                .limit(limite)
+                .collect(Collectors.toList());
     }
-    
+
     public BigDecimal calcularIngresosPorPeriodo(Negocio negocio, LocalDateTime inicio, LocalDateTime fin) {
         List<Reserva> reservas = obtenerPorNegocio(negocio);
-        
+
         return reservas.stream()
-            .filter(r -> r.getHoraInicio().isAfter(inicio) && r.getHoraInicio().isBefore(fin))
-            .filter(r -> r.getEstado() == Reserva.EstadoReserva.COMPLETADA || r.getEstado() == Reserva.EstadoReserva.CONFIRMADA)
-            .flatMap(r -> r.getServiciosReservas().stream())
-            .map(sr -> sr.getServicio().getPrecio())
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .filter(r -> r.getHoraInicio().isAfter(inicio) && r.getHoraInicio().isBefore(fin))
+                .filter(r -> r.getEstado() == Reserva.EstadoReserva.COMPLETADA
+                        || r.getEstado() == Reserva.EstadoReserva.CONFIRMADA)
+                .flatMap(r -> r.getServiciosReservas().stream())
+                .map(sr -> sr.getServicio().getPrecio())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-    
+
     public Reserva actualizar(Reserva reserva) {
         return reservaRepository.save(reserva);
     }
