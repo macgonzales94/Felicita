@@ -1,6 +1,7 @@
 package com.felicita.felicita.service;
 
 import com.felicita.felicita.dto.MensajeResponse;
+import com.felicita.felicita.model.Negocio;
 import com.felicita.felicita.model.Servicio;
 import com.felicita.felicita.model.ServicioReserva;
 import com.felicita.felicita.repository.ServicioRepository;
@@ -8,6 +9,7 @@ import com.felicita.felicita.repository.ServicioReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -232,4 +234,32 @@ public class ServicioService {
         
         return categorias;
     }
+
+/**
+ * Obtiene servicios por negocio
+ * @param negocioId ID del negocio
+ * @return Lista de servicios del negocio
+ */
+public List<Servicio> obtenerPorNegocio(Long negocioId) {
+    Optional<Negocio> negocio = negocioRepository.findById(negocioId);
+    if (negocio.isPresent()) {
+        return servicioRepository.findByNegocio(negocio.get());
+    }
+    return new ArrayList<>();
+}
+
+public Servicio crear(Servicio servicio) {
+    // Valida datos
+    if (servicio.getNombre() == null || servicio.getNombre().isEmpty()) {
+        throw new IllegalArgumentException("El nombre del servicio es obligatorio");
+    }
+    
+    if (servicio.getPrecio() == null || servicio.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+        throw new IllegalArgumentException("El precio debe ser mayor que cero");
+    }
+    
+    // Guarda y retorna
+    return servicioRepository.save(servicio);
+}
+
 }

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <!-- Estilos del dashboard -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+        <style>
+            .negocio-banner {
+                background-color: var(--primary);
+                color: white;
+                padding: 2rem 0;
+                margin-bottom: 2rem;
+            }
+            
+            .stat-card {
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                padding: 1.5rem;
+                transition: transform 0.3s ease;
+                height: 100%;
+            }
+            
+            .stat-card:hover {
+                transform: translateY(-5px);
+            }
+            
+            .stat-icon {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+                display: inline-block;
+                width: 60px;
+                height: 60px;
+                line-height: 60px;
+                text-align: center;
+                border-radius: 50%;
+            }
+            
+            .stat-icon.blue {
+                background-color: rgba(13, 110, 253, 0.1);
+                color: #0d6efd;
+            }
+            
+            .stat-icon.green {
+                background-color: rgba(25, 135, 84, 0.1);
+                color: #198754;
+            }
+            
+            .stat-icon.orange {
+                background-color: rgba(255, 193, 7, 0.1);
+                color: #ffc107;
+            }
+            
+            .stat-icon.purple {
+                background-color: rgba(106, 44, 112, 0.1);
+                color: #6a2c70;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+            
+            .stat-label {
+                color: #6c757d;
+                font-size: 0.9rem;
+            }
+            
+            .recent-reservations {
+                max-height: 400px;
+                overflow-y: auto;
+            }
+            
+            .status-badge {
+                padding: 0.25rem 0.5rem;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+            
+            .status-badge.pending {
+                background-color: rgba(255, 193, 7, 0.1);
+                color: #ffc107;
+            }
+            
+            .status-badge.confirmed {
+                background-color: rgba(25, 135, 84, 0.1);
+                color: #198754;
+            }
+            
+            .status-badge.completed {
+                background-color: rgba(13, 110, 253, 0.1);
+                color: #0d6efd;
+            }
+            
+            .status-badge.cancelled {
+                background-color: rgba(220, 53, 69, 0.1);
+                color: #dc3545;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Banner del negocio -->
+        <div class="negocio-banner">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 th:text="${negocio.nombreComercial}">Nombre del Negocio</h1>
+                        <p class="mb-0" th:text="${negocio.direccion}">Dirección del Negocio</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <span th:if="${negocio.verificado}" class="badge bg-success">
+                            <i class="fas fa-check-circle me-1"></i> Verificado
+                        </span>
+                        <span th:unless="${negocio.verificado}" class="badge bg-warning text-dark">
+                            <i class="fas fa-clock me-1"></i> Pendiente de verificación
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="container py-4">
+            <!-- Alerta de mensajes -->
+            <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <!-- Tarjetas de estadísticas -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-value" th:text="${estadisticasReservas.get(T(com.felicita.felicita.model.Reserva.EstadoReserva).PENDIENTE) ?: 0 + estadisticasReservas.get(T(com.felicita.felicita.model.Reserva.EstadoReserva).CONFIRMADA) ?: 0}">0</div>
+                        <div class="stat-label">Reservas pendientes</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-value" th:text="${empleadosActivos}">0</div>
+                        <div class="stat-label">Empleados activos</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-concierge-bell"></i>
+                        </div>
+                        <div class="stat-value" th:text="${serviciosActivos}">0</div>
+                        <div class="stat-label">Servicios activos</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-value" th:text="'S/. ' + ${#numbers.formatDecimal(ingresosMes, 1, 2)}">S/. 0.00</div>
+                        <div class="stat-label">Ingresos del mes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráficos y reservas recientes -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Distribución de reservas</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="reservasChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Reservas recientes</h5>
+                            <a th:href="@{/negocio/reservas}" class="btn btn-sm btn-primary">Ver todas</a>
+                        </div>
+                        <div class="card-body recent-reservations">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Fecha y Hora</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="reserva : ${reservasRecientes}">
+                                            <td th:text="${reserva.id}">1</td>
+                                            <td th:text="${reserva.usuario.nombreCompleto}">Nombre Cliente</td>
+                                            <td th:text="${#temporals.format(reserva.horaInicio, 'dd/MM/yyyy HH:mm')}">Fecha y Hora</td>
+                                            <td>
+                                                <span th:class="'status-badge ' + ${#strings.toLowerCase(reserva.estado)}" 
+                                                    th:text="${reserva.estado}">PENDIENTE</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/negocio/reservas/{id}(id=${reserva.id})}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(reservasRecientes)}">
+                                            <td colspan="5" class="text-center">No hay reservas recientes</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Acciones rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/negocio/reservas}" class="btn btn-primary">
+                                    <i class="fas fa-calendar-check me-2"></i> Gestionar reservas
+                                </a>
+                                <a th:href="@{/negocio/servicios}" class="btn btn-secondary">
+                                    <i class="fas fa-concierge-bell me-2"></i> Gestionar servicios
+                                </a>
+                                <a th:href="@{/negocio/empleados}" class="btn btn-info text-white">
+                                    <i class="fas fa-user-tie me-2"></i> Gestionar empleados
+                                </a>
+                                <a th:href="@{/negocio/configuracion}" class="btn btn-outline-dark">
+                                    <i class="fas fa-cog me-2"></i> Configuración
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Estado del negocio</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Estado actual:</strong>
+                                <span th:class="'badge ' + (${negocio.estado == 'ACTIVO' ? 'bg-success' : (${negocio.estado == 'SUSPENDIDO' ? 'bg-warning text-dark' : 'bg-danger')})}" 
+                                    th:text="${negocio.estado}">ACTIVO</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Tipo de negocio:</strong>
+                                <span th:text="${negocio.tipo}">SALON</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Fecha de registro:</strong>
+                                <span th:text="${#temporals.format(negocio.fechaRegistro, 'dd/MM/yyyy')}">01/01/2025</span>
+                            </div>
+                            <div>
+                                <strong>Verificación:</strong>
+                                <span th:if="${negocio.verificado}" class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i> Verificado
+                                </span>
+                                <span th:unless="${negocio.verificado}" class="text-warning">
+                                    <i class="fas fa-clock me-1"></i> Pendiente
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Datos para el gráfico de distribución de reservas
+                const estadisticasReservas = /*[[${estadisticasReservas}]]*/ {
+                    'PENDIENTE': 0,
+                    'CONFIRMADA': 0,
+                    'COMPLETADA': 0,
+                    'CANCELADA': 0
+                };
+                
+                // Configurar gráfico de distribución de reservas
+                const ctx = document.getElementById('reservasChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pendientes', 'Confirmadas', 'Completadas', 'Canceladas'],
+                        datasets: [{
+                            data: [
+                                estadisticasReservas['PENDIENTE'] || 0,
+                                estadisticasReservas['CONFIRMADA'] || 0,
+                                estadisticasReservas['COMPLETADA'] || 0,
+                                estadisticasReservas['CANCELADA'] || 0
+                            ],
+                            backgroundColor: [
+                                '#ffc107',
+                                '#198754',
+                                '#0d6efd',
+                                '#dc3545'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Servicio - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .form-container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            .servicio-preview {
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                margin-bottom: 2rem;
+            }
+            
+            .servicio-preview img {
+                width: 100%;
+                height: 250px;
+                object-fit: cover;
+            }
+            
+            .form-floating label {
+                color: #6c757d;
+            }
+            
+            .preview-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 10;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <div class="container py-4">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/negocio}">Panel</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/negocio/servicios}">Servicios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Editar servicio</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Editar Servicio</h1>
+            
+            <div class="form-container">
+                <!-- Vista previa del servicio -->
+                <div class="servicio-preview position-relative">
+                    <span th:if="${servicio.destacado}" class="preview-badge badge bg-warning">Destacado</span>
+                    <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" th:alt="${servicio.nombre}" id="imagenPreview">
+                    <div class="p-4">
+                        <h4 th:text="${servicio.nombre}" id="nombrePreview">Nombre del Servicio</h4>
+                        <p class="text-muted" th:text="${servicio.descripcion}" id="descripcionPreview">Descripción del servicio...</p>
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                <i class="far fa-clock me-1"></i> <span th:text="${servicio.duracion} + ' min'" id="duracionPreview">30 min</span>
+                            </span>
+                            <span class="fw-bold" th:text="'S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}" id="precioPreview">S/. 35.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulario de edición -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <form th:action="@{/negocio/servicios/{id}/actualizar(id=${servicio.id})}" method="post" th:object="${servicio}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                                        <label for="nombre">Nombre del servicio</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="categoria" th:field="*{categoria}">
+                                            <option value="">Seleccione una categoría</option>
+                                            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}" th:selected="${servicio.categoria != null && servicio.categoria.id == cat.id}">Categoría</option>
+                                        </select>
+                                        <label for="categoria">Categoría</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" id="precio" th:field="*{precio}" step="0.01" min="0" required>
+                                        <label for="precio">Precio (S/.)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" id="duracion" th:field="*{duracion}" min="1" required>
+                                        <label for="duracion">Duración (minutos)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" id="descripcion" th:field="*{descripcion}" style="height: 100px" required></textarea>
+                                <label for="descripcion">Descripción</label>
+                            </div>
+                            
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="imagen" th:field="*{imagen}" placeholder="URL de la imagen">
+                                <label for="imagen">URL de imagen (opcional)</label>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="destacado" th:field="*{destacado}">
+                                        <label class="form-check-label" for="destacado">
+                                            Destacar este servicio
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="activo" th:field="*{activo}">
+                                        <label class="form-check-label" for="activo">
+                                            Servicio activo
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <a th:href="@{/negocio/servicios}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i> Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Actualizar vista previa en tiempo real
+                const nombreInput = document.getElementById('nombre');
+                const descripcionInput = document.getElementById('descripcion');
+                const precioInput = document.getElementById('precio');
+                const duracionInput = document.getElementById('duracion');
+                const imagenInput = document.getElementById('imagen');
+                const destacadoCheck = document.getElementById('destacado');
+                
+                const nombrePreview = document.getElementById('nombrePreview');
+                const descripcionPreview = document.getElementById('descripcionPreview');
+                const precioPreview = document.getElementById('precioPreview');
+                const duracionPreview = document.getElementById('duracionPreview');
+                const imagenPreview = document.getElementById('imagenPreview');
+                const previewBadge = document.querySelector('.preview-badge');
+                
+                // Actualizar nombre
+                nombreInput.addEventListener('input', function() {
+                    nombrePreview.textContent = this.value;
+                });
+                
+                // Actualizar descripción
+                descripcionInput.addEventListener('input', function() {
+                    descripcionPreview.textContent = this.value;
+                });
+                
+                // Actualizar precio
+                precioInput.addEventListener('input', function() {
+                    const precio = parseFloat(this.value);
+                    precioPreview.textContent = 'S/. ' + precio.toFixed(2);
+                });
+                
+                // Actualizar duración
+                duracionInput.addEventListener('input', function() {
+                    duracionPreview.textContent = this.value + ' min';
+                });
+                
+                // Actualizar imagen
+                imagenInput.addEventListener('input', function() {
+                    if (this.value) {
+                        imagenPreview.src = this.value;
+                    } else {
+                        imagenPreview.src = '/images/servicio-default.jpg';
+                    }
+                });
+                
+                // Actualizar destacado
+                destacadoCheck.addEventListener('change', function() {
+                    if (this.checked) {
+                        if (!previewBadge) {
+                            const badge = document.createElement('span');
+                            badge.className = 'preview-badge badge bg-warning';
+                            badge.textContent = 'Destacado';
+                            document.querySelector('.servicio-preview').appendChild(badge);
+                        } else {
+                            previewBadge.style.display = 'inline-block';
+                        }
+                    } else if (previewBadge) {
+                        previewBadge.style.display = 'none';
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .empleado-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            .empleado-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            }
+            
+            .empleado-img {
+                width: 120px;
+                height: 120px;
+                object-fit: cover;
+                border-radius: 50%;
+                margin: 1.5rem auto;
+                border: 5px solid #f8f9fa;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            .empleado-info {
+                text-align: center;
+                padding: 0 1rem 1.5rem;
+            }
+            
+            .empleado-status {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 5px;
+            }
+            
+            .empleado-status.active {
+                background-color: #198754;
+            }
+            
+            .empleado-status.inactive {
+                background-color: #dc3545;
+            }
+            
+            .availability-box {
+                background-color: #f8f9fa;
+                border-radius: 10px;
+                padding: 1rem;
+                margin-top: 1.5rem;
+            }
+            
+            .day-label {
+                font-weight: 600;
+            }
+            
+            .schedule-time {
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+            
+            .modal-header {
+                background-color: var(--primary);
+                color: white;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Empleados</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoEmpleadoModal">
+                    <i class="fas fa-plus me-2"></i> Nuevo Empleado
+                </button>
+            </div>
+            
+            <!-- Alerta de mensajes -->
+            <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <!-- Filtro de búsqueda -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3 mb-md-0">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="buscarEmpleado" class="form-control" placeholder="Buscar empleados...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="filtroEstado" class="form-select">
+                                <option value="todos">Todos los estados</option>
+                                <option value="activo">Activos</option>
+                                <option value="inactivo">Inactivos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de empleados -->
+            <div class="row g-4" id="empleadosContainer">
+                <div class="col-md-4" th:each="empleado : ${empleados}">
+                    <div class="card empleado-card" th:data-estado="${empleado.activo ? 'activo' : 'inactivo'}">
+                        <img th:src="${empleado.foto != null ? empleado.foto : '/images/empleado-default.jpg'}" class="empleado-img" th:alt="${empleado.nombre}">
+                        <div class="empleado-info">
+                            <div class="d-flex justify-content-center align-items-center mb-1">
+                                <h5 class="mb-0" th:text="${empleado.nombre}">Nombre del Empleado</h5>
+                                <span th:class="'empleado-status ms-2 ' + (${empleado.activo ? 'active' : 'inactive'})"></span>
+                            </div>
+                            <p class="text-muted" th:text="${empleado.cargo}">Cargo</p>
+                            
+                            <div class="availability-box">
+                                <h6 class="mb-3">Disponibilidad</h6>
+                                <div class="row mb-2" th:if="${empleado.disponibilidad != null}">
+                                    <div class="col-4" th:each="dia : ${{'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'}}">
+                                        <div class="day-label" th:text="${dia}">Día</div>
+                                        <div class="schedule-time" th:text="${empleado.disponibilidad.containsKey(dia) ? empleado.disponibilidad.get(dia) : 'No disponible'}">Horario</div>
+                                    </div>
+                                </div>
+                                <div class="text-center" th:if="${empleado.disponibilidad == null}">
+                                    <span class="text-muted">Horario no configurado</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-3">
+                                <a th:href="@{/negocio/empleados/{id}/editar(id=${empleado.id})}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </a>
+                                <button th:onclick="'toggleEmpleadoEstado(' + ${empleado.id} + ', ' + ${empleado.activo} + ')'" class="btn btn-outline-secondary">
+                                    <i th:class="${empleado.activo ? 'fas fa-toggle-on text-success' : 'fas fa-toggle-off text-danger'}"></i>
+                                    <span th:text="${empleado.activo ? 'Activo' : 'Inactivo'}">Estado</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mensaje cuando no hay empleados -->
+                <div th:if="${#lists.isEmpty(empleados)}" class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i> No hay empleados registrados. ¡Agrega tu primer empleado!
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal para nuevo empleado -->
+            <div class="modal fade" id="nuevoEmpleadoModal" tabindex="-1" aria-labelledby="nuevoEmpleadoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="nuevoEmpleadoModalLabel">Registrar Nuevo Empleado</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form th:action="@{/negocio/empleados/crear}" method="post" th:object="${nuevoEmpleado}">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                                            <label for="nombre">Nombre completo</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" id="cargo" th:field="*{cargo}" required>
+                                            <label for="cargo">Cargo</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="email" class="form-control" id="email" th:field="*{email}">
+                                            <label for="email">Email (opcional)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="tel" class="form-control" id="telefono" th:field="*{telefono}">
+                                            <label for="telefono">Teléfono (opcional)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="foto" th:field="*{foto}" placeholder="URL de la foto">
+                                    <label for="foto">URL de foto (opcional)</label>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Disponibilidad por día</label>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3" th:each="dia, iterStat : ${{'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'}}">
+                                            <div class="card">
+                                                <div class="card-body p-2">
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input dia-checkbox" type="checkbox" th:id="'dia' + ${iterStat.index}" th:data-dia="${dia}" checked>
+                                                        <label class="form-check-label" th:for="'dia' + ${iterStat.index}" th:text="${dia}">Día</label>
+                                                    </div>
+                                                    <div class="horario-inputs">
+                                                        <div class="input-group input-group-sm mb-2">
+                                                            <span class="input-group-text">Desde</span>
+                                                            <input type="time" class="form-control horario-desde" th:name="'disponibilidad[' + ${dia} + '].desde'" value="09:00">
+                                                        </div>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text">Hasta</span>
+                                                            <input type="time" class="form-control horario-hasta" th:name="'disponibilidad[' + ${dia} + '].hasta'" value="18:00">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Empleado</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulario oculto para cambiar estado -->
+            <form id="cambiarEstadoForm" th:action="@{/negocio/empleados/cambiarEstado}" method="post" style="display: none;">
+                <input type="hidden" id="empleadoId" name="id">
+                <input type="hidden" id="nuevoEstado" name="activo">
+            </form>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Filtrar empleados
+                const buscarEmpleado = document.getElementById('buscarEmpleado');
+                const filtroEstado = document.getElementById('filtroEstado');
+                const empleadosContainer = document.getElementById('empleadosContainer');
+                const empleadoCards = document.querySelectorAll('.empleado-card');
+                
+                if (buscarEmpleado) {
+                    buscarEmpleado.addEventListener('input', filtrarEmpleados);
+                }
+                
+                if (filtroEstado) {
+                    filtroEstado.addEventListener('change', filtrarEmpleados);
+                }
+                
+                function filtrarEmpleados() {
+                    const textoBusqueda = buscarEmpleado.value.toLowerCase();
+                    const estadoSeleccionado = filtroEstado.value;
+                    
+                    let hayResultados = false;
+                    
+                    empleadoCards.forEach(card => {
+                        const nombre = card.querySelector('h5').textContent.toLowerCase();
+                        const cargo = card.querySelector('.text-muted').textContent.toLowerCase();
+                        const cardContainer = card.closest('.col-md-4');
+                        const estadoEmpleado = card.dataset.estado;
+                        
+                        // Comprobar si coincide con la búsqueda
+                        const coincideTexto = nombre.includes(textoBusqueda) || cargo.includes(textoBusqueda);
+                        
+                        // Comprobar si coincide con el estado
+                        let coincideEstado = true;
+                        if (estadoSeleccionado !== 'todos') {
+                            coincideEstado = estadoEmpleado === estadoSeleccionado;
+                        }
+                        
+                        // Mostrar u ocultar
+                        if (coincideTexto && coincideEstado) {
+                            cardContainer.style.display = 'block';
+                            hayResultados = true;
+                        } else {
+                            cardContainer.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mostrar mensaje si no hay resultados
+                    let noResultadosMsg = document.getElementById('noResultadosMsg');
+                    
+                    if (!hayResultados) {
+                        if (!noResultadosMsg) {
+                            noResultadosMsg = document.createElement('div');
+                            noResultadosMsg.id = 'noResultadosMsg';
+                            noResultadosMsg.className = 'col-12';
+                            noResultadosMsg.innerHTML = `
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-info-circle me-2"></i> No se encontraron empleados que coincidan con tu búsqueda.
+                                </div>
+                            `;
+                            empleadosContainer.appendChild(noResultadosMsg);
+                        }
+                    } else if (noResultadosMsg) {
+                        noResultadosMsg.remove();
+                    }
+                }
+                
+                // Manejar checkboxes de disponibilidad
+                const diaCheckboxes = document.querySelectorAll('.dia-checkbox');
+                
+                diaCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const horarioInputs = this.closest('.card-body').querySelector('.horario-inputs');
+                        
+                        if (this.checked) {
+                            horarioInputs.style.display = 'block';
+                        } else {
+                            horarioInputs.style.display = 'none';
+                        }
+                    });
+                });
+            });
+            
+            // Función para cambiar el estado de un empleado
+            function toggleEmpleadoEstado(id, estadoActual) {
+                const form = document.getElementById('cambiarEstadoForm');
+                const empleadoIdInput = document.getElementById('empleadoId');
+                const nuevoEstadoInput = document.getElementById('nuevoEstado');
+                
+                empleadoIdInput.value = id;
+                nuevoEstadoInput.value = !estadoActual;
+                
+                form.submit();
+            }
+        </script>
+    </th:block>
+</body>
+</html>

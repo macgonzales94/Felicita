@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Servicios - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <!-- Estilos para la página de servicios -->
+        <style>
+            .servicio-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            .servicio-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            }
+            
+            .servicio-img {
+                height: 180px;
+                object-fit: cover;
+            }
+            
+            .servicio-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 1;
+            }
+            
+            .modal-header {
+                background-color: var(--primary);
+                color: white;
+            }
+            
+            .form-floating label {
+                color: #6c757d;
+            }
+            
+            .servicio-status {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 5px;
+            }
+            
+            .servicio-status.active {
+                background-color: #198754;
+            }
+            
+            .servicio-status.inactive {
+                background-color: #dc3545;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Servicios</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoServicioModal">
+                    <i class="fas fa-plus me-2"></i> Nuevo Servicio
+                </button>
+            </div>
+            
+            <!-- Alerta de mensajes -->
+            <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <!-- Filtros y búsqueda -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3 mb-md-0">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="buscarServicio" class="form-control" placeholder="Buscar servicios...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="filtroCategoria" class="form-select">
+                                <option value="todas">Todas las categorías</option>
+                                <option th:each="categoria : ${categorias}" th:value="${categoria.id}" th:text="${categoria.nombre}">Categoría</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de servicios -->
+            <div class="row g-4" id="serviciosContainer">
+                <div class="col-md-4" th:each="servicio : ${servicios}">
+                    <div class="card servicio-card h-100">
+                        <span th:if="${servicio.destacado}" class="servicio-badge badge bg-warning">Destacado</span>
+                        <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" class="card-img-top servicio-img" th:alt="${servicio.nombre}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title mb-0" th:text="${servicio.nombre}">Nombre del Servicio</h5>
+                                <span th:class="'servicio-status ' + (${servicio.activo ? 'active' : 'inactive'})"></span>
+                            </div>
+                            <p class="card-text text-muted mb-3" th:text="${servicio.descripcion}">Descripción del servicio...</p>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-light text-dark">
+                                    <i class="far fa-clock me-1"></i> <span th:text="${servicio.duracion} + ' min'">30 min</span>
+                                </span>
+                                <span class="fw-bold" th:text="'S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">S/. 35.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/negocio/servicios/{id}/editar(id=${servicio.id})}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </a>
+                                <button th:onclick="'toggleServicioEstado(' + ${servicio.id} + ', ' + ${servicio.activo} + ')'" class="btn btn-outline-secondary">
+                                    <i th:class="${servicio.activo ? 'fas fa-toggle-on text-success' : 'fas fa-toggle-off text-danger'}"></i>
+                                    <span th:text="${servicio.activo ? 'Activo' : 'Inactivo'}">Estado</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mensaje cuando no hay servicios -->
+                <div th:if="${#lists.isEmpty(servicios)}" class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i> No hay servicios registrados. ¡Crea tu primer servicio!
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal para nuevo servicio -->
+            <div class="modal fade" id="nuevoServicioModal" tabindex="-1" aria-labelledby="nuevoServicioModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="nuevoServicioModalLabel">Crear Nuevo Servicio</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form th:action="@{/negocio/servicios/crear}" method="post" th:object="${nuevoServicio}">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                                            <label for="nombre">Nombre del servicio</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <select class="form-select" id="categoria" th:field="*{categoria}">
+                                                <option value="">Seleccione una categoría</option>
+                                                <option th:each="categoria : ${categorias}" th:value="${categoria.id}" th:text="${categoria.nombre}">Categoría</option>
+                                            </select>
+                                            <label for="categoria">Categoría</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="number" class="form-control" id="precio" th:field="*{precio}" step="0.01" min="0" required>
+                                            <label for="precio">Precio (S/.)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="number" class="form-control" id="duracion" th:field="*{duracion}" min="1" required>
+                                            <label for="duracion">Duración (minutos)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" id="descripcion" th:field="*{descripcion}" style="height: 100px" required></textarea>
+                                    <label for="descripcion">Descripción</label>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="imagen" th:field="*{imagen}" placeholder="URL de la imagen">
+                                    <label for="imagen">URL de imagen (opcional)</label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="destacado" th:field="*{destacado}">
+                                    <label class="form-check-label" for="destacado">
+                                        Destacar este servicio
+                                    </label>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Servicio</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulario oculto para cambiar estado -->
+            <form id="cambiarEstadoForm" th:action="@{/negocio/servicios/cambiarEstado}" method="post" style="display: none;">
+                <input type="hidden" id="servicioId" name="id">
+                <input type="hidden" id="nuevoEstado" name="activo">
+            </form>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Filtrar servicios
+                const buscarServicio = document.getElementById('buscarServicio');
+                const filtroCategoria = document.getElementById('filtroCategoria');
+                const serviciosContainer = document.getElementById('serviciosContainer');
+                const servicioCards = document.querySelectorAll('.servicio-card');
+                
+                if (buscarServicio) {
+                    buscarServicio.addEventListener('input', filtrarServicios);
+                }
+                
+                if (filtroCategoria) {
+                    filtroCategoria.addEventListener('change', filtrarServicios);
+                }
+                
+                function filtrarServicios() {
+                    const textoBusqueda = buscarServicio.value.toLowerCase();
+                    const categoriaSeleccionada = filtroCategoria.value;
+                    
+                    let hayResultados = false;
+                    
+                    servicioCards.forEach(card => {
+                        const nombre = card.querySelector('.card-title').textContent.toLowerCase();
+                        const descripcion = card.querySelector('.card-text').textContent.toLowerCase();
+                        const cardContainer = card.closest('.col-md-4');
+                        
+                        // Comprobar si coincide con la búsqueda
+                        const coincideTexto = nombre.includes(textoBusqueda) || descripcion.includes(textoBusqueda);
+                        
+                        // Comprobar si coincide con la categoría
+                        let coincideCategoria = true;
+                        if (categoriaSeleccionada !== 'todas') {
+                            const categoriaServicio = card.dataset.categoriaId;
+                            coincideCategoria = categoriaServicio === categoriaSeleccionada;
+                        }
+                        
+                        // Mostrar u ocultar
+                        if (coincideTexto && coincideCategoria) {
+                            cardContainer.style.display = 'block';
+                            hayResultados = true;
+                        } else {
+                            cardContainer.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mostrar mensaje si no hay resultados
+                    let noResultadosMsg = document.getElementById('noResultadosMsg');
+                    
+                    if (!hayResultados) {
+                        if (!noResultadosMsg) {
+                            noResultadosMsg = document.createElement('div');
+                            noResultadosMsg.id = 'noResultadosMsg';
+                            noResultadosMsg.className = 'col-12';
+                            noResultadosMsg.innerHTML = `
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-info-circle me-2"></i> No se encontraron servicios que coincidan con tu búsqueda.
+                                </div>
+                            `;
+                            serviciosContainer.appendChild(noResultadosMsg);
+                        }
+                    } else if (noResultadosMsg) {
+                        noResultadosMsg.remove();
+                    }
+                }
+            });
+            
+            // Función para cambiar el estado de un servicio
+            function toggleServicioEstado(id, estadoActual) {
+                const form = document.getElementById('cambiarEstadoForm');
+                const servicioIdInput = document.getElementById('servicioId');
+                const nuevoEstadoInput = document.getElementById('nuevoEstado');
+                
+                servicioIdInput.value = id;
+                nuevoEstadoInput.value = !estadoActual;
+                
+                form.submit();
+            }
+        </script>
+    </th:block>
+</body>
+</html>

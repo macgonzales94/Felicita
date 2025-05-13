@@ -21,6 +21,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
     
     /**
+     * Método alternativo para buscar un usuario por su nombre de usuario 
+     * (para compatibilidad con Spring Security)
+     * @param username El nombre de usuario a buscar
+     * @return Un Optional que contiene el usuario si existe
+     */
+    default Optional<Usuario> findByUsername(String username) {
+        return findByNombreUsuario(username);
+    }
+    
+    /**
      * Busca un usuario por su correo electrónico
      * @param correo El correo electrónico a buscar
      * @return Un Optional que contiene el usuario si existe

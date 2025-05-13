@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Reservas - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css">
+        <style>
+            .reserva-status {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                margin-right: 5px;
+            }
+            
+            .reserva-status.PENDIENTE {
+                background-color: #ffc107;
+            }
+            
+            .reserva-status.CONFIRMADA {
+                background-color: #198754;
+            }
+            
+            .reserva-status.COMPLETADA {
+                background-color: #0d6efd;
+            }
+            
+            .reserva-status.CANCELADA {
+                background-color: #dc3545;
+            }
+            
+            .nav-pills .nav-link.active {
+                background-color: var(--primary);
+            }
+            
+            .tab-content {
+                padding: 20px 0;
+            }
+            
+            .fc-event {
+                cursor: pointer;
+            }
+            
+            .fc-event.pendiente {
+                background-color: #ffc107;
+                border-color: #ffc107;
+                color: #000;
+            }
+            
+            .fc-event.confirmada {
+                background-color: #198754;
+                border-color: #198754;
+            }
+            
+            .fc-event.completada {
+                background-color: #0d6efd;
+                border-color: #0d6efd;
+            }
+            
+            .fc-event.cancelada {
+                background-color: #dc3545;
+                border-color: #dc3545;
+            }
+            
+            .table-responsive {
+                min-height: 300px;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Reservas</h1>
+                <a th:href="@{/negocio/reservas/nueva}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Nueva Reserva
+                </a>
+            </div>
+            
+            <!-- Alerta de mensajes -->
+            <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <!-- Filtros y vistas -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <ul class="nav nav-pills mb-3" id="reservasTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="calendario-tab" data-bs-toggle="pill" data-bs-target="#calendario" type="button" role="tab" aria-controls="calendario" aria-selected="true">
+                                <i class="far fa-calendar-alt me-1"></i> Calendario
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="lista-tab" data-bs-toggle="pill" data-bs-target="#lista" type="button" role="tab" aria-controls="lista" aria-selected="false">
+                                <i class="fas fa-list me-1"></i> Lista
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="buscarReserva" class="form-control" placeholder="Buscar por cliente...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filtroEmpleado" class="form-select">
+                                <option value="todos">Todos los empleados</option>
+                                <option th:each="empleado : ${empleados}" th:if="${empleado.activo}" th:value="${empleado.id}" th:text="${empleado.nombre}">Empleado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filtroEstado" class="form-select">
+                                <option value="todos">Todos los estados</option>
+                                <option value="PENDIENTE">Pendientes</option>
+                                <option value="CONFIRMADA">Confirmadas</option>
+                                <option value="COMPLETADA">Completadas</option>
+                                <option value="CANCELADA">Canceladas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="filtroPeriodo" class="form-select">
+                                <option value="hoy">Hoy</option>
+                                <option value="semana">Esta semana</option>
+                                <option value="mes">Este mes</option>
+                                <option value="todos" selected>Todas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenido de pestañas -->
+            <div class="tab-content" id="reservasTabContent">
+                <!-- Vista de calendario -->
+                <div class="tab-pane fade show active" id="calendario" role="tabpanel" aria-labelledby="calendario-tab">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div id="reservasCalendar"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vista de lista -->
+                <div class="tab-pane fade" id="lista" role="tabpanel" aria-labelledby="lista-tab">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Empleado</th>
+                                            <th>Fecha y Hora</th>
+                                            <th>Servicios</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reservasTableBody">
+                                        <tr th:each="reserva : ${reservas}">
+                                            <td th:text="${reserva.id}">1</td>
+                                            <td th:text="${reserva.usuario.nombreCompleto}">Nombre Cliente</td>
+                                            <td th:text="${reserva.empleado.nombre}">Nombre Empleado</td>
+                                            <td th:text="${#temporals.format(reserva.horaInicio, 'dd/MM/yyyy HH:mm')}">Fecha y Hora</td>
+                                            <td>
+                                                <span th:text="${#lists.size(reserva.servicios)}">3</span> servicios
+                                            </td>
+                                            <td>
+                                                <span th:class="'reserva-status ' + ${reserva.estado}"></span>
+                                                <span th:text="${reserva.estado}">PENDIENTE</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/negocio/reservas/{id}(id=${reserva.id})}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="text-center py-3" id="noReservasMsg" style="display: none;">
+                                    <p class="text-muted mb-0">No se encontraron reservas que coincidan con los filtros seleccionados.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/locales-all.min.js"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Preparar datos de reservas para el calendario
+                const reservas = /*[[${reservas}]]*/ [];
+                const calendarEvents = reservas.map(r => {
+                    return {
+                        id: r.id,
+                        title: r.usuario.nombreCompleto + ' - ' + r.servicios.length + ' servicios',
+                        start: new Date(r.horaInicio),
+                        end: new Date(r.horaFin),
+                        allDay: false,
+                        backgroundColor: getEstadoColor(r.estado),
+                        borderColor: getEstadoColor(r.estado),
+                        textColor: r.estado === 'PENDIENTE' ? '#000' : '#fff',
+                        className: r.estado.toLowerCase(),
+                        extendedProps: {
+                            empleadoId: r.empleado.id,
+                            estado: r.estado,
+                            cliente: r.usuario.nombreCompleto
+                        }
+                    };
+                });
+                
+                // Inicializar calendario
+                const calendarEl = document.getElementById('reservasCalendar');
+                if (calendarEl) {
+                    const calendar = new FullCalendar.Calendar(calendarEl, {
+                        locale: 'es',
+                        initialView: 'timeGridWeek',
+                        headerToolbar: {
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                        },
+                        allDaySlot: false,
+                        slotMinTime: '08:00:00',
+                        slotMaxTime: '21:00:00',
+                        events: calendarEvents,
+                        eventTimeFormat: {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        },
+                        height: 'auto',
+                        eventClick: function(info) {
+                            // Redireccionar a la página de detalles de la reserva
+                            window.location.href = '/negocio/reservas/' + info.event.id;
+                        }
+                    });
+                    
+                    calendar.render();
+                    
+                    // Filtrar eventos en el calendario
+                    const filtroEmpleado = document.getElementById('filtroEmpleado');
+                    const filtroEstado = document.getElementById('filtroEstado');
+                    
+                    if (filtroEmpleado) {
+                        filtroEmpleado.addEventListener('change', function() {
+                            calendar.getEvents().forEach(event => {
+                                const empleadoId = event.extendedProps.empleadoId;
+                                const shouldShow = this.value === 'todos' || empleadoId.toString() === this.value;
+                                event.setProp('display', shouldShow ? 'auto' : 'none');
+                            });
+                        });
+                    }
+                    
+                    if (filtroEstado) {
+                        filtroEstado.addEventListener('change', function() {
+                            calendar.getEvents().forEach(event => {
+                                const estado = event.extendedProps.estado;
+                                const shouldShow = this.value === 'todos' || estado === this.value;
+                                event.setProp('display', shouldShow ? 'auto' : 'none');
+                            });
+                        });
+                    }
+                }
+                
+                // Filtrar reservas en la vista de lista
+                const buscarReserva = document.getElementById('buscarReserva');
+                const filtroEmpleadoLista = document.getElementById('filtroEmpleado');
+                const filtroEstadoLista = document.getElementById('filtroEstado');
+                const filtroPeriodo = document.getElementById('filtroPeriodo');
+                const reservasTableBody = document.getElementById('reservasTableBody');
+                const noReservasMsg = document.getElementById('noReservasMsg');
+                
+                if (buscarReserva && reservasTableBody) {
+                    // Conjunto de eventos para activar el filtrado
+                    const filterEvents = ['input', 'change'];
+                    const filterElements = [buscarReserva, filtroEmpleadoLista, filtroEstadoLista, filtroPeriodo];
+                    
+                    filterEvents.forEach(eventType => {
+                        filterElements.forEach(element => {
+                            if (element) {
+                                element.addEventListener(eventType, filtrarReservas);
+                            }
+                        });
+                    });
+                    
+                    function filtrarReservas() {
+                        const textoBusqueda = buscarReserva.value.toLowerCase();
+                        const empleadoSeleccionado = filtroEmpleadoLista.value;
+                        const estadoSeleccionado = filtroEstadoLista.value;
+                        const periodoSeleccionado = filtroPeriodo.value;
+                        
+                        const filas = reservasTableBody.querySelectorAll('tr');
+                        let hayResultados = false;
+                        
+                        filas.forEach(fila => {
+                            const cliente = fila.cells[1].textContent.toLowerCase();
+                            const empleadoId = fila.dataset.empleadoId;
+                            const estado = fila.cells[5].textContent.trim();
+                            const fechaReserva = new Date(fila.dataset.fecha);
+                            
+                            // Comprobar si coincide con la búsqueda de cliente
+                            const coincideCliente = cliente.includes(textoBusqueda);
+                            
+                            // Comprobar si coincide con el filtro de empleado
+                            const coincideEmpleado = empleadoSeleccionado === 'todos' || empleadoId === empleadoSeleccionado;
+                            
+                            // Comprobar si coincide con el filtro de estado
+                            const coincideEstado = estadoSeleccionado === 'todos' || estado === estadoSeleccionado;
+                            
+                            // Comprobar si coincide con el filtro de periodo
+                            let coincidePeriodo = true;
+                            const hoy = new Date();
+                            hoy.setHours(0, 0, 0, 0);
+                            
+                            if (periodoSeleccionado === 'hoy') {
+                                const fechaSinHora = new Date(fechaReserva);
+                                fechaSinHora.setHours(0, 0, 0, 0);
+                                coincidePeriodo = fechaSinHora.getTime() === hoy.getTime();
+                            } else if (periodoSeleccionado === 'semana') {
+                                const inicioSemana = new Date(hoy);
+                                inicioSemana.setDate(hoy.getDate() - hoy.getDay()); // Domingo de esta semana
+                                const finSemana = new Date(inicioSemana);
+                                finSemana.setDate(inicioSemana.getDate() + 6); // Sábado de esta semana
+                                coincidePeriodo = fechaReserva >= inicioSemana && fechaReserva <= finSemana;
+                            } else if (periodoSeleccionado === 'mes') {
+                                const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                                const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+                                coincidePeriodo = fechaReserva >= inicioMes && fechaReserva <= finMes;
+                            }
+                            
+                            // Mostrar u ocultar
+                            if (coincideCliente && coincideEmpleado && coincideEstado && coincidePeriodo) {
+                                fila.style.display = '';
+                                hayResultados = true;
+                            } else {
+                                fila.style.display = 'none';
+                            }
+                        });
+                        
+                        // Mostrar mensaje si no hay resultados
+                        if (noReservasMsg) {
+                            noReservasMsg.style.display = hayResultados ? 'none' : 'block';
+                        }
+                    }
+                }
+            });
+            
+            // Función para obtener color según estado
+            function getEstadoColor(estado) {
+                switch(estado) {
+                    case 'PENDIENTE': return '#ffc107';
+                    case 'CONFIRMADA': return '#198754';
+                    case 'COMPLETADA': return '#0d6efd';
+                    case 'CANCELADA': return '#dc3545';
+                    default: return '#6c757d';
+                }
+            }
+        </script>
+    </th:block>
+</body>
+</html>

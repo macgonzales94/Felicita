@@ -1,5 +1,6 @@
 package com.felicita.felicita.repository;
 
+import com.felicita.felicita.model.Negocio;
 import com.felicita.felicita.model.Servicio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -40,4 +41,18 @@ public interface ServicioRepository extends JpaRepository<Servicio, Long> {
      * @return Lista de servicios con duración menor o igual
      */
     List<Servicio> findByDuracionLessThanEqual(Integer duracionMaxima);
+    
+    /**
+     * Busca servicios por negocio
+     * @param negocio El negocio cuyos servicios se quieren obtener
+     * @return Lista de servicios del negocio especificado
+     */
+    List<Servicio> findByNegocio(Negocio negocio);
+    
+    /**
+     * Busca servicios activos por negocio
+     * @param negocio El negocio cuyos servicios activos se quieren obtener
+     * @return Lista de servicios activos del negocio especificado
+     */
+    List<Servicio> findByNegocioAndActivoTrue(Negocio negocio);
 }

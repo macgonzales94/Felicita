@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Negocio - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .form-section {
+                border-bottom: 1px solid #e9ecef;
+                padding-bottom: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .form-section:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+                margin-bottom: 0;
+            }
+            
+            .form-section-title {
+                font-size: 1.2rem;
+                margin-bottom: 1.5rem;
+                color: var(--primary);
+            }
+            
+            .profile-image {
+                width: 150px;
+                height: 150px;
+                object-fit: cover;
+                border-radius: 10px;
+                border: 1px solid #e9ecef;
+            }
+            
+            .logo-preview {
+                width: 100px;
+                height: 100px;
+                object-fit: contain;
+                border-radius: 5px;
+                border: 1px solid #e9ecef;
+            }
+            
+            .week-selector {
+                display: flex;
+                margin-bottom: 15px;
+            }
+            
+            .day-item {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .day-checkbox {
+                display: none;
+            }
+            
+            .day-label {
+                display: block;
+                cursor: pointer;
+                padding: 10px 5px;
+                border-radius: 5px;
+                margin: 0 2px;
+                background-color: #f8f9fa;
+                transition: all 0.2s;
+            }
+            
+            .day-checkbox:checked + .day-label {
+                background-color: var(--primary);
+                color: white;
+            }
+            
+            .horario-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            
+            .horario-container .form-control {
+                max-width: 150px;
+            }
+            
+            .text-verification {
+                font-size: 0.9rem;
+                padding: 10px 15px;
+                margin: 15px 0;
+                border-radius: 5px;
+            }
+            
+            .text-verification.pending {
+                background-color: rgba(255, 193, 7, 0.1);
+                color: #664d03;
+            }
+            
+            .text-verification.verified {
+                background-color: rgba(25, 135, 84, 0.1);
+                color: #0f5132;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <div class="container py-4">
+            <h1 class="mb-4">Configuración del Negocio</h1>
+            
+            <!-- Alerta de mensajes -->
+            <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <!-- Estado de verificación -->
+            <div th:if="${!negocio.verificado}" class="text-verification pending mb-4">
+                <i class="fas fa-info-circle me-2"></i> Tu negocio está pendiente de verificación. Una vez verificado, podrás acceder a todas las funcionalidades de FELICITA.
+            </div>
+            
+            <div th:if="${negocio.verificado}" class="text-verification verified mb-4">
+                <i class="fas fa-check-circle me-2"></i> ¡Tu negocio está verificado! Tienes acceso completo a todas las funcionalidades de FELICITA.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <!-- Menú de navegación lateral -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush nav-config">
+                                <a href="#informacion-general" class="list-group-item list-group-item-action active">
+                                    <i class="fas fa-store me-2"></i> Información General
+                                </a>
+                                <a href="#localizacion" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-map-marker-alt me-2"></i> Localización
+                                </a>
+                                <a href="#horarios" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-clock me-2"></i> Horarios de Atención
+                                </a>
+                                <a href="#imagenes" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-images me-2"></i> Imágenes
+                                </a>
+                                <a href="#redes-sociales" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-share-alt me-2"></i> Redes Sociales
+                                </a>
+                                <a href="#cuenta" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-user-cog me-2"></i> Configuración de Cuenta
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información de plan -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-crown me-2"></i> Tu Plan
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="mb-3">Plan Premium</h6>
+                            <p class="mb-2 small">
+                                <i class="fas fa-check text-success me-2"></i> Reservas ilimitadas
+                            </p>
+                            <p class="mb-2 small">
+                                <i class="fas fa-check text-success me-2"></i> Empleados ilimitados
+                            </p>
+                            <p class="mb-2 small">
+                                <i class="fas fa-check text-success me-2"></i> Estadísticas avanzadas
+                            </p>
+                            <p class="mb-3 small">
+                                <i class="fas fa-check text-success me-2"></i> Soporte prioritario
+                            </p>
+                            
+                            <a href="#" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-arrow-up me-1"></i> Upgrade plan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-9">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
+                            <form th:action="@{/negocio/configuracion/actualizar}" method="post" th:object="${negocio}">
+                                <!-- Información General -->
+                                <div id="informacion-general" class="form-section">
+                                    <h3 class="form-section-title">Información General</h3>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="nombreComercial" class="form-label">Nombre Comercial *</label>
+                                            <input type="text" class="form-control" id="nombreComercial" th:field="*{nombreComercial}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="tipo" class="form-label">Tipo de Negocio *</label>
+                                            <select class="form-select" id="tipo" th:field="*{tipo}" required>
+                                                <option value="SALON">Salón de Belleza</option>
+                                                <option value="BARBERIA">Barbería</option>
+                                                <option value="SPA">Spa</option>
+                                                <option value="CENTRO_ESTETICO">Centro Estético</option>
+                                                <option value="OTRO">Otro</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="descripcion" class="form-label">Descripción</label>
+                                        <textarea class="form-control" id="descripcion" th:field="*{descripcion}" rows="3"></textarea>
+                                        <div class="form-text">Describe brevemente tu negocio. Esta información será visible para los clientes.</div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="telefono" class="form-label">Teléfono de Contacto *</label>
+                                            <input type="tel" class="form-control" id="telefono" th:field="*{telefono}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="email" class="form-label">Email de Contacto *</label>
+                                            <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="sitioWeb" class="form-label">Sitio Web</label>
+                                        <input type="url" class="form-control" id="sitioWeb" th:field="*{sitioWeb}" placeholder="https://www.ejemplo.com">
+                                    </div>
+                                </div>
+                                
+                                <!-- Localización -->
+                                <div id="localizacion" class="form-section">
+                                    <h3 class="form-section-title">Localización</h3>
+                                    
+                                    <div class="mb-3">
+                                        <label for="direccion" class="form-label">Dirección *</label>
+                                        <input type="text" class="form-control" id="direccion" th:field="*{direccion}" required>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="ciudad" class="form-label">Ciudad *</label>
+                                            <input type="text" class="form-control" id="ciudad" th:field="*{ciudad}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="provincia" class="form-label">Provincia/Estado *</label>
+                                            <input type="text" class="form-control" id="provincia" th:field="*{provincia}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="codigoPostal" class="form-label">Código Postal</label>
+                                            <input type="text" class="form-control" id="codigoPostal" th:field="*{codigoPostal}">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="ubicacionMapa" class="form-label">Ubicación en el Mapa (Coordenadas)</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="latitud" th:field="*{latitud}" placeholder="Latitud (Ej: -12.0464)">
+                                            <input type="text" class="form-control" id="longitud" th:field="*{longitud}" placeholder="Longitud (Ej: -77.0428)">
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i> Puedes obtener las coordenadas desde Google Maps.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Horarios de Atención -->
+                                <div id="horarios" class="form-section">
+                                    <h3 class="form-section-title">Horarios de Atención</h3>
+                                    
+                                    <div class="week-selector mb-4">
+                                        <div class="day-item" th:each="dia, iterStat : ${{'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'}}">
+                                            <input type="checkbox" class="day-checkbox" th:id="'dia' + ${iterStat.index}" th:name="'dias'" th:value="${dia}" th:checked="${true}">
+                                            <label class="day-label" th:for="'dia' + ${iterStat.index}" th:text="${dia}">Día</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="horariosDias">
+                                        <div class="row mb-4" th:each="dia, iterStat : ${{'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'}}">
+                                            <div class="col-md-2">
+                                                <label class="form-label" th:text="${dia}">Día</label>
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="horario-container">
+                                                    <label class="me-2">Desde:</label>
+                                                    <input type="time" class="form-control me-3" th:name="'horario[' + ${dia} + '].desde'" th:value="${dia != 'Domingo' ? '09:00' : '10:00'}">
+                                                    <label class="me-2">Hasta:</label>
+                                                    <input type="time" class="form-control" th:name="'horario[' + ${dia} + '].hasta'" th:value="${dia != 'Domingo' ? '19:00' : '16:00'}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Imágenes -->
+                                <div id="imagenes" class="form-section">
+                                    <h3 class="form-section-title">Imágenes</h3>
+                                    
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Imagen Principal del Negocio</label>
+                                            <div class="mb-3">
+                                                <img th:src="${negocio.imagenPrincipal != null ? negocio.imagenPrincipal : '/images/negocio-default.jpg'}" class="profile-image" id="imagenPrincipalPreview">
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="imagenPrincipal" th:field="*{imagenPrincipal}" placeholder="URL de la imagen">
+                                                <button class="btn btn-outline-secondary" type="button" id="btnPreviewImagen">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Logo del Negocio</label>
+                                            <div class="mb-3">
+                                                <img th:src="${negocio.logo != null ? negocio.logo : '/images/logo-default.png'}" class="logo-preview" id="logoPreview">
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="logo" th:field="*{logo}" placeholder="URL del logo">
+                                                <button class="btn btn-outline-secondary" type="button" id="btnPreviewLogo">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Galería de Imágenes</label>
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control" id="nuevaImagen" placeholder="URL de la imagen">
+                                            <button class="btn btn-outline-primary" type="button" id="btnAgregarImagen">
+                                                <i class="fas fa-plus"></i> Agregar
+                                            </button>
+                                        </div>
+                                        <div class="form-text mb-3">
+                                            <i class="fas fa-info-circle me-1"></i> Agrega imágenes que muestren tu negocio y servicios.
+                                        </div>
+                                        
+                                        <div class="row" id="galeriaImagenes">
+                                            <!-- Las imágenes de la galería se mostrarán aquí -->
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Redes Sociales -->
+                                <div id="redes-sociales" class="form-section">
+                                    <h3 class="form-section-title">Redes Sociales</h3>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="facebook" class="form-label">
+                                                <i class="fab fa-facebook me-1 text-primary"></i> Facebook
+                                            </label>
+                                            <input type="text" class="form-control" id="facebook" th:field="*{redes.facebook}" placeholder="https://facebook.com/tunegocio">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="instagram" class="form-label">
+                                                <i class="fab fa-instagram me-1 text-danger"></i> Instagram
+                                            </label>
+                                            <input type="text" class="form-control" id="instagram" th:field="*{redes.instagram}" placeholder="https://instagram.com/tunegocio">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="tiktok" class="form-label">
+                                                <i class="fab fa-tiktok me-1"></i> TikTok
+                                            </label>
+                                            <input type="text" class="form-control" id="tiktok" th:field="*{redes.tiktok}" placeholder="https://tiktok.com/@tunegocio">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="whatsapp" class="form-label">
+                                                <i class="fab fa-whatsapp me-1 text-success"></i> WhatsApp
+                                            </label>
+                                            <input type="text" class="form-control" id="whatsapp" th:field="*{redes.whatsapp}" placeholder="+51 987 654 321">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Configuración de Cuenta -->
+                                <div id="cuenta" class="form-section">
+                                    <h3 class="form-section-title">Configuración de Cuenta</h3>
+                                    
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Los cambios en la configuración de la cuenta afectarán el acceso al sistema.
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="emailCuenta" class="form-label">Email de la Cuenta</label>
+                                        <input type="email" class="form-control" id="emailCuenta" th:value="${negocio.usuario.email}" readonly>
+                                        <div class="form-text">Para cambiar el email de la cuenta, contacta al soporte de FELICITA.</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="cambiarContrasena" class="form-label">Cambiar Contraseña</label>
+                                        <div class="d-grid">
+                                            <button type="button" class="btn btn-outline-secondary" id="cambiarContrasena">
+                                                <i class="fas fa-key me-2"></i> Cambiar Contraseña
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                    <button type="reset" class="btn btn-outline-secondary me-md-2">
+                                        <i class="fas fa-undo me-1"></i> Restaurar cambios
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Guardar configuración
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para cambiar contraseña -->
+        <div class="modal fade" id="cambiarContrasenaModal" tabindex="-1" aria-labelledby="cambiarContrasenaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cambiarContrasenaModalLabel">Cambiar Contraseña</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formCambiarContrasena" th:action="@{/negocio/cambiar-contrasena}" method="post">
+                            <div class="mb-3">
+                                <label for="contrasenaActual" class="form-label">Contraseña Actual</label>
+                                <input type="password" class="form-control" id="contrasenaActual" name="contrasenaActual" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="nuevaContrasena" class="form-label">Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="nuevaContrasena" name="nuevaContrasena" required>
+                                <div class="form-text">La contraseña debe tener al menos 8 caracteres.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmarContrasena" class="form-label">Confirmar Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="confirmarContrasena" name="confirmarContrasena" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" form="formCambiarContrasena" class="btn btn-primary">Cambiar Contraseña</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Navegación del menú lateral
+                const navLinks = document.querySelectorAll('.nav-config a');
+                const sections = document.querySelectorAll('.form-section');
+                
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Actualizar clase activa
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Scroll al elemento
+                        const targetId = this.getAttribute('href').substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    });
+                });
+                
+                // Preview de imágenes
+                const imagenPrincipalInput = document.getElementById('imagenPrincipal');
+                const imagenPrincipalPreview = document.getElementById('imagenPrincipalPreview');
+                const logoInput = document.getElementById('logo');
+                const logoPreview = document.getElementById('logoPreview');
+                const btnPreviewImagen = document.getElementById('btnPreviewImagen');
+                const btnPreviewLogo = document.getElementById('btnPreviewLogo');
+                
+                // Preview de imagen principal
+                if (btnPreviewImagen) {
+                    btnPreviewImagen.addEventListener('click', function() {
+                        if (imagenPrincipalInput.value) {
+                            imagenPrincipalPreview.src = imagenPrincipalInput.value;
+                        } else {
+                            imagenPrincipalPreview.src = '/images/negocio-default.jpg';
+                        }
+                    });
+                }
+                
+                // Preview de logo
+                if (btnPreviewLogo) {
+                    btnPreviewLogo.addEventListener('click', function() {
+                        if (logoInput.value) {
+                            logoPreview.src = logoInput.value;
+                        } else {
+                            logoPreview.src = '/images/logo-default.png';
+                        }
+                    });
+                }
+                
+                // Galería de imágenes
+                const nuevaImagenInput = document.getElementById('nuevaImagen');
+                const btnAgregarImagen = document.getElementById('btnAgregarImagen');
+                const galeriaImagenes = document.getElementById('galeriaImagenes');
+                let imagenes = [];
+                
+                // Cargar imágenes existentes
+                const imagenesExistentes = /*[[${negocio.imagenes}]]*/ [];
+                if (imagenesExistentes && imagenesExistentes.length > 0) {
+                    imagenes = [...imagenesExistentes];
+                    renderizarGaleria();
+                }
+                
+                // Agregar nueva imagen a la galería
+                if (btnAgregarImagen) {
+                    btnAgregarImagen.addEventListener('click', function() {
+                        const url = nuevaImagenInput.value.trim();
+                        if (url) {
+                            imagenes.push(url);
+                            renderizarGaleria();
+                            nuevaImagenInput.value = '';
+                        }
+                    });
+                }
+                
+                // Renderizar la galería de imágenes
+                function renderizarGaleria() {
+                    if (galeriaImagenes) {
+                        galeriaImagenes.innerHTML = '';
+                        
+                        imagenes.forEach((url, index) => {
+                            const col = document.createElement('div');
+                            col.className = 'col-md-3 mb-3';
+                            
+                            col.innerHTML = `
+                                <div class="card">
+                                    <img src="${url}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                                    <div class="card-body p-2 text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-imagen" data-index="${index}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="imagenes[${index}]" value="${url}">
+                            `;
+                            
+                            galeriaImagenes.appendChild(col);
+                        });
+                        
+                        // Agregar evento para eliminar imágenes
+                        document.querySelectorAll('.btn-eliminar-imagen').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const index = parseInt(this.dataset.index);
+                                imagenes.splice(index, 1);
+                                renderizarGaleria();
+                            });
+                        });
+                    }
+                }
+                
+                // Manejo de días y horarios
+                const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+                
+                dayCheckboxes.forEach((checkbox, index) => {
+                    checkbox.addEventListener('change', function() {
+                        const dayName = this.value;
+                        const horarioContainer = document.querySelector(`[name="horario[${getDayName(index)}].desde"]`).closest('.row');
+                        
+                        if (this.checked) {
+                            horarioContainer.style.display = '';
+                        } else {
+                            horarioContainer.style.display = 'none';
+                        }
+                    });
+                });
+                
+                function getDayName(index) {
+                    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                    return days[index];
+                }
+                
+                // Abrir modal para cambiar contraseña
+                const btnCambiarContrasena = document.getElementById('cambiarContrasena');
+                if (btnCambiarContrasena) {
+                    btnCambiarContrasena.addEventListener('click', function() {
+                        const modal = new bootstrap.Modal(document.getElementById('cambiarContrasenaModal'));
+                        modal.show();
+                    });
+                }
+                
+                // Validar formulario de cambio de contraseña
+                const formCambiarContrasena = document.getElementById('formCambiarContrasena');
+                if (formCambiarContrasena) {
+                    formCambiarContrasena.addEventListener('submit', function(e) {
+                        const nuevaContrasena = document.getElementById('nuevaContrasena').value;
+                        const confirmarContrasena = document.getElementById('confirmarContrasena').value;
+                        
+                        if (nuevaContrasena !== confirmarContrasena) {
+                            e.preventDefault();
+                            alert('Las contraseñas no coinciden');
+                        } else if (nuevaContrasena.length < 8) {
+                            e.preventDefault();
+                            alert('La contraseña debe tener al menos 8 caracteres');
+                        }
+                    });
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -3,14 +3,17 @@ package com.felicita.felicita.service;
 import com.felicita.felicita.dto.MensajeResponse;
 import com.felicita.felicita.model.Disponibilidad;
 import com.felicita.felicita.model.Empleado;
+import com.felicita.felicita.model.Negocio;
 import com.felicita.felicita.repository.DisponibilidadRepository;
 import com.felicita.felicita.repository.EmpleadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Servicio que gestiona las operaciones relacionadas con los empleados.
@@ -187,5 +190,29 @@ public class EmpleadoService {
     public List<Empleado> obtenerPorCargo(String cargo) {
         return empleadoRepository.findByCargo(cargo);
     }
+
+ /**
+ * Obtiene empleados por negocio
+ * @param negocioId ID del negocio
+ * @return Lista de empleados del negocio
+ */
+public List<Empleado> obtenerPorNegocio(Long negocioId) {
+    Optional<Negocio> negocio = negocioRepository.findById(negocioId);
+    if (negocio.isPresent()) {
+        return empleadoRepository.findByNegocio(negocio.get());
+    }
+    return new ArrayList<>();
+}
+
+public Empleado crear(Empleado empleado) {
+    // Valida datos
+    if (empleado.getNombre() == null || empleado.getNombre().isEmpty()) {
+        throw new IllegalArgumentException("El nombre del empleado es obligatorio");
+    }
+    
+    // Guarda y retorna
+    return empleadoRepository.save(empleado);
+}
+
 
 }

@@ -1,6 +1,7 @@
 package com.felicita.felicita.repository;
 
 import com.felicita.felicita.model.Empleado;
+import com.felicita.felicita.model.Negocio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -32,4 +33,18 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
      * @return Lista de empleados activos
      */
     List<Empleado> findByActivoTrue();
+    
+    /**
+     * Busca empleados por negocio
+     * @param negocio El negocio cuyos empleados se quieren obtener
+     * @return Lista de empleados del negocio especificado
+     */
+    List<Empleado> findByNegocio(Negocio negocio);
+    
+    /**
+     * Busca empleados activos por negocio
+     * @param negocio El negocio cuyos empleados activos se quieren obtener
+     * @return Lista de empleados activos del negocio especificado
+     */
+    List<Empleado> findByNegocioAndActivoTrue(Negocio negocio);
 }

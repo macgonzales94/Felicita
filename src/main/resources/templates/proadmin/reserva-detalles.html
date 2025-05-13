@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de Reserva - FELICITA</title>
+    
+    <th:block th:fragment="estilosAdicionales">
+        <style>
+            .reserva-header {
+                background-color: var(--primary);
+                color: white;
+                padding: 2rem 0;
+                margin-bottom: 2rem;
+            }
+            
+            .reservation-status {
+                font-size: 0.9rem;
+                padding: 0.3rem 0.6rem;
+                border-radius: 20px;
+                font-weight: 600;
+            }
+            
+            .status-PENDIENTE {
+                background-color: rgba(255, 193, 7, 0.1);
+                color: #ffc107;
+            }
+            
+            .status-CONFIRMADA {
+                background-color: rgba(25, 135, 84, 0.1);
+                color: #198754;
+            }
+            
+            .status-COMPLETADA {
+                background-color: rgba(13, 110, 253, 0.1);
+                color: #0d6efd;
+            }
+            
+            .status-CANCELADA {
+                background-color: rgba(220, 53, 69, 0.1);
+                color: #dc3545;
+            }
+            
+            .timeline {
+                position: relative;
+                padding-left: 30px;
+                margin-bottom: 50px;
+            }
+            
+            .timeline-item {
+                position: relative;
+                padding-bottom: 25px;
+            }
+            
+            .timeline-item:last-child {
+                padding-bottom: 0;
+            }
+            
+            .timeline-item::before {
+                content: "";
+                position: absolute;
+                left: -30px;
+                top: 0;
+                width: 15px;
+                height: 15px;
+                border-radius: 50%;
+                background-color: var(--primary);
+                z-index: 2;
+            }
+            
+            .timeline-item::after {
+                content: "";
+                position: absolute;
+                left: -23px;
+                top: 15px;
+                width: 2px;
+                height: calc(100% - 15px);
+                background-color: #e9ecef;
+                z-index: 1;
+            }
+            
+            .timeline-item:last-child::after {
+                display: none;
+            }
+            
+            .timeline-date {
+                font-size: 0.8rem;
+                color: #6c757d;
+                margin-bottom: 5px;
+            }
+            
+            .timeline-content {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+            }
+            
+            .service-item {
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                transition: transform 0.2s;
+                height: 100%;
+            }
+            
+            .service-item:hover {
+                transform: translateY(-5px);
+            }
+            
+            .service-img {
+                height: 120px;
+                object-fit: cover;
+            }
+            
+            .service-details {
+                padding: 15px;
+            }
+            
+            .cliente-info {
+                font-size: 0.9rem;
+            }
+            
+            .cliente-info i {
+                width: 20px;
+                text-align: center;
+                margin-right: 5px;
+                color: var(--primary);
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="contenidoPagina">
+        <!-- Header de reserva -->
+        <div class="reserva-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0" style="--bs-breadcrumb-divider: '>';">
+                                <li class="breadcrumb-item"><a th:href="@{/negocio}" class="text-white">Panel</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/negocio/reservas}" class="text-white">Reservas</a></li>
+                                <li class="breadcrumb-item active text-white" aria-current="page">Reserva #<span th:text="${reserva.id}">123</span></li>
+                            </ol>
+                        </nav>
+                        <h1 class="my-3">Detalles de Reserva</h1>
+                        <div class="d-flex align-items-center">
+                            <span th:class="'reservation-status status-' + ${reserva.estado}" th:text="${reserva.estado}">PENDIENTE</span>
+                            <span class="ms-3 text-white-50">
+                                <i class="far fa-calendar-alt me-1"></i> 
+                                <span th:text="${#temporals.format(reserva.horaInicio, 'EEEE, dd MMMM yyyy')}">Lunes, 01 Mayo 2025</span>
+                            </span>
+                            <span class="ms-3 text-white-50">
+                                <i class="far fa-clock me-1"></i> 
+                                <span th:text="${#temporals.format(reserva.horaInicio, 'HH:mm')} + ' - ' + ${#temporals.format(reserva.horaFin, 'HH:mm')}">10:00 - 11:30</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                        <div class="btn-group" th:if="${reserva.estado == 'PENDIENTE' || reserva.estado == 'CONFIRMADA'}">
+                            <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-cog me-1"></i> Cambiar estado
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li th:if="${reserva.estado == 'PENDIENTE'}">
+                                    <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#confirmarReservaModal">
+                                        <i class="fas fa-check text-success me-2"></i> Confirmar
+                                    </button>
+                                </li>
+                                <li th:if="${reserva.estado == 'PENDIENTE' || reserva.estado == 'CONFIRMADA'}">
+                                    <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#completarReservaModal">
+                                        <i class="fas fa-calendar-check text-primary me-2"></i> Marcar como completada
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#cancelarReservaModal">
+                                        <i class="fas fa-times text-danger me-2"></i> Cancelar
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <a th:href="@{/negocio/reservas}" class="btn btn-outline-light ms-2">
+                            <i class="fas fa-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container pb-5">
+            <!-- Alerta de mensajes -->
+            <div th:if="${mensajeExito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <span th:text="${mensajeExito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div class="row">
+                <!-- Detalles principales -->
+                <div class="col-lg-8">
+                    <!-- Información de servicios -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Servicios reservados</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6" th:each="servicio, iterStat : ${servicios}">
+                                    <div class="service-item">
+                                        <img th:src="${servicio.imagen != null ? servicio.imagen : '/images/servicio-default.jpg'}" class="service-img w-100" th:alt="${servicio.nombre}">
+                                        <div class="service-details">
+                                            <h6 th:text="${servicio.nombre}">Nombre del servicio</h6>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="far fa-clock me-1"></i> <span th:text="${servicio.duracion} + ' min'">30 min</span>
+                                                </span>
+                                                <span class="fw-bold" th:text="'S/. ' + ${#numbers.formatDecimal(servicio.precio, 1, 2)}">S/. 35.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="mb-0">Total de servicios: <span th:text="${#lists.size(servicios)}">3</span></p>
+                                        <p class="mb-0">Duración total: <span th:text="${#lists.size(servicios) > 0 ? servicios.stream().mapToInt(s -> s.duracion).sum() + ' min' : '0 min'}">90 min</span></p>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="mb-0 text-muted">Subtotal:</p>
+                                        <h5 th:text="'S/. ' + ${#numbers.formatDecimal(servicios.stream().mapToDouble(s -> s.precio).sum(), 1, 2)}">S/. 105.00</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Historial de la reserva -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Historial</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-date" th:text="${#temporals.format(reserva.fechaCreacion, 'dd/MM/yyyy HH:mm')}">01/05/2025 09:30</div>
+                                    <div class="timeline-content">
+                                        <p class="mb-0">
+                                            <strong>Reserva creada</strong> por 
+                                            <span th:text="${reserva.usuario.nombreCompleto}">Cliente</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item" th:if="${reserva.fechaConfirmacion != null}">
+                                    <div class="timeline-date" th:text="${#temporals.format(reserva.fechaConfirmacion, 'dd/MM/yyyy HH:mm')}">01/05/2025 10:15</div>
+                                    <div class="timeline-content">
+                                        <p class="mb-0">
+                                            <strong>Reserva confirmada</strong> por
+                                            <span th:text="${reserva.empleado.nombre}">Empleado</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item" th:if="${reserva.estado == 'COMPLETADA'}">
+                                    <div class="timeline-date" th:text="${#temporals.format(reserva.fechaActualizacion, 'dd/MM/yyyy HH:mm')}">02/05/2025 11:30</div>
+                                    <div class="timeline-content">
+                                        <p class="mb-0">
+                                            <strong>Servicio completado</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item" th:if="${reserva.estado == 'CANCELADA'}">
+                                    <div class="timeline-date" th:text="${#temporals.format(reserva.fechaActualizacion, 'dd/MM/yyyy HH:mm')}">01/05/2025 14:00</div>
+                                    <div class="timeline-content">
+                                        <p class="mb-0">
+                                            <strong>Reserva cancelada</strong>
+                                            <span th:if="${reserva.motivoCancelacion != null}">
+                                                - Motivo: <span th:text="${reserva.motivoCancelacion}">Motivo de cancelación</span>
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Información lateral -->
+                <div class="col-lg-4">
+                    <!-- Información del cliente -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Cliente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img th:src="${reserva.usuario.avatar != null ? reserva.usuario.avatar : '/images/avatar-default.jpg'}" alt="Foto de perfil" class="rounded-circle me-3" width="60" height="60">
+                                <div>
+                                    <h6 class="mb-0" th:text="${reserva.usuario.nombreCompleto}">Nombre del Cliente</h6>
+                                    <p class="text-muted mb-0" th:text="${reserva.usuario.email}">cliente@ejemplo.com</p>
+                                </div>
+                            </div>
+                            
+                            <div class="cliente-info">
+                                <p th:if="${reserva.usuario.telefono != null}">
+                                    <i class="fas fa-phone"></i> <span th:text="${reserva.usuario.telefono}">+51 123 456 789</span>
+                                </p>
+                                <p>
+                                    <i class="fas fa-calendar-plus"></i> Cliente desde <span th:text="${#temporals.format(reserva.usuario.fechaRegistro, 'MMMM yyyy')}">Mayo 2024</span>
+                                </p>
+                                <p>
+                                    <i class="fas fa-calendar-check"></i> <span th:text="${reserva.usuario.reservas.size()}">5</span> reservas anteriores
+                                </p>
+                            </div>
+                            
+                            <a href="#" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                                <i class="fas fa-history me-1"></i> Ver historial del cliente
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Información del empleado -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Empleado asignado</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img th:src="${reserva.empleado.foto != null ? reserva.empleado.foto : '/images/empleado-default.jpg'}" alt="Foto de empleado" class="rounded-circle me-3" width="60" height="60">
+                                <div>
+                                    <h6 class="mb-0" th:text="${reserva.empleado.nombre}">Nombre del Empleado</h6>
+                                    <p class="text-muted mb-0" th:text="${reserva.empleado.cargo}">Estilista Senior</p>
+                                </div>
+                            </div>
+                            
+                            <div class="cliente-info">
+                                <p th:if="${reserva.empleado.email != null}">
+                                    <i class="fas fa-envelope"></i> <span th:text="${reserva.empleado.email}">empleado@ejemplo.com</span>
+                                </p>
+                                <p th:if="${reserva.empleado.telefono != null}">
+                                    <i class="fas fa-phone"></i> <span th:text="${reserva.empleado.telefono}">+51 987 654 321</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notas y comentarios -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Notas de la reserva</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${reserva.notas != null && !reserva.notas.isEmpty()}">
+                                <p th:text="${reserva.notas}">Notas de la reserva...</p>
+                            </div>
+                            <div th:unless="${reserva.notas != null && !reserva.notas.isEmpty()}" class="text-center text-muted py-3">
+                                <i class="far fa-sticky-note mb-2" style="font-size: 2rem;"></i>
+                                <p class="mb-0">No hay notas para esta reserva</p>
+                            </div>
+                            
+                            <button class="btn btn-outline-primary btn-sm w-100 mt-2" data-bs-toggle="modal" data-bs-target="#agregarNotaModal">
+                                <i class="fas fa-plus me-1"></i> Agregar nota
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modales para cambio de estado -->
+        <!-- Modal Confirmar Reserva -->
+        <div class="modal fade" id="confirmarReservaModal" tabindex="-1" aria-labelledby="confirmarReservaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmarReservaModalLabel">Confirmar Reserva</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas confirmar esta reserva?</p>
+                        <p class="text-muted small">Se notificará al cliente que su reserva ha sido confirmada.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form th:action="@{/negocio/reservas/{id}/estado(id=${reserva.id})}" method="post">
+                            <input type="hidden" name="nuevoEstado" value="CONFIRMADA">
+                            <button type="submit" class="btn btn-success">Confirmar Reserva</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Completar Reserva -->
+        <div class="modal fade" id="completarReservaModal" tabindex="-1" aria-labelledby="completarReservaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="completarReservaModalLabel">Completar Reserva</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas marcar esta reserva como completada?</p>
+                        <p class="text-muted small">Esto indicará que todos los servicios fueron realizados correctamente.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form th:action="@{/negocio/reservas/{id}/estado(id=${reserva.id})}" method="post">
+                            <input type="hidden" name="nuevoEstado" value="COMPLETADA">
+                            <button type="submit" class="btn btn-primary">Marcar como Completada</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Cancelar Reserva -->
+        <div class="modal fade" id="cancelarReservaModal" tabindex="-1" aria-labelledby="cancelarReservaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelarReservaModalLabel">Cancelar Reserva</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas cancelar esta reserva?</p>
+                        <p class="text-danger">Esta acción no se puede deshacer.</p>
+                        
+                        <form th:action="@{/negocio/reservas/{id}/estado(id=${reserva.id})}" method="post" id="cancelarReservaForm">
+                            <input type="hidden" name="nuevoEstado" value="CANCELADA">
+                            
+                            <div class="mb-3">
+                                <label for="motivoCancelacion" class="form-label">Motivo de la cancelación</label>
+                                <textarea class="form-control" id="motivoCancelacion" name="motivoCancelacion" rows="3" required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" form="cancelarReservaForm" class="btn btn-danger">Cancelar Reserva</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Agregar Nota -->
+        <div class="modal fade" id="agregarNotaModal" tabindex="-1" aria-labelledby="agregarNotaModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agregarNotaModalLabel">Agregar Nota</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:action="@{/negocio/reservas/{id}/notas(id=${reserva.id})}" method="post" id="agregarNotaForm">
+                            <div class="mb-3">
+                                <label for="notas" class="form-label">Nota para la reserva</label>
+                                <textarea class="form-control" id="notas" name="notas" rows="5" th:text="${reserva.notas}"></textarea>
+                                <div class="form-text">
+                                    Estas notas son solo visibles para el personal del negocio, no para el cliente.
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" form="agregarNotaForm" class="btn btn-primary">Guardar Nota</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scriptsAdicionales">
+        <script>
+            // Agregar cualquier JavaScript específico para esta página
+            document.addEventListener('DOMContentLoaded', function() {
+                // Automatizar el cierre de alertas después de 5 segundos
+                setTimeout(function() {
+                    const alerts = document.querySelectorAll('.alert');
+                    alerts.forEach(alert => {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    });
+                }, 5000);
+            });
+        </script>
+    </th:block>
+</body>
+</html>
