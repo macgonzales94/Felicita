@@ -1,0 +1,65 @@
+# ==============================================
+# DEPENDENCIAS FELICITA - Sistema de Facturación Electrónica Perú
+# Versiones probadas y compatibles con Python 3.12
+# ==============================================
+
+# Framework Principal
+Django==4.2.16
+djangorestframework==3.14.0
+
+# Base de Datos
+psycopg2-binary==2.9.9
+django-extensions==3.2.3
+
+# Autenticación y Seguridad
+djangorestframework-simplejwt==5.3.0
+django-cors-headers==4.3.1
+cryptography>=43.0.0
+django-ratelimit==4.1.0
+
+# Validación de Datos y APIs
+requests>=2.31.0
+pydantic>=2.5.0
+python-decouple>=3.8
+
+# Documentación API
+drf-spectacular>=0.27.0
+drf-spectacular-sidecar>=2023.11.1
+
+# Tareas en Background (opcional)
+celery>=5.3.0
+redis>=5.0.0
+django-celery-beat>=2.5.0
+
+# Manejo de Archivos
+Pillow>=10.0.0
+openpyxl>=3.1.0
+reportlab>=4.0.0
+
+# Utilidades
+python-dateutil>=2.8.0
+pytz>=2023.3
+python-dotenv>=1.0.0
+
+# Integración APIs Perú
+xmltodict>=0.13.0
+lxml>=4.9.0
+
+# Cache y Performance
+django-redis>=5.4.0
+django-debug-toolbar>=4.2.0
+
+# Testing (opcional)
+pytest-django>=4.7.0
+coverage>=7.3.0
+
+# Validaciones Perú específicas - COMENTADO por incompatibilidad
+# python-stdnum>=1.19  # Validación RUC/DNI - implementaremos manualmente
+
+# Formateo de código (desarrollo)
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+
+# Backup de BD
+django-dbbackup>=4.0.0

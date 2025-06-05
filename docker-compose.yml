@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Base de datos PostgreSQL para FELICITA
   postgres_felicita:
@@ -15,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data_felicita:/var/lib/postgresql/data
-      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - felicita_network
     healthcheck:

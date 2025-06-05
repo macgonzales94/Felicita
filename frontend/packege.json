@@ -1,0 +1,22 @@
+{
+  "name": "felicita-frontend",
+  "version": "1.0.0",
+  "description": "Frontend React para FELICITA - Sistema de Facturación Electrónica Perú",
+  "private": true,
+  "scripts": {
+    "dev": "echo '⚛️ Frontend React se configurará en Fase 4'",
+    "build": "echo '📦 Build se configurará en Fase 4'",
+    "preview": "echo '👀 Preview se configurará en Fase 4'"
+  },
+  "keywords": [
+    "facturacion",
+    "sunat",
+    "peru",
+    "react",
+    "typescript"
+  ],
+  "author": "Equipo FELICITA",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
