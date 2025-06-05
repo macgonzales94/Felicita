@@ -1,0 +1,427 @@
+[
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "codigo": "10",
+      "nombre": "EFECTIVO Y EQUIVALENTES DE EFECTIVO",
+      "descripcion": "Incluye las cuentas divisionarias que representan medios de pago",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "cuenta_caja": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "codigo": "10.1",
+      "nombre": "CAJA",
+      "descripcion": "Efectivo en caja general y cajas chicas",
+      "cuenta_padre": 1,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "cuenta_caja": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "codigo": "10.1.1",
+      "nombre": "CAJA GENERAL",
+      "descripcion": "Efectivo disponible en caja general",
+      "cuenta_padre": 2,
+      "nivel": 3,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": false,
+      "cuenta_caja": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "codigo": "10.4",
+      "nombre": "CUENTAS CORRIENTES EN INSTITUCIONES FINANCIERAS",
+      "descripcion": "Saldos en cuentas corrientes bancarias",
+      "cuenta_padre": 1,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": true,
+      "cuenta_banco": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 5,
+    "fields": {
+      "empresa": 1,
+      "codigo": "12",
+      "nombre": "CUENTAS POR COBRAR COMERCIALES - TERCEROS",
+      "descripcion": "Derechos de cobro a terceros que se derivan de las ventas de bienes",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 6,
+    "fields": {
+      "empresa": 1,
+      "codigo": "12.1",
+      "nombre": "FACTURAS, BOLETAS Y OTROS COMPROBANTES POR COBRAR",
+      "descripcion": "Cuentas por cobrar por ventas realizadas",
+      "cuenta_padre": 5,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 7,
+    "fields": {
+      "empresa": 1,
+      "codigo": "20",
+      "nombre": "MERCADERÍAS",
+      "descripcion": "Bienes que posee la empresa destinados a la venta",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 8,
+    "fields": {
+      "empresa": 1,
+      "codigo": "20.1",
+      "nombre": "MERCADERÍAS MANUFACTURADAS",
+      "descripcion": "Productos terminados fabricados por la empresa",
+      "cuenta_padre": 7,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 9,
+    "fields": {
+      "empresa": 1,
+      "codigo": "40",
+      "nombre": "TRIBUTOS, CONTRAPRESTACIONES Y APORTES AL SISTEMA DE PENSIONES Y DE SALUD POR PAGAR",
+      "descripcion": "Obligaciones tributarias pendientes de pago",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 10,
+    "fields": {
+      "empresa": 1,
+      "codigo": "40.1",
+      "nombre": "GOBIERNO CENTRAL",
+      "descripcion": "Tributos por pagar al gobierno central",
+      "cuenta_padre": 9,
+      "nivel": 2,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 11,
+    "fields": {
+      "empresa": 1,
+      "codigo": "40.1.1",
+      "nombre": "IMPUESTO GENERAL A LAS VENTAS",
+      "descripcion": "IGV por pagar a SUNAT",
+      "cuenta_padre": 10,
+      "nivel": 3,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": false,
+      "cuenta_igv": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 12,
+    "fields": {
+      "empresa": 1,
+      "codigo": "40.1.7",
+      "nombre": "IMPUESTO A LA RENTA",
+      "descripcion": "Impuesto a la renta por pagar",
+      "cuenta_padre": 10,
+      "nivel": 3,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 13,
+    "fields": {
+      "empresa": 1,
+      "codigo": "50",
+      "nombre": "CAPITAL",
+      "descripcion": "Aportes de accionistas y socios",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "PATRIMONIO",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 14,
+    "fields": {
+      "empresa": 1,
+      "codigo": "50.1",
+      "nombre": "CAPITAL SOCIAL",
+      "descripcion": "Capital social suscrito y pagado",
+      "cuenta_padre": 13,
+      "nivel": 2,
+      "tipo_cuenta": "PATRIMONIO",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 15,
+    "fields": {
+      "empresa": 1,
+      "codigo": "70",
+      "nombre": "VENTAS",
+      "descripcion": "Ingresos por ventas de bienes y servicios",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "INGRESOS",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "cuenta_ventas": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 16,
+    "fields": {
+      "empresa": 1,
+      "codigo": "70.1",
+      "nombre": "MERCADERÍAS",
+      "descripcion": "Ventas de mercaderías",
+      "cuenta_padre": 15,
+      "nivel": 2,
+      "tipo_cuenta": "INGRESOS",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": true,
+      "cuenta_ventas": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 17,
+    "fields": {
+      "empresa": 1,
+      "codigo": "70.2",
+      "nombre": "PRODUCTOS TERMINADOS",
+      "descripcion": "Ventas de productos terminados",
+      "cuenta_padre": 15,
+      "nivel": 2,
+      "tipo_cuenta": "INGRESOS",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": true,
+      "cuenta_ventas": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 18,
+    "fields": {
+      "empresa": 1,
+      "codigo": "70.3",
+      "nombre": "SERVICIOS",
+      "descripcion": "Ingresos por prestación de servicios",
+      "cuenta_padre": 15,
+      "nivel": 2,
+      "tipo_cuenta": "INGRESOS",
+      "naturaleza": "ACREEDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": true,
+      "cuenta_ventas": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 19,
+    "fields": {
+      "empresa": 1,
+      "codigo": "60",
+      "nombre": "COMPRAS",
+      "descripcion": "Costo de adquisición de bienes destinados a la venta",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "GASTOS",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "cuenta_compras": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 20,
+    "fields": {
+      "empresa": 1,
+      "codigo": "60.1",
+      "nombre": "MERCADERÍAS",
+      "descripcion": "Compra de mercaderías para la venta",
+      "cuenta_padre": 19,
+      "nivel": 2,
+      "tipo_cuenta": "GASTOS",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": true,
+      "cuenta_compras": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 21,
+    "fields": {
+      "empresa": 1,
+      "codigo": "63",
+      "nombre": "GASTOS DE SERVICIOS PRESTADOS POR TERCEROS",
+      "descripcion": "Gastos por servicios prestados por terceros",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "GASTOS",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": false,
+      "requiere_documento": false,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 22,
+    "fields": {
+      "empresa": 1,
+      "codigo": "63.1",
+      "nombre": "TRANSPORTE, CORREOS Y GASTOS DE VIAJE",
+      "descripcion": "Gastos de transporte y movilidad",
+      "cuenta_padre": 21,
+      "nivel": 2,
+      "tipo_cuenta": "GASTOS",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 23,
+    "fields": {
+      "empresa": 1,
+      "codigo": "63.2",
+      "nombre": "ASESORÍA Y CONSULTORÍA",
+      "descripcion": "Gastos por asesorías profesionales",
+      "cuenta_padre": 21,
+      "nivel": 2,
+      "tipo_cuenta": "GASTOS",
+      "naturaleza": "DEUDOR",
+      "acepta_movimientos": true,
+      "requiere_documento": true,
+      "requiere_referencia": false,
+      "activo": true
+    }
+  }
+]

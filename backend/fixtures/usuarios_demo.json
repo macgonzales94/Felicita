@@ -1,0 +1,296 @@
+[
+  {
+    "model": "empresas.empresa",
+    "pk": 1,
+    "fields": {
+      "ruc": "20123456789",
+      "razon_social": "EMPRESA DEMO FELICITA S.A.C.",
+      "nombre_comercial": "FELICITA DEMO",
+      "direccion": "Av. Lima 123, Lima, Lima, Perú",
+      "ubigeo": "150101",
+      "telefono": "+51 1 234-5678",
+      "email": "demo@felicita.pe",
+      "pagina_web": "https://demo.felicita.pe",
+      "representante_legal": "Juan Carlos Pérez García",
+      "usuario_sol": "MODDATOS",
+      "clave_sol": "MODDATOS",
+      "plan_cuentas_id": null,
+      "ejercicio_fiscal_inicio": "2024-01-01",
+      "estado": true,
+      "configuraciones": {
+        "igv_rate": 0.18,
+        "moneda_principal": "PEN",
+        "metodo_costeo": "PEPS",
+        "numeracion_automatica": true,
+        "facturacion_electronica": true,
+        "nubefact_mode": "demo",
+        "permitir_stock_negativo": false,
+        "calculo_igv_automatico": true,
+        "redondeo_decimales": 2,
+        "formato_fecha": "dd/mm/yyyy",
+        "backup_automatico": true,
+        "envio_email_automatico": false,
+        "limite_credito_por_defecto": 0.00,
+        "dias_vencimiento_por_defecto": 30
+      },
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "fecha_actualizacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.almacen",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "codigo": "ALM001",
+      "nombre": "Almacén Principal",
+      "descripcion": "Almacén principal de la empresa demo",
+      "direccion": "Av. Lima 123, Lima, Lima, Perú",
+      "responsable": null,
+      "es_principal": true,
+      "permite_ventas": true,
+      "permite_compras": true,
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 1,
+    "fields": {
+      "username": "admin",
+      "password": "pbkdf2_sha256$720000$OhMyPasswordHashHere123$fakehashfordemopurposes",
+      "email": "admin@felicita.pe",
+      "first_name": "Administrador",
+      "last_name": "FELICITA",
+      "is_active": true,
+      "is_staff": true,
+      "is_superuser": true,
+      "empresa": 1,
+      "numero_documento": "12345678",
+      "tipo_documento": "1",
+      "telefono": "+51 987654321",
+      "direccion": "Lima, Perú",
+      "rol": "ADMINISTRADOR",
+      "permisos_especiales": {},
+      "configuraciones": {
+        "tema_preferido": "claro",
+        "idioma": "es-pe",
+        "notificaciones_email": true,
+        "dashboard_widgets": ["ventas", "inventario", "clientes"]
+      },
+      "tema_preferido": "claro",
+      "idioma": "es-pe",
+      "date_joined": "2024-01-01T00:00:00Z",
+      "last_login": null
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 2,
+    "fields": {
+      "username": "contador",
+      "password": "pbkdf2_sha256$720000$AnotherPasswordHash456$fakehashfordemopurposes",
+      "email": "contador@felicita.pe",
+      "first_name": "María Elena",
+      "last_name": "Rodríguez Vega",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "empresa": 1,
+      "numero_documento": "87654321",
+      "tipo_documento": "1",
+      "telefono": "+51 987123456",
+      "direccion": "San Isidro, Lima",
+      "rol": "CONTADOR",
+      "permisos_especiales": {
+        "facturacion": {
+          "ver": true,
+          "crear": true,
+          "editar": true,
+          "eliminar": false,
+          "anular": true
+        },
+        "contabilidad": {
+          "ver": true,
+          "crear": true,
+          "editar": true,
+          "eliminar": false,
+          "confirmar_asientos": true
+        },
+        "reportes": {
+          "ver": true,
+          "exportar": true,
+          "ple": true
+        }
+      },
+      "configuraciones": {
+        "tema_preferido": "claro",
+        "idioma": "es-pe",
+        "notificaciones_email": true,
+        "dashboard_widgets": ["contabilidad", "reportes", "facturacion"]
+      },
+      "tema_preferido": "claro",
+      "idioma": "es-pe",
+      "date_joined": "2024-01-01T00:00:00Z",
+      "last_login": null
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 3,
+    "fields": {
+      "username": "vendedor1",
+      "password": "pbkdf2_sha256$720000$VendedorPasswordHash789$fakehashfordemopurposes",
+      "email": "vendedor1@felicita.pe",
+      "first_name": "Carlos Alberto",
+      "last_name": "Mendoza Silva",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "empresa": 1,
+      "numero_documento": "45678912",
+      "tipo_documento": "1",
+      "telefono": "+51 987789123",
+      "direccion": "Miraflores, Lima",
+      "rol": "VENDEDOR",
+      "permisos_especiales": {
+        "pos": {
+          "ver": true,
+          "crear": true,
+          "procesar_ventas": true
+        },
+        "facturacion": {
+          "ver": true,
+          "crear": true,
+          "editar": false,
+          "eliminar": false
+        },
+        "clientes": {
+          "ver": true,
+          "crear": true,
+          "editar": true
+        },
+        "productos": {
+          "ver": true,
+          "editar_precios": false
+        }
+      },
+      "configuraciones": {
+        "tema_preferido": "claro",
+        "idioma": "es-pe",
+        "notificaciones_email": false,
+        "dashboard_widgets": ["pos", "ventas", "clientes"],
+        "almacenes_permitidos": [1]
+      },
+      "tema_preferido": "claro",
+      "idioma": "es-pe",
+      "date_joined": "2024-01-01T00:00:00Z",
+      "last_login": null
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 4,
+    "fields": {
+      "username": "vendedor2",
+      "password": "pbkdf2_sha256$720000$OtroVendedorPassword012$fakehashfordemopurposes",
+      "email": "vendedor2@felicita.pe",
+      "first_name": "Ana Lucía",
+      "last_name": "Torres Ramírez",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "empresa": 1,
+      "numero_documento": "78912345",
+      "tipo_documento": "1",
+      "telefono": "+51 987456789",
+      "direccion": "San Borja, Lima",
+      "rol": "VENDEDOR",
+      "permisos_especiales": {
+        "pos": {
+          "ver": true,
+          "crear": true,
+          "procesar_ventas": true
+        },
+        "facturacion": {
+          "ver": true,
+          "crear": true,
+          "editar": false,
+          "eliminar": false
+        },
+        "clientes": {
+          "ver": true,
+          "crear": true,
+          "editar": true
+        },
+        "productos": {
+          "ver": true,
+          "editar_precios": false
+        }
+      },
+      "configuraciones": {
+        "tema_preferido": "oscuro",
+        "idioma": "es-pe",
+        "notificaciones_email": true,
+        "dashboard_widgets": ["pos", "ventas", "inventario"],
+        "almacenes_permitidos": [1]
+      },
+      "tema_preferido": "oscuro",
+      "idioma": "es-pe",
+      "date_joined": "2024-01-01T00:00:00Z",
+      "last_login": null
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 5,
+    "fields": {
+      "username": "almacenero",
+      "password": "pbkdf2_sha256$720000$AlmaceneroPassword345$fakehashfordemopurposes",
+      "email": "almacenero@felicita.pe",
+      "first_name": "Roberto",
+      "last_name": "Sánchez Morales",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "empresa": 1,
+      "numero_documento": "23456789",
+      "tipo_documento": "1",
+      "telefono": "+51 987321654",
+      "direccion": "Villa El Salvador, Lima",
+      "rol": "VENDEDOR",
+      "permisos_especiales": {
+        "inventarios": {
+          "ver": true,
+          "crear": true,
+          "editar": true,
+          "movimientos": true,
+          "ajustes": true,
+          "transferencias": true
+        },
+        "productos": {
+          "ver": true,
+          "crear": true,
+          "editar": true
+        },
+        "reportes": {
+          "ver": true,
+          "inventario": true,
+          "kardex": true
+        }
+      },
+      "configuraciones": {
+        "tema_preferido": "claro",
+        "idioma": "es-pe",
+        "notificaciones_email": true,
+        "dashboard_widgets": ["inventario", "productos", "almacenes"],
+        "almacenes_permitidos": [1]
+      },
+      "tema_preferido": "claro",
+      "idioma": "es-pe",
+      "date_joined": "2024-01-01T00:00:00Z",
+      "last_login": null
+    }
+  }
+]

@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL para FELICITA
+  postgres_felicita:
+    image: postgres:15
+    container_name: felicita_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: felicita_db
+      POSTGRES_USER: felicita_user
+      POSTGRES_PASSWORD: felicita_password_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=es_PE.UTF-8 --lc-ctype=es_PE.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_felicita:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - felicita_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U felicita_user -d felicita_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis para cache (opcional para desarrollo)
+  redis_felicita:
+    image: redis:7-alpine
+    container_name: felicita_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - felicita_network
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data_felicita:/data
+
+volumes:
+  postgres_data_felicita:
+    driver: local
+  redis_data_felicita:
+    driver: local
+
+networks:
+  felicita_network:
+    driver: bridge

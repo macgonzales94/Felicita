@@ -1,0 +1,498 @@
+[
+  {
+    "model": "productos.producto",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD001",
+      "codigo_barra": "7751234567890",
+      "nombre": "Smartphone Samsung Galaxy A54",
+      "descripcion": "Smartphone Samsung Galaxy A54 5G, 128GB, 6GB RAM, Pantalla 6.4 pulgadas",
+      "categoria": 1,
+      "codigo_sunat": "84713000",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "850.0000",
+      "precio_venta": "1200.0000",
+      "precio_venta_min": "1100.0000",
+      "margen_ganancia": "41.18",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "5.0000",
+      "stock_maximo": "50.0000",
+      "peso": "0.2020",
+      "volumen": "0.0001",
+      "observaciones": "Producto de alta rotación, muy solicitado",
+      "datos_adicionales": {
+        "marca": "Samsung",
+        "modelo": "Galaxy A54",
+        "color": "Negro",
+        "garantia_meses": 12,
+        "origen": "Corea del Sur"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD002",
+      "codigo_barra": "7751234567891",
+      "nombre": "Laptop Lenovo ThinkPad E14",
+      "descripcion": "Laptop Lenovo ThinkPad E14, Intel Core i5, 8GB RAM, 256GB SSD, Windows 11",
+      "categoria": 1,
+      "codigo_sunat": "84713000",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "1800.0000",
+      "precio_venta": "2500.0000",
+      "precio_venta_min": "2350.0000",
+      "margen_ganancia": "38.89",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "3.0000",
+      "stock_maximo": "20.0000",
+      "peso": "1.6400",
+      "volumen": "0.0050",
+      "observaciones": "Ideal para empresas y profesionales",
+      "datos_adicionales": {
+        "marca": "Lenovo",
+        "modelo": "ThinkPad E14",
+        "procesador": "Intel Core i5",
+        "garantia_meses": 12,
+        "origen": "China"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD003",
+      "codigo_barra": "7751234567892",
+      "nombre": "Polo Básico Algodón",
+      "descripcion": "Polo básico de algodón 100%, cuello redondo, manga corta",
+      "categoria": 2,
+      "codigo_sunat": "61091000",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "15.0000",
+      "precio_venta": "35.0000",
+      "precio_venta_min": "30.0000",
+      "margen_ganancia": "133.33",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "20.0000",
+      "stock_maximo": "200.0000",
+      "peso": "0.1800",
+      "volumen": "0.0002",
+      "observaciones": "Disponible en varios colores y tallas",
+      "datos_adicionales": {
+        "material": "Algodón 100%",
+        "tallas": ["S", "M", "L", "XL"],
+        "colores": ["Blanco", "Negro", "Azul", "Rojo"],
+        "cuidado": "Lavado a máquina"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD004",
+      "codigo_barra": "7751234567893",
+      "nombre": "Jean Clásico Denim",
+      "descripcion": "Jean clásico de denim, corte recto, cinco bolsillos",
+      "categoria": 2,
+      "codigo_sunat": "62034200",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "45.0000",
+      "precio_venta": "89.0000",
+      "precio_venta_min": "80.0000",
+      "margen_ganancia": "97.78",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "15.0000",
+      "stock_maximo": "100.0000",
+      "peso": "0.6500",
+      "volumen": "0.0008",
+      "observaciones": "Tallas de 28 a 38, muy popular",
+      "datos_adicionales": {
+        "material": "Denim 98% Algodón, 2% Elastano",
+        "tallas": ["28", "30", "32", "34", "36", "38"],
+        "colores": ["Azul clásico", "Negro", "Gris"],
+        "estilo": "Clásico"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 5,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD005",
+      "codigo_barra": "7751234567894",
+      "nombre": "Silla de Oficina Ergonómica",
+      "descripcion": "Silla de oficina ergonómica con soporte lumbar, brazos ajustables y base giratoria",
+      "categoria": 3,
+      "codigo_sunat": "94013000",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "280.0000",
+      "precio_venta": "450.0000",
+      "precio_venta_min": "420.0000",
+      "margen_ganancia": "60.71",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "8.0000",
+      "stock_maximo": "40.0000",
+      "peso": "15.5000",
+      "volumen": "0.2500",
+      "observaciones": "Muy cómoda para trabajo de oficina prolongado",
+      "datos_adicionales": {
+        "material": "Malla transpirable y metal",
+        "colores": ["Negro", "Gris", "Azul"],
+        "caracteristicas": ["Ergonómica", "Regulable", "Giratoria"],
+        "garantia_meses": 24
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 6,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD006",
+      "codigo_barra": "7751234567895",
+      "nombre": "Mesa de Centro Madera",
+      "descripcion": "Mesa de centro de madera maciza, diseño moderno, 120cm x 60cm",
+      "categoria": 3,
+      "codigo_sunat": "94036000",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "320.0000",
+      "precio_venta": "580.0000",
+      "precio_venta_min": "550.0000",
+      "margen_ganancia": "81.25",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "5.0000",
+      "stock_maximo": "25.0000",
+      "peso": "25.0000",
+      "volumen": "0.4320",
+      "observaciones": "Producto artesanal, cada pieza es única",
+      "datos_adicionales": {
+        "material": "Madera de cedro",
+        "dimensiones": "120cm x 60cm x 45cm",
+        "acabado": "Barniz natural",
+        "estilo": "Moderno minimalista"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 7,
+    "fields": {
+      "empresa": 1,
+      "codigo": "SERV001",
+      "codigo_barra": "",
+      "nombre": "Servicio de Instalación de Software",
+      "descripcion": "Servicio profesional de instalación y configuración de software",
+      "categoria": 4,
+      "codigo_sunat": "83250000",
+      "tipo_producto": "SERVICIO",
+      "unidad_medida": "ZZ",
+      "precio_compra": "0.0000",
+      "precio_venta": "150.0000",
+      "precio_venta_min": "120.0000",
+      "margen_ganancia": "0.00",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": false,
+      "stock_minimo": "0.0000",
+      "stock_maximo": null,
+      "peso": null,
+      "volumen": null,
+      "observaciones": "Incluye instalación, configuración básica y capacitación",
+      "datos_adicionales": {
+        "duracion_estimada": "2-4 horas",
+        "incluye": ["Instalación", "Configuración", "Capacitación básica"],
+        "requisitos": "Acceso remoto o presencial"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 8,
+    "fields": {
+      "empresa": 1,
+      "codigo": "SERV002",
+      "codigo_barra": "",
+      "nombre": "Consultoría Técnica",
+      "descripcion": "Servicio de consultoría técnica especializada por hora",
+      "categoria": 4,
+      "codigo_sunat": "83250000",
+      "tipo_producto": "SERVICIO",
+      "unidad_medida": "ZZ",
+      "precio_compra": "0.0000",
+      "precio_venta": "200.0000",
+      "precio_venta_min": "180.0000",
+      "margen_ganancia": "0.00",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": false,
+      "stock_minimo": "0.0000",
+      "stock_maximo": null,
+      "peso": null,
+      "volumen": null,
+      "observaciones": "Tarifa por hora, mínimo 2 horas",
+      "datos_adicionales": {
+        "tarifa": "Por hora",
+        "minimo_horas": 2,
+        "especialidades": ["Sistemas", "Redes", "Seguridad"],
+        "modalidad": "Presencial o remota"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 9,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD007",
+      "codigo_barra": "7751234567896",
+      "nombre": "Auriculares Bluetooth Sony",
+      "descripcion": "Auriculares inalámbricos Sony WH-CH720N con cancelación de ruido",
+      "categoria": 1,
+      "codigo_sunat": "85183000",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "180.0000",
+      "precio_venta": "299.0000",
+      "precio_venta_min": "280.0000",
+      "margen_ganancia": "66.11",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "10.0000",
+      "stock_maximo": "60.0000",
+      "peso": "0.1920",
+      "volumen": "0.0015",
+      "observaciones": "Excelente calidad de sonido, muy demandados",
+      "datos_adicionales": {
+        "marca": "Sony",
+        "modelo": "WH-CH720N",
+        "caracteristicas": ["Bluetooth 5.2", "Cancelación de ruido", "30h batería"],
+        "colores": ["Negro", "Blanco", "Azul"]
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "productos.producto",
+    "pk": 10,
+    "fields": {
+      "empresa": 1,
+      "codigo": "PROD008",
+      "codigo_barra": "7751234567897",
+      "nombre": "Zapatillas Nike Air Max",
+      "descripcion": "Zapatillas deportivas Nike Air Max, ideales para running y uso casual",
+      "categoria": 2,
+      "codigo_sunat": "64041100",
+      "tipo_producto": "BIEN",
+      "unidad_medida": "NIU",
+      "precio_compra": "120.0000",
+      "precio_venta": "219.0000",
+      "precio_venta_min": "200.0000",
+      "margen_ganancia": "82.50",
+      "afecto_igv": true,
+      "codigo_impuesto": "1000",
+      "maneja_stock": true,
+      "stock_minimo": "12.0000",
+      "stock_maximo": "80.0000",
+      "peso": "0.4800",
+      "volumen": "0.0040",
+      "observaciones": "Disponible en múltiples tallas, producto estrella",
+      "datos_adicionales": {
+        "marca": "Nike",
+        "modelo": "Air Max",
+        "tallas": ["38", "39", "40", "41", "42", "43", "44"],
+        "colores": ["Negro/Blanco", "Azul/Blanco", "Rojo/Negro"],
+        "uso": "Running y casual"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "producto": 1,
+      "almacen": 1,
+      "cantidad_disponible": "25.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "850.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "producto": 2,
+      "almacen": 1,
+      "cantidad_disponible": "8.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "1800.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "producto": 3,
+      "almacen": 1,
+      "cantidad_disponible": "150.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "15.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "producto": 4,
+      "almacen": 1,
+      "cantidad_disponible": "45.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "45.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 5,
+    "fields": {
+      "empresa": 1,
+      "producto": 5,
+      "almacen": 1,
+      "cantidad_disponible": "12.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "280.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 6,
+    "fields": {
+      "empresa": 1,
+      "producto": 6,
+      "almacen": 1,
+      "cantidad_disponible": "8.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "320.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 7,
+    "fields": {
+      "empresa": 1,
+      "producto": 9,
+      "almacen": 1,
+      "cantidad_disponible": "35.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "180.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "inventarios.stock",
+    "pk": 8,
+    "fields": {
+      "empresa": 1,
+      "producto": 10,
+      "almacen": 1,
+      "cantidad_disponible": "28.0000",
+      "cantidad_reservada": "0.0000",
+      "costo_promedio": "120.0000",
+      "fecha_ultimo_movimiento": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "productos.imagenproducto",
+    "pk": 1,
+    "fields": {
+      "producto": 1,
+      "descripcion": "Imagen principal Samsung Galaxy A54",
+      "orden": 1,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "productos.imagenproducto",
+    "pk": 2,
+    "fields": {
+      "producto": 2,
+      "descripcion": "Imagen principal Lenovo ThinkPad E14",
+      "orden": 1,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "productos.imagenproducto",
+    "pk": 3,
+    "fields": {
+      "producto": 9,
+      "descripcion": "Auriculares Sony vista frontal",
+      "orden": 1,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  }
+]

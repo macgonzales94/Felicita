@@ -1,0 +1,358 @@
+[
+  {
+    "model": "productos.categoriaproducto",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "codigo": "ELEC",
+      "nombre": "Electrónicos",
+      "descripcion": "Productos electrónicos y tecnológicos",
+      "categoria_padre": null,
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "productos.categoriaproducto",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "codigo": "ROPA",
+      "nombre": "Ropa y Accesorios",
+      "descripcion": "Prendas de vestir y accesorios",
+      "categoria_padre": null,
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "productos.categoriaproducto",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "codigo": "HOGAR",
+      "nombre": "Hogar y Jardín",
+      "descripcion": "Artículos para el hogar y jardín",
+      "categoria_padre": null,
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "productos.categoriaproducto",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "codigo": "SERV",
+      "nombre": "Servicios",
+      "descripcion": "Servicios diversos",
+      "categoria_padre": null,
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "12345678",
+      "tipo_documento": "1",
+      "razon_social": "Juan Carlos Pérez García",
+      "nombre_comercial": "",
+      "direccion": "Av. Larco 456, Miraflores, Lima",
+      "ubigeo": "150120",
+      "telefono": "+51 987123456",
+      "email": "juan.perez@email.com",
+      "pagina_web": "",
+      "condicion_pago": "CONTADO",
+      "limite_credito": "0.00",
+      "vendedor_asignado": 3,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Cliente frecuente, siempre paga al contado",
+      "datos_adicionales": {
+        "preferencias": ["electrónicos", "tecnología"],
+        "descuento_habitual": 0
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 3
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "20567890123",
+      "tipo_documento": "6",
+      "razon_social": "COMERCIAL LIMA NORTE S.A.C.",
+      "nombre_comercial": "Lima Norte Comercial",
+      "direccion": "Av. Túpac Amaru 1234, Los Olivos, Lima",
+      "ubigeo": "150117",
+      "telefono": "+51 1 485-7890",
+      "email": "ventas@limanorte.com.pe",
+      "pagina_web": "https://www.limanorte.com.pe",
+      "condicion_pago": "CREDITO_30",
+      "limite_credito": "50000.00",
+      "vendedor_asignado": 3,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Cliente corporativo con crédito de 30 días",
+      "datos_adicionales": {
+        "giro_negocio": "Comercio al por mayor",
+        "contacto_principal": "María González",
+        "descuento_corporativo": 5
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 2
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "87654321",
+      "tipo_documento": "1",
+      "razon_social": "María Elena Rodríguez Vega",
+      "nombre_comercial": "",
+      "direccion": "Jr. Huancavelica 890, Cercado de Lima",
+      "ubigeo": "150101",
+      "telefono": "+51 987654321",
+      "email": "maria.rodriguez@gmail.com",
+      "pagina_web": "",
+      "condicion_pago": "CREDITO_15",
+      "limite_credito": "5000.00",
+      "vendedor_asignado": 4,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Cliente regular con buen historial crediticio",
+      "datos_adicionales": {
+        "profesion": "Profesora",
+        "descuento_habitual": 2
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 4
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "20123456789",
+      "tipo_documento": "6",
+      "razon_social": "DISTRIBUIDORA EL SOL E.I.R.L.",
+      "nombre_comercial": "Distribuidora El Sol",
+      "direccion": "Av. Argentina 2345, Callao",
+      "ubigeo": "070101",
+      "telefono": "+51 1 429-8765",
+      "email": "ventas@elsol.com.pe",
+      "pagina_web": "https://www.distribuidoraelsol.pe",
+      "condicion_pago": "CREDITO_45",
+      "limite_credito": "75000.00",
+      "vendedor_asignado": 3,
+      "exonerado_igv": false,
+      "retencion_agente": true,
+      "percepcion_agente": false,
+      "observaciones": "Gran distribuidor, agente de retención",
+      "datos_adicionales": {
+        "giro_negocio": "Distribución mayorista",
+        "zona_cobertura": "Lima y Callao",
+        "descuento_volumen": 8
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 1
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 5,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "45678912",
+      "tipo_documento": "1",
+      "razon_social": "Carlos Alberto Mendoza Silva",
+      "nombre_comercial": "",
+      "direccion": "Av. San Juan 567, San Juan de Miraflores, Lima",
+      "ubigeo": "150131",
+      "telefono": "+51 987789123",
+      "email": "carlos.mendoza@outlook.com",
+      "pagina_web": "",
+      "condicion_pago": "CONTADO",
+      "limite_credito": "0.00",
+      "vendedor_asignado": 4,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Cliente ocasional, prefiere pago al contado",
+      "datos_adicionales": {
+        "ocupacion": "Ingeniero",
+        "frecuencia_compra": "mensual"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 4
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 6,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "20987654321",
+      "tipo_documento": "6",
+      "razon_social": "FERRETERÍA CENTRAL S.R.L.",
+      "nombre_comercial": "Ferretería Central",
+      "direccion": "Av. Grau 1122, Barranco, Lima",
+      "ubigeo": "150104",
+      "telefono": "+51 1 247-5678",
+      "email": "gerencia@ferreteriacentral.pe",
+      "pagina_web": "",
+      "condicion_pago": "CREDITO_30",
+      "limite_credito": "25000.00",
+      "vendedor_asignado": 3,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Especializado en herramientas y materiales de construcción",
+      "datos_adicionales": {
+        "giro_negocio": "Ferretería",
+        "productos_interes": ["herramientas", "construcción"],
+        "descuento_habitual": 3
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 3
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 7,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "78912345",
+      "tipo_documento": "1",
+      "razon_social": "Ana Lucía Torres Ramírez",
+      "nombre_comercial": "",
+      "direccion": "Calle Las Flores 234, San Borja, Lima",
+      "ubigeo": "150130",
+      "telefono": "+51 987456789",
+      "email": "ana.torres@empresa.com",
+      "pagina_web": "",
+      "condicion_pago": "CREDITO_7",
+      "limite_credito": "3000.00",
+      "vendedor_asignado": 4,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Compras pequeñas pero frecuentes",
+      "datos_adicionales": {
+        "profesion": "Diseñadora",
+        "productos_favoritos": ["ropa", "accesorios"]
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 4
+    }
+  },
+  {
+    "model": "clientes.cliente",
+    "pk": 8,
+    "fields": {
+      "empresa": 1,
+      "numero_documento": "20111222333",
+      "tipo_documento": "6",
+      "razon_social": "RESTAURANTE DON JOSÉ S.A.C.",
+      "nombre_comercial": "Restaurante Don José",
+      "direccion": "Av. El Sol 445, Santiago de Surco, Lima",
+      "ubigeo": "150132",
+      "telefono": "+51 1 344-5567",
+      "email": "administracion@donjoser.pe",
+      "pagina_web": "https://www.restaurantedonjose.pe",
+      "condicion_pago": "CREDITO_15",
+      "limite_credito": "15000.00",
+      "vendedor_asignado": 3,
+      "exonerado_igv": false,
+      "retencion_agente": false,
+      "percepcion_agente": false,
+      "observaciones": "Restaurante establecido, cliente confiable",
+      "datos_adicionales": {
+        "giro_negocio": "Restaurante",
+        "tipo_cocina": "Criolla peruana",
+        "capacidad": "80 personas"
+      },
+      "estado": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z",
+      "usuario_creacion": 3
+    }
+  },
+  {
+    "model": "clientes.contactocliente",
+    "pk": 1,
+    "fields": {
+      "cliente": 2,
+      "nombre": "María González Ruiz",
+      "cargo": "Gerente de Compras",
+      "telefono": "+51 987111222",
+      "email": "maria.gonzalez@limanorte.com.pe",
+      "es_principal": true,
+      "observaciones": "Contacto principal para todas las compras",
+      "activo": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "clientes.contactocliente",
+    "pk": 2,
+    "fields": {
+      "cliente": 2,
+      "nombre": "Roberto Salinas López",
+      "cargo": "Jefe de Almacén",
+      "telefono": "+51 987333444",
+      "email": "roberto.salinas@limanorte.com.pe",
+      "es_principal": false,
+      "observaciones": "Contacto para coordinación de entregas",
+      "activo": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "clientes.contactocliente",
+    "pk": 3,
+    "fields": {
+      "cliente": 4,
+      "nombre": "Fernando Castillo Vargas",
+      "cargo": "Gerente General",
+      "telefono": "+51 987555666",
+      "email": "fernando.castillo@elsol.com.pe",
+      "es_principal": true,
+      "observaciones": "Toma decisiones de compras importantes",
+      "activo": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "clientes.contactocliente",
+    "pk": 4,
+    "fields": {
+      "cliente": 8,
+      "nombre": "José Antonio Ramírez",
+      "cargo": "Propietario",
+      "telefono": "+51 987777888",
+      "email": "jose.ramirez@donjoser.pe",
+      "es_principal": true,
+      "observaciones": "Dueño del restaurante, muy exigente con la calidad",
+      "activo": true,
+      "fecha_creacion": "2024-01-01T00:00:00Z"
+    }
+  }
+]
