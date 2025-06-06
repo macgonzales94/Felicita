@@ -1,62 +1,118 @@
 """
-Configuración Django para desarrollo local - FELICITA
+Configuración para desarrollo local de FELICITA
 Sistema de Facturación Electrónica para Perú
+FASE 2: Configuración optimizada para desarrollo con seguridad
 """
 
 from .base import *
-import os
-from decouple import config
+from datetime import timedelta
 
 # ==============================================
-# CONFIGURACIÓN DE DEBUG Y DESARROLLO
+# CONFIGURACIÓN DE DESARROLLO
 # ==============================================
 
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ENVIRONMENT = 'local'
+
+# Hosts permitidos para desarrollo
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '[::1]']
 
 # ==============================================
-# BASE DE DATOS POSTGRESQL LOCAL
+# BASE DE DATOS LOCAL (PostgreSQL en Docker)
 # ==============================================
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DATABASE_NAME', default='felicita_db'),
-        'USER': config('DATABASE_USER', default='felicita_user'),
-        'PASSWORD': config('DATABASE_PASSWORD', default='felicita_password_2024'),
-        'HOST': config('DATABASE_HOST', default='localhost'),
-        'PORT': config('DATABASE_PORT', default='5432'),
-        'OPTIONS': {
-            'charset': 'utf8',
-        },
-        'CONN_MAX_AGE': 60,
-        'CONN_HEALTH_CHECKS': True,
-    }
-}
+DATABASES['default'].update({
+    'NAME': config('DATABASE_NAME', default='felicita_db'),
+    'USER': config('DATABASE_USER', default='felicita_user'),
+    'PASSWORD': config('DATABASE_PASSWORD', default='felicita_password_2024'),
+    'HOST': config('DATABASE_HOST', default='localhost'),
+    'PORT': config('DATABASE_PORT', default='5432'),
+    'OPTIONS': {
+        'options': '-c default_transaction_isolation=serializable'
+    },
+    'CONN_MAX_AGE': 0,  # No persistent connections en desarrollo
+})
 
 # ==============================================
-# CACHE CON REDIS LOCAL
+# CACHE REDIS LOCAL
 # ==============================================
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://localhost:6379/0'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
-
-# Cache para sesiones
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+CACHES['default'].update({
+    'LOCATION': config('REDIS_URL', default='redis://localhost:6379/0'),
+    'TIMEOUT': 300,
+    'OPTIONS': {
+        'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+    },
+})
 
 # ==============================================
-# CORS PARA FRONTEND LOCAL
+# CONFIGURACIÓN DE AUTENTICACIÓN Y SEGURIDAD LOCAL
 # ==============================================
 
-CORS_ALLOW_ALL_ORIGINS = False
+# JWT para desarrollo (configuración extendida)
+SIMPLE_JWT.update({
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),  # Token más largo para desarrollo
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    
+    # Claims personalizados
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    
+    # Configuración de tokens
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    
+    # Configuración de algoritmo
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': config('JWT_SECRET_KEY', default=SECRET_KEY),
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': 'FELICITA',
+    'JSON_ENCODER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+})
+
+# ==============================================
+# CONFIGURACIONES DE SEGURIDAD PARA DESARROLLO
+# ==============================================
+
+# Configuración de intentos de login (más permisiva para desarrollo)
+MAX_INTENTOS_LOGIN = config('MAX_INTENTOS_LOGIN', default=10, cast=int)
+TIEMPO_BLOQUEO_MINUTOS = config('TIEMPO_BLOQUEO_MINUTOS', default=5, cast=int)
+SESSION_TIMEOUT_MINUTES = config('SESSION_TIMEOUT_MINUTES', default=480, cast=int)  # 8 horas
+
+# Rate limiting (más permisivo para desarrollo)
+RATELIMIT_ENABLE = config('RATELIMIT_ENABLE', default=True, cast=bool)
+RATELIMIT_PER_MINUTE = config('RATELIMIT_PER_MINUTE', default=200, cast=int)
+
+# Configuración de logs de seguridad
+SECURITY_LOG_LEVEL = 'DEBUG'
+AUDIT_LOG_RETENTION_DAYS = 30  # Menor retención en desarrollo
+
+# Configuración de sesiones concurrentes
+ALLOW_CONCURRENT_SESSIONS = True
+MAX_CONCURRENT_SESSIONS = 10  # Más sesiones permitidas en desarrollo
+
+# Configuración de notificaciones (deshabilitadas en desarrollo)
+SEND_SECURITY_NOTIFICATIONS = False
+SECURITY_EMAIL_RECIPIENTS = ['admin@felicita.pe']
+
+# URLs del frontend
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+FRONTEND_LOGIN_URL = f'{FRONTEND_URL}/login'
+
+# ==============================================
+# CORS PARA DESARROLLO
+# ==============================================
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -64,7 +120,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
 ]
 
+CORS_ALLOW_ALL_ORIGINS = False  # Solo para desarrollo controlado
 CORS_ALLOW_CREDENTIALS = True
+
+# Headers adicionales para desarrollo
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -75,101 +134,90 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'x-forwarded-for',
+    'x-forwarded-proto',
+    'x-debug-mode',  # Header personalizado para desarrollo
 ]
 
 # ==============================================
-# CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS
+# EMAIL PARA DESARROLLO
 # ==============================================
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Si quieres probar email real, descomenta y configura:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
 # ==============================================
-# LOGGING PARA DESARROLLO
+# CONFIGURACIÓN DE LOGGING PARA DESARROLLO
 # ==============================================
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
+LOGGING['loggers'].update({
+    'django': {
+        'handlers': ['console'],
+        'level': 'INFO',
+        'propagate': False,
     },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'logs/felicita_local.log',
-            'formatter': 'verbose',
-        },
+    'django.db.backends': {
+        'handlers': ['console'],
+        'level': 'DEBUG' if config('SHOW_SQL_QUERIES', default=False, cast=bool) else 'INFO',
+        'propagate': False,
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'felicita': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'nubefact': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
+    'felicita': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+        'propagate': False,
     },
-}
+    'aplicaciones': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+        'propagate': False,
+    },
+})
 
 # ==============================================
-# DEBUG TOOLBAR PARA DESARROLLO
+# CONFIGURACIÓN DE DEBUGGING
 # ==============================================
 
-if DEBUG:
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + MIDDLEWARE
+# Django Debug Toolbar (si está instalado)
+if 'debug_toolbar' in INSTALLED_APPS:
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    INTERNAL_IPS = ['127.0.0.1', '::1']
     
     DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+        'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
         'SHOW_COLLAPSED': True,
+        'DISABLE_PANELS': [
+            'debug_toolbar.panels.redirects.RedirectsPanel',
+        ],
     }
-    
-    INTERNAL_IPS = [
-        '127.0.0.1',
-        'localhost',
-    ]
 
 # ==============================================
-# CONFIGURACIÓN ESPECÍFICA PERÚ - DESARROLLO
+# CONFIGURACIÓN NUBEFACT PARA DESARROLLO
 # ==============================================
 
-# Nubefact en modo DEMO
-NUBEFACT_CONFIG = {
-    'TOKEN': config('NUBEFACT_TOKEN', default='demo-token'),
+NUBEFACT_CONFIG.update({
+    'MODE': 'demo',  # Siempre demo en desarrollo
+    'TOKEN': config('NUBEFACT_TOKEN', default='test_token_demo'),
     'RUC': config('NUBEFACT_RUC', default='20123456789'),
     'USUARIO_SOL': config('NUBEFACT_USUARIO_SOL', default='MODDATOS'),
     'CLAVE_SOL': config('NUBEFACT_CLAVE_SOL', default='MODDATOS'),
-    'MODE': config('NUBEFACT_MODE', default='demo'),
-    'BASE_URL': config('NUBEFACT_BASE_URL', default='https://demo-ose.nubefact.com/ol-ti-itcpe/billService'),
-}
+    'BASE_URL': 'https://demo-ose.nubefact.com/ol-ti-itcpe/billService',
+    'TIMEOUT': 30,  # Mayor timeout para desarrollo
+    'RETRY_ATTEMPTS': 3,
+})
 
-# Configuración empresa por defecto
-EMPRESA_CONFIG = {
+# ==============================================
+# CONFIGURACIÓN DE DATOS DEMO
+# ==============================================
+
+# Empresa por defecto para desarrollo
+EMPRESA_DEMO = {
     'RUC': config('EMPRESA_RUC', default='20123456789'),
     'RAZON_SOCIAL': config('EMPRESA_RAZON_SOCIAL', default='EMPRESA DEMO FELICITA S.A.C.'),
     'DIRECCION': config('EMPRESA_DIRECCION', default='Av. Lima 123, Lima, Lima, Perú'),
@@ -177,74 +225,146 @@ EMPRESA_CONFIG = {
     'EMAIL': config('EMPRESA_EMAIL', default='demo@felicita.pe'),
 }
 
-# IGV Perú
-IGV_RATE = 0.18
-MONEDA_NACIONAL = 'PEN'
-
 # ==============================================
-# EMAIL PARA DESARROLLO (CONSOLE)
+# CONFIGURACIÓN DE ARCHIVOS PARA DESARROLLO
 # ==============================================
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='localhost')
-EMAIL_PORT = config('EMAIL_PORT', default=1025, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+# Archivos estáticos
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Media files con mayor límite para desarrollo
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB para desarrollo
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB para desarrollo
 
 # ==============================================
-# CONFIGURACIÓN DE TIMEZONE PERÚ
+# CONFIGURACIÓN REST FRAMEWORK DESARROLLO
 # ==============================================
 
-TIME_ZONE = 'America/Lima'
-USE_TZ = True
-
-# ==============================================
-# CONFIGURACIÓN DE AUTENTICACIÓN
-# ==============================================
-
-# JWT para desarrollo
-SIMPLE_JWT.update({
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),  # Token más largo para desarrollo
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
+# Configuración más permisiva para desarrollo
+REST_FRAMEWORK.update({
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # UI navegable para desarrollo
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/min',      # Más permisivo para desarrollo
+        'user': '200/min',     # Más permisivo para desarrollo
+        'login': '10/min',     # Más intentos de login
+    },
 })
 
 # ==============================================
-# CONFIGURACIÓN API DOCUMENTATION
+# CONFIGURACIÓN SPECTACULAR PARA DESARROLLO
 # ==============================================
 
-SPECTACULAR_SETTINGS['SERVE_INCLUDE_SCHEMA'] = True
-SPECTACULAR_SETTINGS['SWAGGER_UI_SETTINGS'] = {
-    'deepLinking': True,
-    'displayOperationId': True,
-    'defaultModelsExpandDepth': 2,
-    'defaultModelExpandDepth': 2,
-    'displayRequestDuration': True,
+SPECTACULAR_SETTINGS.update({
+    'SERVE_INCLUDE_SCHEMA': True,  # Incluir schema en desarrollo
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    'SERVERS': [
+        {
+            'url': 'http://localhost:8000',
+            'description': 'Servidor de Desarrollo Local'
+        },
+        {
+            'url': 'http://127.0.0.1:8000',
+            'description': 'Servidor de Desarrollo Local (127.0.0.1)'
+        },
+    ],
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
+})
+
+# ==============================================
+# CONFIGURACIONES ADICIONALES DESARROLLO
+# ==============================================
+
+# Configuración de timezone para desarrollo
+USE_TZ = True
+TIME_ZONE = 'America/Lima'
+
+# Configuración de idioma
+LANGUAGE_CODE = 'es-pe'
+USE_I18N = True
+USE_L10N = True
+
+# Configuración de formatos de fecha/hora para Perú
+DATE_FORMAT = 'd/m/Y'
+TIME_FORMAT = 'H:i'
+DATETIME_FORMAT = 'd/m/Y H:i'
+SHORT_DATE_FORMAT = 'd/m/Y'
+SHORT_DATETIME_FORMAT = 'd/m/Y H:i'
+
+# Formato de números para Perú
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = ','
+DECIMAL_SEPARATOR = '.'
+
+# ==============================================
+# CONFIGURACIÓN DE DESARROLLO ESPECÍFICA
+# ==============================================
+
+# Hot reload automático
+DEVELOPMENT_SETTINGS = {
+    'AUTO_RELOAD': True,
+    'SHOW_EXCEPTION_DETAILS': True,
+    'ENABLE_PROFILING': config('ENABLE_PROFILING', default=False, cast=bool),
+    'MOCK_EXTERNAL_APIS': config('MOCK_EXTERNAL_APIS', default=True, cast=bool),
 }
 
-# ==============================================
-# CONFIGURACIÓN DE SEGURIDAD RELAJADA PARA DEV
-# ==============================================
+# Configuración de testing
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+TEST_DATABASE_PREFIX = 'test_'
 
-SECURE_BROWSER_XSS_FILTER = False
-SECURE_CONTENT_TYPE_NOSNIFF = False
-SECURE_SSL_REDIRECT = False
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-# Rate limiting más permisivo para desarrollo
-RATELIMIT_ENABLE = config('RATELIMIT_ENABLE', default=False, cast=bool)
+# Configuración de sesiones para desarrollo
+SESSION_COOKIE_AGE = 86400 * 7  # 7 días
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # ==============================================
-# CONFIGURACIÓN DE FIXTURES Y SEED DATA
+# IMPRESIÓN DE CONFIGURACIÓN PARA DESARROLLO
 # ==============================================
 
-FIXTURE_DIRS = [
-    os.path.join(BASE_DIR, 'fixtures'),
+print("🏗️ Configuración local de desarrollo cargada para FELICITA")
+print(f"🔧 Entorno: {ENVIRONMENT}")
+print(f"🐘 Base de datos: {DATABASES['default']['NAME']} en {DATABASES['default']['HOST']}")
+print(f"🔑 Cache Redis: {CACHES['default']['LOCATION']}")
+print(f"🌐 CORS permitido para: {', '.join(CORS_ALLOWED_ORIGINS)}")
+print(f"🔐 JWT lifetime: {SIMPLE_JWT['ACCESS_TOKEN_LIFETIME']}")
+print(f"⚡ Rate limit: {RATELIMIT_PER_MINUTE} req/min")
+print(f"🚀 Frontend URL: {FRONTEND_URL}")
+print("✅ Configuración de desarrollo lista para FELICITA FASE 2")
+
+# ==============================================
+# ADVERTENCIAS DE DESARROLLO
+# ==============================================
+
+if DEBUG:
+    import warnings
+    warnings.filterwarnings('ignore', message='Django is running in DEBUG mode')
+    
+    print("\n" + "="*50)
+    print("🚨 MODO DESARROLLO ACTIVADO")
+    print("="*50)
+    print("⚠️  No usar esta configuración en producción")
+    print("⚠️  Los logs de seguridad están en modo DEBUG")
+    print("⚠️  Rate limiting reducido para desarrollo")
+    print("⚠️  Tokens JWT con mayor duración")
+    print("⚠️  CORS configurado para localhost solamente")
+    print("="*50)
+
+# Variables de entorno requeridas para desarrollo
+REQUIRED_ENV_VARS = [
+    'DATABASE_NAME',
+    'DATABASE_USER', 
+    'DATABASE_PASSWORD',
+    'JWT_SECRET_KEY',
 ]
 
-# Crear directorio de logs si no existe
-import os
-log_dir = os.path.join(BASE_DIR, 'logs')
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-print("🔧 Configuración Django LOCAL cargada para FELICITA")
+missing_vars = [var for var in REQUIRED_ENV_VARS if not config(var, default=None)]
+if missing_vars:
+    print(f"\n❌ Variables de entorno faltantes: {', '.join(missing_vars)}")
+    print("💡 Revisa tu archivo .env")
+else:
+    print("\n✅ Todas las variables de entorno requeridas están configuradas")

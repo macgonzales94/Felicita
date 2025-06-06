@@ -44,7 +44,7 @@ class Configuracion(models.Model):
     empresa = models.ForeignKey(
         'empresas.Empresa',
         on_delete=models.CASCADE,
-        related_name='configuraciones',
+        related_name='configuraciones_relacionadas',
         null=True,
         blank=True,
         verbose_name='Empresa',
