@@ -1,58 +1,44 @@
 """
-Modelos de facturación para FELICITA
+MODELOS FACTURACIÓN - PROYECTO FELICITA
 Sistema de Facturación Electrónica para Perú
-Cumple normativa SUNAT y integración con Nubefact
+
+Modelos para el módulo de facturación electrónica según normativa SUNAT:
+- SerieComprobante
+- Factura
+- FacturaItem
+- NotaCredito
+- NotaDebito
+- GuiaRemision
 """
 
-from django.db import models, transaction
-from django.core.validators import MinValueValidator, RegexValidator
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-from decimal import Decimal, ROUND_HALF_UP
-import json
+from decimal import Decimal
+from aplicaciones.core.models import ModeloBase, Cliente, Producto, Empresa
+from aplicaciones.usuarios.models import Usuario
+import uuid
 
-
-class TipoComprobante(models.TextChoices):
-    """Tipos de comprobante según SUNAT"""
-    FACTURA = '01', 'Factura'
-    BOLETA = '03', 'Boleta de Venta'
-    NOTA_CREDITO = '07', 'Nota de Crédito'
-    NOTA_DEBITO = '08', 'Nota de Débito'
-    GUIA_REMISION = '09', 'Guía de Remisión'
-
-
-class EstadoSunat(models.TextChoices):
-    """Estados del comprobante en SUNAT"""
-    PENDIENTE = 'PENDIENTE', 'Pendiente'
-    ENVIADO = 'ENVIADO', 'Enviado'
-    ACEPTADO = 'ACEPTADO', 'Aceptado'
-    RECHAZADO = 'RECHAZADO', 'Rechazado'
-    ANULADO = 'ANULADO', 'Anulado'
-
-
-class FormaPago(models.TextChoices):
-    """Formas de pago disponibles"""
-    CONTADO = 'CONTADO', 'Contado'
-    CREDITO = 'CREDITO', 'Crédito'
-    TARJETA_CREDITO = 'TARJETA_CREDITO', 'Tarjeta de Crédito'
-    TARJETA_DEBITO = 'TARJETA_DEBITO', 'Tarjeta de Débito'
-    TRANSFERENCIA = 'TRANSFERENCIA', 'Transferencia Bancaria'
-    EFECTIVO = 'EFECTIVO', 'Efectivo'
-
-
-class TipoMoneda(models.TextChoices):
-    """Tipos de moneda según SUNAT"""
-    PEN = 'PEN', 'Sol Peruano'
-    USD = 'USD', 'Dólar Americano'
-    EUR = 'EUR', 'Euro'
-
-
-class SerieComprobante(models.Model):
+# =============================================================================
+# MODELO SERIE COMPROBANTE
+# =============================================================================
+class SerieComprobante(ModeloBase):
     """
-    Modelo para series de comprobantes electrónicos
-    Maneja numeración correlativa obligatoria por SUNAT
+    Series para numeración de comprobantes según SUNAT
     """
+    
+    TIPO_COMPROBANTE_CHOICES = [
+        ('01', 'Factura'),
+        ('03', 'Boleta de Venta'),
+        ('07', 'Nota de Crédito'),
+        ('08', 'Nota de Débito'),
+        ('09', 'Guía de Remisión'),
+        ('20', 'Comprobante de Retención'),
+        ('40', 'Comprobante de Percepción'),
+    ]
+    
     empresa = models.ForeignKey(
-        'empresas.Empresa',
+        Empresa,
         on_delete=models.CASCADE,
         related_name='series_comprobantes',
         verbose_name='Empresa'
@@ -60,139 +46,100 @@ class SerieComprobante(models.Model):
     
     tipo_comprobante = models.CharField(
         max_length=2,
-        choices=TipoComprobante.choices,
+        choices=TIPO_COMPROBANTE_CHOICES,
         verbose_name='Tipo de Comprobante'
     )
     
     serie = models.CharField(
         max_length=4,
-        validators=[RegexValidator(
-            regex=r'^[A-Z0-9]{4}$',
-            message='La serie debe tener 4 caracteres alfanuméricos'
-        )],
         verbose_name='Serie',
-        help_text='Serie de 4 caracteres (ej: F001, B001)'
+        help_text='Serie del comprobante (ej: F001, B001)'
     )
     
     numero_actual = models.PositiveIntegerField(
         default=0,
         verbose_name='Número Actual',
-        help_text='Último número utilizado'
+        help_text='Último número usado'
     )
     
     numero_maximo = models.PositiveIntegerField(
         default=99999999,
-        verbose_name='Número Máximo',
-        help_text='Número máximo permitido'
+        verbose_name='Número Máximo'
     )
     
-    # Configuración
-    activo = models.BooleanField(
+    activa = models.BooleanField(
         default=True,
-        verbose_name='Activo'
+        verbose_name='Serie Activa'
     )
     
-    electronico = models.BooleanField(
-        default=True,
-        verbose_name='Electrónico',
-        help_text='Si la serie es para comprobantes electrónicos'
-    )
-    
-    por_defecto = models.BooleanField(
-        default=False,
-        verbose_name='Por Defecto',
-        help_text='Serie por defecto para este tipo de comprobante'
-    )
-    
-    fecha_creacion = models.DateTimeField(
-        default=timezone.now,
-        verbose_name='Fecha de Creación'
-    )
-    
-    fecha_actualizacion = models.DateTimeField(
-        auto_now=True,
-        verbose_name='Fecha de Actualización'
+    punto_venta = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Punto de Venta',
+        help_text='Identificador del punto de venta'
     )
     
     class Meta:
-        db_table = 'series_comprobantes'
+        db_table = 'facturacion_serie_comprobante'
         verbose_name = 'Serie de Comprobante'
         verbose_name_plural = 'Series de Comprobantes'
         unique_together = ['empresa', 'tipo_comprobante', 'serie']
-        ordering = ['tipo_comprobante', 'serie']
         indexes = [
-            models.Index(fields=['empresa', 'tipo_comprobante']),
-            models.Index(fields=['activo']),
+            models.Index(fields=['tipo_comprobante', 'serie']),
+            models.Index(fields=['activa']),
         ]
     
     def __str__(self):
         return f"{self.get_tipo_comprobante_display()} - {self.serie}"
     
-    def save(self, *args, **kwargs):
-        """Asegurar que solo hay una serie por defecto por tipo de comprobante"""
-        if self.por_defecto:
-            SerieComprobante.objects.filter(
-                empresa=self.empresa,
-                tipo_comprobante=self.tipo_comprobante,
-                por_defecto=True
-            ).exclude(id=self.id).update(por_defecto=False)
-        
-        super().save(*args, **kwargs)
-    
     def obtener_siguiente_numero(self):
-        """Obtener siguiente número correlativo"""
-        if self.numero_actual >= self.numero_maximo:
-            raise ValueError(f"Se alcanzó el número máximo para la serie {self.serie}")
-        
-        with transaction.atomic():
-            # Bloquear el registro para evitar concurrencia
-            serie = SerieComprobante.objects.select_for_update().get(id=self.id)
-            serie.numero_actual += 1
-            serie.save()
-            
-            return serie.numero_actual
+        """Obtiene el siguiente número de la serie"""
+        self.numero_actual += 1
+        if self.numero_actual > self.numero_maximo:
+            raise ValueError(f"Se agotó la numeración para la serie {self.serie}")
+        self.save(update_fields=['numero_actual'])
+        return self.numero_actual
     
     def get_numero_completo(self, numero=None):
-        """Obtener número completo del comprobante"""
-        num = numero or self.numero_actual
-        return f"{self.serie}-{num:08d}"
-    
-    def puede_emitir(self):
-        """Verificar si se puede emitir con esta serie"""
-        return (
-            self.activo and 
-            self.numero_actual < self.numero_maximo
-        )
-    
-    def get_comprobantes_emitidos(self):
-        """Obtener comprobantes emitidos con esta serie"""
-        return self.comprobantes.all()
-    
-    def get_total_emitidos(self):
-        """Obtener total de comprobantes emitidos"""
-        return self.comprobantes.count()
+        """Retorna el número completo del comprobante"""
+        if numero is None:
+            numero = self.numero_actual + 1
+        return f"{self.serie}-{numero:08d}"
 
-
-class Comprobante(models.Model):
+# =============================================================================
+# MODELO BASE COMPROBANTE
+# =============================================================================
+class ComprobanteBase(ModeloBase):
     """
-    Modelo principal para comprobantes electrónicos
+    Modelo base abstracto para todos los comprobantes
     """
-    empresa = models.ForeignKey(
-        'empresas.Empresa',
-        on_delete=models.CASCADE,
-        related_name='comprobantes',
-        verbose_name='Empresa'
-    )
+    
+    ESTADO_CHOICES = [
+        ('borrador', 'Borrador'),
+        ('validado', 'Validado'),
+        ('enviado', 'Enviado a SUNAT'),
+        ('aceptado', 'Aceptado por SUNAT'),
+        ('rechazado', 'Rechazado por SUNAT'),
+        ('anulado', 'Anulado'),
+        ('baja', 'Comunicación de Baja'),
+    ]
+    
+    MONEDA_CHOICES = [
+        ('PEN', 'Nuevos Soles'),
+        ('USD', 'Dólares Americanos'),
+        ('EUR', 'Euros'),
+    ]
     
     # Identificación del comprobante
-    tipo_comprobante = models.CharField(
-        max_length=2,
-        choices=TipoComprobante.choices,
-        verbose_name='Tipo de Comprobante'
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        verbose_name='Empresa Emisora'
     )
     
-    serie = models.CharField(
-        max_length=4,
+    serie_comprobante = models.ForeignKey(
+        SerieComprobante,
+        on_delete=models.PROTECT,
         verbose_name='Serie'
     )
     
@@ -200,39 +147,17 @@ class Comprobante(models.Model):
         verbose_name='Número'
     )
     
+    numero_completo = models.CharField(
+        max_length=20,
+        verbose_name='Número Completo',
+        help_text='Serie-Número (ej: F001-00000001)'
+    )
+    
     # Cliente
     cliente = models.ForeignKey(
-        'clientes.Cliente',
+        Cliente,
         on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='comprobantes',
         verbose_name='Cliente'
-    )
-    
-    cliente_numero_documento = models.CharField(
-        max_length=20,
-        verbose_name='Número de Documento del Cliente'
-    )
-    
-    cliente_tipo_documento = models.CharField(
-        max_length=1,
-        verbose_name='Tipo de Documento del Cliente'
-    )
-    
-    cliente_razon_social = models.CharField(
-        max_length=255,
-        verbose_name='Razón Social del Cliente'
-    )
-    
-    cliente_direccion = models.TextField(
-        blank=True,
-        verbose_name='Dirección del Cliente'
-    )
-    
-    cliente_email = models.EmailField(
-        blank=True,
-        verbose_name='Email del Cliente'
     )
     
     # Fechas
@@ -242,21 +167,21 @@ class Comprobante(models.Model):
     )
     
     fecha_vencimiento = models.DateField(
-        null=True,
         blank=True,
+        null=True,
         verbose_name='Fecha de Vencimiento'
     )
     
     # Montos
     moneda = models.CharField(
         max_length=3,
-        choices=TipoMoneda.choices,
-        default=TipoMoneda.PEN,
+        choices=MONEDA_CHOICES,
+        default='PEN',
         verbose_name='Moneda'
     )
     
     tipo_cambio = models.DecimalField(
-        max_digits=6,
+        max_digits=10,
         decimal_places=4,
         default=Decimal('1.0000'),
         verbose_name='Tipo de Cambio'
@@ -266,27 +191,23 @@ class Comprobante(models.Model):
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Subtotal'
     )
     
-    total_descuentos = models.DecimalField(
+    descuento_global = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
-        verbose_name='Total Descuentos'
-    )
-    
-    base_imponible = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        verbose_name='Base Imponible'
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Descuento Global'
     )
     
     total_igv = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Total IGV'
     )
     
@@ -294,61 +215,50 @@ class Comprobante(models.Model):
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Total Otros Impuestos'
     )
     
-    total_gratuito = models.DecimalField(
+    total = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
-        verbose_name='Total Gratuito'
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Total'
     )
     
-    total_sin_impuestos = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        verbose_name='Total sin Impuestos'
-    )
-    
-    total_con_impuestos = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        verbose_name='Total con Impuestos'
-    )
-    
-    # Configuración de pago
-    forma_pago = models.CharField(
-        max_length=20,
-        choices=FormaPago.choices,
-        default=FormaPago.CONTADO,
-        verbose_name='Forma de Pago'
-    )
-    
-    condicion_pago = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='Condición de Pago'
-    )
-    
+    # Observaciones
     observaciones = models.TextField(
         blank=True,
         verbose_name='Observaciones'
     )
     
-    # Estado SUNAT y facturación electrónica
-    estado_sunat = models.CharField(
-        max_length=20,
-        choices=EstadoSunat.choices,
-        default=EstadoSunat.PENDIENTE,
-        verbose_name='Estado SUNAT'
+    # Usuario que registra
+    usuario_registro = models.ForeignKey(
+        Usuario,
+        on_delete=models.PROTECT,
+        related_name='%(class)s_registrados',
+        verbose_name='Usuario que Registra'
     )
     
-    codigo_hash = models.CharField(
+    # Estado y auditoría SUNAT
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='borrador',
+        verbose_name='Estado'
+    )
+    
+    fecha_envio_sunat = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Envío a SUNAT'
+    )
+    
+    hash_documento = models.CharField(
         max_length=100,
         blank=True,
-        verbose_name='Código Hash'
+        verbose_name='Hash del Documento'
     )
     
     codigo_qr = models.TextField(
@@ -356,350 +266,227 @@ class Comprobante(models.Model):
         verbose_name='Código QR'
     )
     
-    xml_enviado = models.TextField(
+    respuesta_sunat = models.JSONField(
+        default=dict,
         blank=True,
-        verbose_name='XML Enviado a SUNAT'
+        verbose_name='Respuesta SUNAT'
     )
     
-    xml_respuesta = models.TextField(
+    xml_documento = models.TextField(
         blank=True,
-        verbose_name='XML Respuesta de SUNAT'
+        verbose_name='XML del Documento'
     )
     
-    pdf_url = models.URLField(
+    pdf_documento = models.FileField(
+        upload_to='comprobantes/pdf/',
         blank=True,
-        verbose_name='URL del PDF'
-    )
-    
-    # Referencia para notas de crédito/débito
-    comprobante_referencia = models.ForeignKey(
-        'self',
-        on_delete=models.PROTECT,
         null=True,
-        blank=True,
-        related_name='notas_relacionadas',
-        verbose_name='Comprobante de Referencia'
-    )
-    
-    motivo_nota = models.TextField(
-        blank=True,
-        verbose_name='Motivo de la Nota',
-        help_text='Motivo para notas de crédito/débito'
-    )
-    
-    # Auditoria
-    fecha_creacion = models.DateTimeField(
-        default=timezone.now,
-        verbose_name='Fecha de Creación'
-    )
-    
-    fecha_actualizacion = models.DateTimeField(
-        auto_now=True,
-        verbose_name='Fecha de Actualización'
-    )
-    
-    usuario_creacion = models.ForeignKey(
-        'usuarios.Usuario',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='comprobantes_creados',
-        verbose_name='Usuario que Creó'
-    )
-    
-    usuario_actualizacion = models.ForeignKey(
-        'usuarios.Usuario',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='comprobantes_actualizados',
-        verbose_name='Usuario que Actualizó'
+        verbose_name='PDF del Documento'
     )
     
     class Meta:
-        db_table = 'comprobantes'
-        verbose_name = 'Comprobante'
-        verbose_name_plural = 'Comprobantes'
-        unique_together = ['empresa', 'tipo_comprobante', 'serie', 'numero']
-        ordering = ['-fecha_emision', '-numero']
+        abstract = True
         indexes = [
-            models.Index(fields=['empresa', 'fecha_emision']),
+            models.Index(fields=['numero_completo']),
+            models.Index(fields=['fecha_emision']),
             models.Index(fields=['cliente']),
-            models.Index(fields=['estado_sunat']),
-            models.Index(fields=['tipo_comprobante']),
-            models.Index(fields=['serie', 'numero']),
+            models.Index(fields=['estado']),
         ]
-    
-    def __str__(self):
-        return f"{self.get_tipo_comprobante_display()} {self.numero_completo}"
-    
-    @property
-    def numero_completo(self):
-        """Número completo del comprobante"""
-        return f"{self.serie}-{self.numero:08d}"
     
     def save(self, *args, **kwargs):
-        """Guardar con cálculos automáticos y validaciones"""
-        # Validar que el tipo de comprobante coincide con la serie
-        if hasattr(self, '_serie_obj') and self._serie_obj.tipo_comprobante != self.tipo_comprobante:
-            raise ValueError("El tipo de comprobante no coincide con la serie")
-        
-        # Calcular totales automáticamente
-        self.calcular_totales()
-        
-        # Validar totales
-        self.validar_totales()
-        
+        """Generar número completo automáticamente"""
+        if not self.numero_completo:
+            self.numero_completo = f"{self.serie_comprobante.serie}-{self.numero:08d}"
         super().save(*args, **kwargs)
     
+    def __str__(self):
+        return f"{self.numero_completo} - {self.cliente.razon_social}"
+    
     def calcular_totales(self):
-        """Calcular todos los totales del comprobante"""
+        """Calcula los totales del comprobante basado en los items"""
         items = self.items.all()
         
-        # Inicializar totales
-        self.subtotal = Decimal('0.00')
-        self.total_descuentos = Decimal('0.00')
-        self.base_imponible = Decimal('0.00')
-        self.total_igv = Decimal('0.00')
-        self.total_gratuito = Decimal('0.00')
+        subtotal = sum(item.valor_venta for item in items)
+        total_igv = sum(item.igv for item in items)
+        total = subtotal + total_igv - self.descuento_global
         
-        for item in items:
-            self.subtotal += item.valor_venta
-            self.total_descuentos += item.descuento_total
-            self.base_imponible += item.base_imponible
-            self.total_igv += item.igv_total
-            
-            # Si es gratuito, sumar al total gratuito
-            if item.precio_unitario == 0:
-                self.total_gratuito += item.valor_venta
+        self.subtotal = subtotal
+        self.total_igv = total_igv
+        self.total = total
         
-        # Calcular totales finales
-        self.total_sin_impuestos = self.base_imponible
-        self.total_con_impuestos = self.base_imponible + self.total_igv + self.total_otros_impuestos
-        
-        # Redondear a 2 decimales
-        self._redondear_montos()
-    
-    def _redondear_montos(self):
-        """Redondear todos los montos a 2 decimales"""
-        campos_monto = [
-            'subtotal', 'total_descuentos', 'base_imponible', 'total_igv',
-            'total_otros_impuestos', 'total_gratuito', 'total_sin_impuestos',
-            'total_con_impuestos'
-        ]
-        
-        for campo in campos_monto:
-            valor = getattr(self, campo)
-            setattr(self, campo, valor.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-    
-    def validar_totales(self):
-        """Validar que los totales sean correctos"""
-        tolerancia = Decimal('0.01')
-        
-        # Validar que el total con impuestos sea la suma correcta
-        total_calculado = self.base_imponible + self.total_igv + self.total_otros_impuestos
-        diferencia = abs(self.total_con_impuestos - total_calculado)
-        
-        if diferencia > tolerancia:
-            raise ValueError(f"Error en cálculo de totales. Diferencia: {diferencia}")
-    
-    def get_serie_objeto(self):
-        """Obtener el objeto serie del comprobante"""
-        try:
-            return SerieComprobante.objects.get(
-                empresa=self.empresa,
-                tipo_comprobante=self.tipo_comprobante,
-                serie=self.serie
-            )
-        except SerieComprobante.DoesNotExist:
-            return None
+        return {
+            'subtotal': self.subtotal,
+            'total_igv': self.total_igv,
+            'total': self.total
+        }
     
     def puede_ser_modificado(self):
-        """Verificar si el comprobante puede ser modificado"""
-        return self.estado_sunat in [EstadoSunat.PENDIENTE, EstadoSunat.RECHAZADO]
+        """Verifica si el comprobante puede ser modificado"""
+        return self.estado in ['borrador', 'validado']
     
     def puede_ser_anulado(self):
-        """Verificar si el comprobante puede ser anulado"""
-        return self.estado_sunat in [EstadoSunat.ACEPTADO, EstadoSunat.ENVIADO]
-    
-    def es_factura(self):
-        """Verificar si es una factura"""
-        return self.tipo_comprobante == TipoComprobante.FACTURA
-    
-    def es_boleta(self):
-        """Verificar si es una boleta"""
-        return self.tipo_comprobante == TipoComprobante.BOLETA
-    
-    def es_nota_credito(self):
-        """Verificar si es una nota de crédito"""
-        return self.tipo_comprobante == TipoComprobante.NOTA_CREDITO
-    
-    def es_nota_debito(self):
-        """Verificar si es una nota de débito"""
-        return self.tipo_comprobante == TipoComprobante.NOTA_DEBITO
-    
-    def get_datos_cliente(self):
-        """Obtener datos del cliente para el comprobante"""
-        return {
-            'numero_documento': self.cliente_numero_documento,
-            'tipo_documento': self.cliente_tipo_documento,
-            'razon_social': self.cliente_razon_social,
-            'direccion': self.cliente_direccion,
-            'email': self.cliente_email,
-        }
-    
-    def get_datos_para_xml(self):
-        """Obtener datos formateados para XML SUNAT"""
-        return {
-            'tipo_comprobante': self.tipo_comprobante,
-            'serie': self.serie,
-            'numero': self.numero,
-            'fecha_emision': self.fecha_emision.strftime('%Y-%m-%d'),
-            'moneda': self.moneda,
-            'cliente': self.get_datos_cliente(),
-            'totales': {
-                'subtotal': str(self.subtotal),
-                'total_descuentos': str(self.total_descuentos),
-                'base_imponible': str(self.base_imponible),
-                'total_igv': str(self.total_igv),
-                'total_con_impuestos': str(self.total_con_impuestos),
-            },
-            'items': [item.get_datos_para_xml() for item in self.items.all()],
-        }
-    
-    def enviar_a_sunat(self):
-        """Enviar comprobante a SUNAT via Nubefact"""
-        if self.estado_sunat == EstadoSunat.ACEPTADO:
-            raise ValueError("El comprobante ya fue aceptado por SUNAT")
-        
-        # Aquí se implementaría la integración con Nubefact
-        # Por ahora solo cambiar el estado
-        self.estado_sunat = EstadoSunat.ENVIADO
-        self.save()
-    
-    def anular(self, motivo="Anulación del comprobante"):
-        """Anular comprobante"""
-        if not self.puede_ser_anulado():
-            raise ValueError("El comprobante no puede ser anulado en su estado actual")
-        
-        with transaction.atomic():
-            # Actualizar estado
-            self.estado_sunat = EstadoSunat.ANULADO
-            self.observaciones += f"\n\nANULADO: {motivo}"
-            self.save()
-            
-            # Revertir movimientos de inventario si existen
-            self._revertir_inventario()
-            
-            # Aquí se enviaría la comunicación de baja a SUNAT
-    
-    def _revertir_inventario(self):
-        """Revertir movimientos de inventario del comprobante"""
-        from aplicaciones.inventarios.models import MovimientoInventario
-        
-        movimientos = MovimientoInventario.objects.filter(
-            referencia_tabla='comprobantes',
-            referencia_id=self.id
-        )
-        
-        for movimiento in movimientos:
-            movimiento.anular()
-    
-    @classmethod
-    def crear_con_serie(cls, empresa, tipo_comprobante, cliente_data, items_data, 
-                       serie=None, usuario=None, **kwargs):
-        """Crear comprobante con serie automática"""
-        # Obtener serie
-        if serie:
-            serie_obj = SerieComprobante.objects.get(
-                empresa=empresa,
-                tipo_comprobante=tipo_comprobante,
-                serie=serie,
-                activo=True
-            )
-        else:
-            serie_obj = SerieComprobante.objects.filter(
-                empresa=empresa,
-                tipo_comprobante=tipo_comprobante,
-                activo=True,
-                por_defecto=True
-            ).first()
-            
-            if not serie_obj:
-                serie_obj = SerieComprobante.objects.filter(
-                    empresa=empresa,
-                    tipo_comprobante=tipo_comprobante,
-                    activo=True
-                ).first()
-        
-        if not serie_obj:
-            raise ValueError(f"No hay series activas para {tipo_comprobante}")
-        
-        # Obtener siguiente número
-        numero = serie_obj.obtener_siguiente_numero()
-        
-        # Crear comprobante
-        comprobante = cls.objects.create(
-            empresa=empresa,
-            tipo_comprobante=tipo_comprobante,
-            serie=serie_obj.serie,
-            numero=numero,
-            usuario_creacion=usuario,
-            **cliente_data,
-            **kwargs
-        )
-        
-        # Almacenar referencia a la serie para validación
-        comprobante._serie_obj = serie_obj
-        
-        # Crear items
-        for item_data in items_data:
-            ItemComprobante.objects.create(
-                comprobante=comprobante,
-                **item_data
-            )
-        
-        # Recalcular totales
-        comprobante.calcular_totales()
-        comprobante.save()
-        
-        return comprobante
+        """Verifica si el comprobante puede ser anulado"""
+        return self.estado in ['aceptado']
 
-
-class ItemComprobante(models.Model):
+# =============================================================================
+# MODELO FACTURA
+# =============================================================================
+class Factura(ComprobanteBase):
     """
-    Modelo para items/líneas de comprobantes
+    Facturas electrónicas según normativa SUNAT
     """
-    comprobante = models.ForeignKey(
-        Comprobante,
-        on_delete=models.CASCADE,
-        related_name='items',
-        verbose_name='Comprobante'
+    
+    TIPO_OPERACION_CHOICES = [
+        ('0101', 'Venta Interna'),
+        ('0112', 'Venta Interna - Sujeta a Detracción'),
+        ('0113', 'Venta Interna - Sujeta a Detracción - Recursos Hidrobiológicos'),
+        ('0121', 'Venta Interna - Sujeta a Detracción - Servicios de Transporte de Carga'),
+        ('0200', 'Exportación de Bienes'),
+        ('0201', 'Exportación de Servicios'),
+        ('0202', 'Exportación de Servicios - Prestados por Sujetos Domiciliados'),
+        ('0203', 'Exportación de Servicios - Prestados por Sujetos No Domiciliados'),
+        ('0204', 'Venta Interna de Bienes y Prestación de Servicios no Gravados'),
+        ('0205', 'Operaciones de Comercio Exterior'),
+        ('0206', 'Venta de Bienes usados, obras de arte, metales preciosos y piedras preciosas'),
+        ('0207', 'Venta de Bienes en consignación'),
+        ('0208', 'Venta de Bienes a plazo'),
+    ]
+    
+    # Configuración específica de factura
+    tipo_operacion = models.CharField(
+        max_length=4,
+        choices=TIPO_OPERACION_CHOICES,
+        default='0101',
+        verbose_name='Tipo de Operación'
     )
     
-    producto = models.ForeignKey(
-        'productos.Producto',
-        on_delete=models.PROTECT,
-        null=True,
+    orden_compra = models.CharField(
+        max_length=50,
         blank=True,
-        related_name='items_comprobante',
+        verbose_name='Orden de Compra'
+    )
+    
+    # Detracción (si aplica)
+    sujeta_detraccion = models.BooleanField(
+        default=False,
+        verbose_name='Sujeta a Detracción'
+    )
+    
+    codigo_detraccion = models.CharField(
+        max_length=3,
+        blank=True,
+        verbose_name='Código de Detracción'
+    )
+    
+    porcentaje_detraccion = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[
+            MinValueValidator(Decimal('0.00')),
+            MaxValueValidator(Decimal('100.00'))
+        ],
+        verbose_name='Porcentaje de Detracción'
+    )
+    
+    monto_detraccion = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='Monto de Detracción'
+    )
+    
+    # Información adicional
+    condicion_pago = models.CharField(
+        max_length=20,
+        choices=[
+            ('contado', 'Al Contado'),
+            ('credito', 'Al Crédito'),
+        ],
+        default='contado',
+        verbose_name='Condición de Pago'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_factura'
+        verbose_name = 'Factura'
+        verbose_name_plural = 'Facturas'
+        unique_together = ['serie_comprobante', 'numero']
+    
+    def calcular_detraccion(self):
+        """Calcula el monto de detracción si aplica"""
+        if self.sujeta_detraccion and self.porcentaje_detraccion > 0:
+            self.monto_detraccion = (self.total * self.porcentaje_detraccion) / 100
+        else:
+            self.monto_detraccion = Decimal('0.00')
+        return self.monto_detraccion
+
+# =============================================================================
+# MODELO BOLETA
+# =============================================================================
+class Boleta(ComprobanteBase):
+    """
+    Boletas de venta electrónicas
+    """
+    
+    # Las boletas tienen menos campos que las facturas
+    # pero heredan toda la funcionalidad base
+    
+    class Meta:
+        db_table = 'facturacion_boleta'
+        verbose_name = 'Boleta de Venta'
+        verbose_name_plural = 'Boletas de Venta'
+        unique_together = ['serie_comprobante', 'numero']
+
+# =============================================================================
+# MODELO ITEM COMPROBANTE BASE
+# =============================================================================
+class ItemComprobanteBase(ModeloBase):
+    """
+    Modelo base abstracto para items de comprobantes
+    """
+    
+    TIPO_AFECTACION_IGV_CHOICES = [
+        ('10', 'Gravado - Operación Onerosa'),
+        ('11', 'Gravado - Retiro por premio'),
+        ('12', 'Gravado - Retiro por donación'),
+        ('13', 'Gravado - Retiro'),
+        ('14', 'Gravado - Retiro por publicidad'),
+        ('15', 'Gravado - Bonificaciones'),
+        ('16', 'Gravado - Retiro por entrega a trabajadores'),
+        ('17', 'Gravado - IVAP'),
+        ('20', 'Exonerado - Operación Onerosa'),
+        ('21', 'Exonerado - Transferencia Gratuita'),
+        ('30', 'Inafecto - Operación Onerosa'),
+        ('31', 'Inafecto - Retiro por Bonificación'),
+        ('32', 'Inafecto - Retiro'),
+        ('33', 'Inafecto - Retiro por Muestras Médicas'),
+        ('34', 'Inafecto - Retiro por Convenio Colectivo'),
+        ('35', 'Inafecto - Retiro por premio'),
+        ('36', 'Inafecto - Retiro por publicidad'),
+        ('40', 'Exportación de Bienes o Servicios'),
+    ]
+    
+    # Producto
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.PROTECT,
         verbose_name='Producto'
     )
     
-    # Identificación del item
-    numero_item = models.PositiveIntegerField(
-        verbose_name='Número de Item'
-    )
-    
-    codigo_producto = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name='Código del Producto'
-    )
-    
+    # Descripción (puede ser diferente al producto)
     descripcion = models.CharField(
-        max_length=255,
+        max_length=250,
         verbose_name='Descripción'
+    )
+    
+    # Cantidades
+    cantidad = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        validators=[MinValueValidator(Decimal('0.0001'))],
+        verbose_name='Cantidad'
     )
     
     unidad_medida = models.CharField(
@@ -708,14 +495,7 @@ class ItemComprobante(models.Model):
         verbose_name='Unidad de Medida'
     )
     
-    # Cantidades y precios
-    cantidad = models.DecimalField(
-        max_digits=12,
-        decimal_places=4,
-        validators=[MinValueValidator(Decimal('0.0001'))],
-        verbose_name='Cantidad'
-    )
-    
+    # Precios
     precio_unitario = models.DecimalField(
         max_digits=12,
         decimal_places=4,
@@ -731,146 +511,400 @@ class ItemComprobante(models.Model):
         verbose_name='Descuento Unitario'
     )
     
+    # Cálculos
+    valor_venta = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name='Valor de Venta'
+    )
+    
     # Impuestos
-    base_imponible = models.DecimalField(
+    tipo_afectacion_igv = models.CharField(
+        max_length=2,
+        choices=TIPO_AFECTACION_IGV_CHOICES,
+        default='10',
+        verbose_name='Tipo de Afectación IGV'
+    )
+    
+    porcentaje_igv = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('18.00'),
+        verbose_name='Porcentaje IGV'
+    )
+    
+    igv = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
-        verbose_name='Base Imponible'
+        verbose_name='IGV'
     )
     
-    igv_unitario = models.DecimalField(
-        max_digits=12,
-        decimal_places=4,
-        default=Decimal('0.0000'),
-        verbose_name='IGV Unitario'
-    )
-    
-    igv_total = models.DecimalField(
+    precio_total = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        default=Decimal('0.00'),
-        verbose_name='IGV Total'
-    )
-    
-    codigo_impuesto = models.CharField(
-        max_length=10,
-        default='1000',
-        verbose_name='Código de Impuesto'
+        verbose_name='Precio Total'
     )
     
     class Meta:
-        db_table = 'items_comprobantes'
-        verbose_name = 'Item de Comprobante'
-        verbose_name_plural = 'Items de Comprobante'
-        unique_together = ['comprobante', 'numero_item']
+        abstract = True
+    
+    def save(self, *args, **kwargs):
+        """Calcular valores automáticamente"""
+        # Calcular valor de venta
+        self.valor_venta = (self.cantidad * self.precio_unitario) - (self.cantidad * self.descuento_unitario)
+        
+        # Calcular IGV según tipo de afectación
+        if self.tipo_afectacion_igv in ['10', '11', '12', '13', '14', '15', '16', '17']:
+            # Gravado con IGV
+            self.igv = self.valor_venta * (self.porcentaje_igv / 100)
+        else:
+            # Exonerado, inafecto o exportación
+            self.igv = Decimal('0.00')
+        
+        # Calcular precio total
+        self.precio_total = self.valor_venta + self.igv
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.descripcion} - {self.cantidad} {self.unidad_medida}"
+
+# =============================================================================
+# MODELO FACTURA ITEM
+# =============================================================================
+class FacturaItem(ItemComprobanteBase):
+    """
+    Items de facturas
+    """
+    
+    factura = models.ForeignKey(
+        Factura,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Factura'
+    )
+    
+    numero_item = models.PositiveIntegerField(
+        verbose_name='Número de Item'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_factura_item'
+        verbose_name = 'Item de Factura'
+        verbose_name_plural = 'Items de Facturas'
+        unique_together = ['factura', 'numero_item']
         ordering = ['numero_item']
+
+# =============================================================================
+# MODELO BOLETA ITEM
+# =============================================================================
+class BoletaItem(ItemComprobanteBase):
+    """
+    Items de boletas
+    """
+    
+    boleta = models.ForeignKey(
+        Boleta,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Boleta'
+    )
+    
+    numero_item = models.PositiveIntegerField(
+        verbose_name='Número de Item'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_boleta_item'
+        verbose_name = 'Item de Boleta'
+        verbose_name_plural = 'Items de Boletas'
+        unique_together = ['boleta', 'numero_item']
+        ordering = ['numero_item']
+
+# =============================================================================
+# MODELO NOTA DE CRÉDITO
+# =============================================================================
+class NotaCredito(ComprobanteBase):
+    """
+    Notas de crédito electrónicas
+    """
+    
+    TIPO_NOTA_CREDITO_CHOICES = [
+        ('01', 'Anulación de la operación'),
+        ('02', 'Anulación por error en el RUC'),
+        ('03', 'Corrección por error en la descripción'),
+        ('04', 'Descuento global'),
+        ('05', 'Descuento por ítem'),
+        ('06', 'Devolución total'),
+        ('07', 'Devolución por ítem'),
+        ('08', 'Bonificación'),
+        ('09', 'Disminución en el valor'),
+        ('10', 'Otros conceptos'),
+        ('11', 'Ajustes de operaciones de exportación'),
+        ('12', 'Ajustes afectos al IVAP'),
+    ]
+    
+    # Documento que se modifica
+    tipo_documento_modificado = models.CharField(
+        max_length=2,
+        choices=[
+            ('01', 'Factura'),
+            ('03', 'Boleta'),
+        ],
+        verbose_name='Tipo de Documento Modificado'
+    )
+    
+    numero_documento_modificado = models.CharField(
+        max_length=20,
+        verbose_name='Número de Documento Modificado'
+    )
+    
+    # Motivo de la nota de crédito
+    codigo_motivo = models.CharField(
+        max_length=2,
+        choices=TIPO_NOTA_CREDITO_CHOICES,
+        verbose_name='Código de Motivo'
+    )
+    
+    descripcion_motivo = models.TextField(
+        verbose_name='Descripción del Motivo'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_nota_credito'
+        verbose_name = 'Nota de Crédito'
+        verbose_name_plural = 'Notas de Crédito'
+        unique_together = ['serie_comprobante', 'numero']
+
+# =============================================================================
+# MODELO NOTA DE DÉBITO
+# =============================================================================
+class NotaDebito(ComprobanteBase):
+    """
+    Notas de débito electrónicas
+    """
+    
+    TIPO_NOTA_DEBITO_CHOICES = [
+        ('01', 'Intereses por mora'),
+        ('02', 'Aumento en el valor'),
+        ('03', 'Penalidades/ otros conceptos'),
+        ('10', 'Ajustes de operaciones de exportación'),
+        ('11', 'Ajustes afectos al IVAP'),
+    ]
+    
+    # Documento que se modifica
+    tipo_documento_modificado = models.CharField(
+        max_length=2,
+        choices=[
+            ('01', 'Factura'),
+            ('03', 'Boleta'),
+        ],
+        verbose_name='Tipo de Documento Modificado'
+    )
+    
+    numero_documento_modificado = models.CharField(
+        max_length=20,
+        verbose_name='Número de Documento Modificado'
+    )
+    
+    # Motivo de la nota de débito
+    codigo_motivo = models.CharField(
+        max_length=2,
+        choices=TIPO_NOTA_DEBITO_CHOICES,
+        verbose_name='Código de Motivo'
+    )
+    
+    descripcion_motivo = models.TextField(
+        verbose_name='Descripción del Motivo'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_nota_debito'
+        verbose_name = 'Nota de Débito'
+        verbose_name_plural = 'Notas de Débito'
+        unique_together = ['serie_comprobante', 'numero']
+
+# =============================================================================
+# MODELO GUÍA DE REMISIÓN
+# =============================================================================
+class GuiaRemision(ModeloBase):
+    """
+    Guías de remisión electrónicas
+    """
+    
+    TIPO_TRASLADO_CHOICES = [
+        ('01', 'Venta'),
+        ('02', 'Compra'),
+        ('04', 'Traslado entre establecimientos de la misma empresa'),
+        ('08', 'Importación'),
+        ('09', 'Exportación'),
+        ('13', 'Otros'),
+        ('14', 'Venta sujeta a confirmación del comprador'),
+        ('18', 'Traslado emisor itinerante CP'),
+        ('19', 'Traslado a zona primaria'),
+    ]
+    
+    MODALIDAD_TRANSPORTE_CHOICES = [
+        ('01', 'Transporte público'),
+        ('02', 'Transporte privado'),
+    ]
+    
+    # Identificación
+    empresa = models.ForeignKey(
+        Empresa,
+        on_delete=models.PROTECT,
+        verbose_name='Empresa'
+    )
+    
+    serie_numero = models.CharField(
+        max_length=20,
+        unique=True,
+        verbose_name='Serie-Número'
+    )
+    
+    fecha_emision = models.DateField(
+        default=timezone.now,
+        verbose_name='Fecha de Emisión'
+    )
+    
+    # Datos del traslado
+    tipo_traslado = models.CharField(
+        max_length=2,
+        choices=TIPO_TRASLADO_CHOICES,
+        verbose_name='Tipo de Traslado'
+    )
+    
+    modalidad_transporte = models.CharField(
+        max_length=2,
+        choices=MODALIDAD_TRANSPORTE_CHOICES,
+        verbose_name='Modalidad de Transporte'
+    )
+    
+    fecha_inicio_traslado = models.DateField(
+        verbose_name='Fecha de Inicio de Traslado'
+    )
+    
+    peso_bruto_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        verbose_name='Peso Bruto Total (kg)'
+    )
+    
+    # Direcciones
+    direccion_origen = models.TextField(
+        verbose_name='Dirección de Origen'
+    )
+    
+    ubigeo_origen = models.CharField(
+        max_length=6,
+        verbose_name='Ubigeo de Origen'
+    )
+    
+    direccion_destino = models.TextField(
+        verbose_name='Dirección de Destino'
+    )
+    
+    ubigeo_destino = models.CharField(
+        max_length=6,
+        verbose_name='Ubigeo de Destino'
+    )
+    
+    # Transportista (si es transporte público)
+    ruc_transportista = models.CharField(
+        max_length=11,
+        blank=True,
+        verbose_name='RUC del Transportista'
+    )
+    
+    razon_social_transportista = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Razón Social del Transportista'
+    )
+    
+    # Conductor
+    tipo_documento_conductor = models.CharField(
+        max_length=1,
+        choices=[
+            ('1', 'DNI'),
+            ('4', 'Carnet de Extranjería'),
+            ('7', 'Pasaporte'),
+        ],
+        blank=True,
+        verbose_name='Tipo de Documento del Conductor'
+    )
+    
+    numero_documento_conductor = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Número de Documento del Conductor'
+    )
+    
+    nombres_conductor = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Nombres del Conductor'
+    )
+    
+    apellidos_conductor = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Apellidos del Conductor'
+    )
+    
+    licencia_conductor = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Licencia del Conductor'
+    )
+    
+    # Vehículo
+    placa_vehiculo = models.CharField(
+        max_length=10,
+        blank=True,
+        verbose_name='Placa del Vehículo'
+    )
+    
+    # Observaciones
+    observaciones = models.TextField(
+        blank=True,
+        verbose_name='Observaciones'
+    )
+    
+    # Estado SUNAT
+    estado_sunat = models.CharField(
+        max_length=20,
+        choices=[
+            ('borrador', 'Borrador'),
+            ('enviado', 'Enviado'),
+            ('aceptado', 'Aceptado'),
+            ('rechazado', 'Rechazado'),
+        ],
+        default='borrador',
+        verbose_name='Estado SUNAT'
+    )
+    
+    hash_documento = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Hash del Documento'
+    )
+    
+    xml_documento = models.TextField(
+        blank=True,
+        verbose_name='XML del Documento'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_guia_remision'
+        verbose_name = 'Guía de Remisión'
+        verbose_name_plural = 'Guías de Remisión'
         indexes = [
-            models.Index(fields=['comprobante']),
-            models.Index(fields=['producto']),
+            models.Index(fields=['serie_numero']),
+            models.Index(fields=['fecha_emision']),
+            models.Index(fields=['estado_sunat']),
         ]
     
     def __str__(self):
-        return f"{self.comprobante.numero_completo} - Item {self.numero_item}"
-    
-    @property
-    def precio_unitario_con_descuento(self):
-        """Precio unitario después del descuento"""
-        return self.precio_unitario - self.descuento_unitario
-    
-    @property
-    def valor_venta(self):
-        """Valor de venta total (cantidad * precio con descuento)"""
-        return self.cantidad * self.precio_unitario_con_descuento
-    
-    @property
-    def descuento_total(self):
-        """Descuento total del item"""
-        return self.cantidad * self.descuento_unitario
-    
-    @property
-    def precio_total(self):
-        """Precio total con impuestos"""
-        return self.valor_venta + self.igv_total
-    
-    def save(self, *args, **kwargs):
-        """Guardar con cálculos automáticos"""
-        self.calcular_impuestos()
-        super().save(*args, **kwargs)
-    
-    def calcular_impuestos(self):
-        """Calcular impuestos del item"""
-        # Obtener tasa de IGV de la empresa
-        tasa_igv = self.comprobante.empresa.get_tasa_igv()
-        
-        # Calcular valor de venta
-        valor_venta = self.valor_venta
-        
-        # Determinar si está afecto a IGV
-        afecto_igv = True
-        if self.producto:
-            afecto_igv = self.producto.afecto_igv
-            self.codigo_impuesto = self.producto.codigo_impuesto
-        
-        if afecto_igv and self.codigo_impuesto == '1000':
-            # Operación gravada
-            self.base_imponible = valor_venta
-            self.igv_unitario = self.precio_unitario_con_descuento * tasa_igv
-            self.igv_total = self.cantidad * self.igv_unitario
-        else:
-            # Operación exonerada, inafecta o gratuita
-            self.base_imponible = Decimal('0.00')
-            self.igv_unitario = Decimal('0.0000')
-            self.igv_total = Decimal('0.00')
-        
-        # Redondear valores
-        self.base_imponible = self.base_imponible.quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP
-        )
-        self.igv_total = self.igv_total.quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP
-        )
-    
-    def get_datos_para_xml(self):
-        """Obtener datos formateados para XML SUNAT"""
-        return {
-            'numero_item': self.numero_item,
-            'codigo_producto': self.codigo_producto,
-            'descripcion': self.descripcion,
-            'unidad_medida': self.unidad_medida,
-            'cantidad': str(self.cantidad),
-            'precio_unitario': str(self.precio_unitario),
-            'descuento_unitario': str(self.descuento_unitario),
-            'valor_venta': str(self.valor_venta),
-            'igv_total': str(self.igv_total),
-            'precio_total': str(self.precio_total),
-            'codigo_impuesto': self.codigo_impuesto,
-        }
-    
-    def crear_movimiento_inventario(self):
-        """Crear movimiento de inventario para este item"""
-        if not self.producto or not self.producto.maneja_stock:
-            return None
-        
-        from aplicaciones.inventarios.models import MovimientoInventario
-        
-        # Determinar almacén (usar almacén principal de la empresa)
-        almacen = self.comprobante.empresa.get_almacen_principal()
-        if not almacen:
-            raise ValueError("No hay almacén principal configurado")
-        
-        # Crear movimiento de salida
-        movimiento = MovimientoInventario.crear_salida(
-            empresa=self.comprobante.empresa,
-            producto=self.producto,
-            almacen=almacen,
-            cantidad=self.cantidad,
-            referencia_tabla='comprobantes',
-            referencia_id=self.comprobante.id,
-            numero_documento=self.comprobante.numero_completo,
-            observaciones=f"Venta - {self.comprobante.numero_completo}",
-            usuario=self.comprobante.usuario_creacion,
-            confirmar=True
-        )
-        
-        return movimiento
+        return f"Guía {self.serie_numero}"

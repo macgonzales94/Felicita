@@ -1,0 +1,387 @@
+[
+  {
+    "model": "core.empresa",
+    "pk": "550e8400-e29b-41d4-a716-446655440001",
+    "fields": {
+      "ruc": "20123456789",
+      "razon_social": "EMPRESA DEMO FELICITA S.A.C.",
+      "nombre_comercial": "FELICITA DEMO",
+      "direccion": "AV. JAVIER PRADO ESTE 123, SAN ISIDRO",
+      "ubigeo": "150101",
+      "distrito": "San Isidro",
+      "provincia": "Lima",
+      "departamento": "Lima",
+      "telefono": "01-2345678",
+      "email": "contacto@demo-felicita.pe",
+      "pagina_web": "https://demo-felicita.pe",
+      "plan_cuentas": "PCGE",
+      "moneda_base": "PEN",
+      "regimen_tributario": "GENERAL",
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.categoriaproducto",
+    "pk": "550e8400-e29b-41d4-a716-446655440002",
+    "fields": {
+      "codigo": "CAT001",
+      "nombre": "Productos de Limpieza",
+      "descripcion": "Productos para limpieza del hogar y oficina",
+      "categoria_padre": null,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.categoriaproducto",
+    "pk": "550e8400-e29b-41d4-a716-446655440003",
+    "fields": {
+      "codigo": "CAT002",
+      "nombre": "Productos de Oficina",
+      "descripcion": "Útiles y suministros de oficina",
+      "categoria_padre": null,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.categoriaproducto",
+    "pk": "550e8400-e29b-41d4-a716-446655440004",
+    "fields": {
+      "codigo": "CAT003",
+      "nombre": "Servicios Profesionales",
+      "descripcion": "Servicios de consultoría y profesionales",
+      "categoria_padre": null,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.producto",
+    "pk": "550e8400-e29b-41d4-a716-446655440010",
+    "fields": {
+      "codigo": "PROD001",
+      "codigo_barras": "7750123456789",
+      "codigo_sunat": "39249000",
+      "nombre": "Detergente Líquido 1L",
+      "descripcion": "Detergente líquido concentrado para ropa, 1 litro",
+      "tipo_producto": "BIEN",
+      "categoria": "550e8400-e29b-41d4-a716-446655440002",
+      "unidad_medida": "NIU",
+      "precio_compra": "8.50",
+      "precio_venta": "12.00",
+      "precio_venta_minimo": "10.00",
+      "tipo_afectacion_igv": "10",
+      "incluye_igv": true,
+      "controla_stock": true,
+      "stock_minimo": "10.0000",
+      "marca": "Clean Pro",
+      "activo_venta": true,
+      "activo_compra": true,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.producto",
+    "pk": "550e8400-e29b-41d4-a716-446655440011",
+    "fields": {
+      "codigo": "PROD002",
+      "codigo_barras": "7750123456790",
+      "codigo_sunat": "48191000",
+      "nombre": "Papel Bond A4 75g",
+      "descripcion": "Papel bond blanco A4, 75 gramos, paquete de 500 hojas",
+      "tipo_producto": "BIEN",
+      "categoria": "550e8400-e29b-41d4-a716-446655440003",
+      "unidad_medida": "NIU",
+      "precio_compra": "13.50",
+      "precio_venta": "18.00",
+      "precio_venta_minimo": "15.00",
+      "tipo_afectacion_igv": "10",
+      "incluye_igv": true,
+      "controla_stock": true,
+      "stock_minimo": "20.0000",
+      "marca": "OfficeMax",
+      "activo_venta": true,
+      "activo_compra": true,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.producto",
+    "pk": "550e8400-e29b-41d4-a716-446655440012",
+    "fields": {
+      "codigo": "SERV001",
+      "codigo_barras": "",
+      "codigo_sunat": "85234900",
+      "nombre": "Consultoría Contable por Hora",
+      "descripcion": "Servicio de consultoría contable especializada",
+      "tipo_producto": "SERVICIO",
+      "categoria": "550e8400-e29b-41d4-a716-446655440004",
+      "unidad_medida": "HUR",
+      "precio_compra": "0.00",
+      "precio_venta": "80.00",
+      "precio_venta_minimo": "60.00",
+      "tipo_afectacion_igv": "10",
+      "incluye_igv": true,
+      "controla_stock": false,
+      "stock_minimo": "0.0000",
+      "marca": "",
+      "activo_venta": true,
+      "activo_compra": false,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.cliente",
+    "pk": "550e8400-e29b-41d4-a716-446655440020",
+    "fields": {
+      "tipo_documento": "DNI",
+      "numero_documento": "12345678",
+      "tipo_cliente": "PERSONA_NATURAL",
+      "razon_social": "JUAN CARLOS PÉREZ GONZÁLEZ",
+      "nombres": "Juan Carlos",
+      "apellido_paterno": "Pérez",
+      "apellido_materno": "González",
+      "direccion": "AV. LOS OLIVOS 456, MIRAFLORES",
+      "ubigeo": "150122",
+      "distrito": "Miraflores",
+      "provincia": "Lima",
+      "departamento": "Lima",
+      "telefono": "987654321",
+      "email": "juan.perez@email.com",
+      "limite_credito": "1000.00",
+      "dias_credito": 30,
+      "descuento_maximo": "5.00",
+      "bloqueado": false,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.cliente",
+    "pk": "550e8400-e29b-41d4-a716-446655440021",
+    "fields": {
+      "tipo_documento": "RUC",
+      "numero_documento": "20987654321",
+      "tipo_cliente": "PERSONA_JURIDICA",
+      "razon_social": "INVERSIONES LIMA NORTE S.A.C.",
+      "nombres": "",
+      "apellido_paterno": "",
+      "apellido_materno": "",
+      "direccion": "AV. TUPAC AMARU 1234, COMAS",
+      "ubigeo": "150104",
+      "distrito": "Comas",
+      "provincia": "Lima",
+      "departamento": "Lima",
+      "telefono": "01-4567890",
+      "email": "facturacion@invlima.com",
+      "limite_credito": "5000.00",
+      "dias_credito": 45,
+      "descuento_maximo": "10.00",
+      "bloqueado": false,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.cliente",
+    "pk": "550e8400-e29b-41d4-a716-446655440022",
+    "fields": {
+      "tipo_documento": "RUC",
+      "numero_documento": "20555666777",
+      "tipo_cliente": "PERSONA_JURIDICA",
+      "razon_social": "COMERCIAL SAN MARTÍN E.I.R.L.",
+      "nombres": "",
+      "apellido_paterno": "",
+      "apellido_materno": "",
+      "direccion": "JR. SAN MARTÍN 789, CERCADO DE LIMA",
+      "ubigeo": "150101",
+      "distrito": "Lima",
+      "provincia": "Lima",
+      "departamento": "Lima",
+      "telefono": "01-3456789",
+      "email": "ventas@sanmartin.pe",
+      "limite_credito": "3000.00",
+      "dias_credito": 30,
+      "descuento_maximo": "8.00",
+      "bloqueado": false,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.proveedor",
+    "pk": "550e8400-e29b-41d4-a716-446655440030",
+    "fields": {
+      "ruc": "20147852369",
+      "razon_social": "DISTRIBUIDORA QUÍMICA INDUSTRIAL S.A.",
+      "nombre_comercial": "DQUIM",
+      "direccion": "AV. ARGENTINA 2500, CALLAO",
+      "ubigeo": "070101",
+      "telefono": "01-5671234",
+      "email": "ventas@dquim.com.pe",
+      "contacto_principal": "María Elena Quispe",
+      "dias_pago": 30,
+      "descuento_obtenido": "3.00",
+      "activo_comercial": true,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.proveedor",
+    "pk": "550e8400-e29b-41d4-a716-446655440031",
+    "fields": {
+      "ruc": "20258963147",
+      "razon_social": "PAPELERÍA NACIONAL S.A.C.",
+      "nombre_comercial": "PAPELNAC",
+      "direccion": "AV. COLONIAL 1800, BREÑA",
+      "ubigeo": "150103",
+      "telefono": "01-4567123",
+      "email": "pedidos@papelnac.pe",
+      "contacto_principal": "Carlos Rodríguez",
+      "dias_pago": 45,
+      "descuento_obtenido": "5.00",
+      "activo_comercial": true,
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z",
+      "actualizado_en": "2024-01-01T00:00:00Z"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 1,
+    "fields": {
+      "clave": "IGV_PORCENTAJE",
+      "valor": "18",
+      "descripcion": "Porcentaje de IGV aplicado en Perú",
+      "tipo_dato": "integer"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 2,
+    "fields": {
+      "clave": "MONEDA_BASE",
+      "valor": "PEN",
+      "descripcion": "Moneda base del sistema",
+      "tipo_dato": "string"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 3,
+    "fields": {
+      "clave": "METODO_INVENTARIO",
+      "valor": "PEPS",
+      "descripcion": "Método de valuación de inventarios",
+      "tipo_dato": "string"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 4,
+    "fields": {
+      "clave": "SERIE_FACTURA_DEFAULT",
+      "valor": "F001",
+      "descripcion": "Serie por defecto para facturas",
+      "tipo_dato": "string"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 5,
+    "fields": {
+      "clave": "SERIE_BOLETA_DEFAULT",
+      "valor": "B001",
+      "descripcion": "Serie por defecto para boletas",
+      "tipo_dato": "string"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 6,
+    "fields": {
+      "clave": "LIMITE_STOCK_BAJO",
+      "valor": "10",
+      "descripcion": "Límite para alertas de stock bajo",
+      "tipo_dato": "integer"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 7,
+    "fields": {
+      "clave": "DIAS_VENCIMIENTO_ALERTA",
+      "valor": "30",
+      "descripcion": "Días antes del vencimiento para alertas",
+      "tipo_dato": "integer"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 8,
+    "fields": {
+      "clave": "BACKUP_AUTOMATICO",
+      "valor": "true",
+      "descripcion": "Activar backup automático",
+      "tipo_dato": "boolean"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 9,
+    "fields": {
+      "clave": "FORMATO_FECHA",
+      "valor": "dd/mm/yyyy",
+      "descripcion": "Formato de fecha del sistema",
+      "tipo_dato": "string"
+    }
+  },
+  
+  {
+    "model": "core.configuracionsistema",
+    "pk": 10,
+    "fields": {
+      "clave": "DECIMALES_MONEDA",
+      "valor": "2",
+      "descripcion": "Cantidad de decimales para moneda",
+      "tipo_dato": "integer"
+    }
+  }
+]

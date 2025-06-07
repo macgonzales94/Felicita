@@ -1,22 +1,109 @@
 {
   "name": "felicita-frontend",
   "version": "1.0.0",
-  "description": "Frontend React para FELICITA - Sistema de Facturación Electrónica Perú",
-  "private": true,
-  "scripts": {
-    "dev": "echo '⚛️ Frontend React se configurará en Fase 4'",
-    "build": "echo '📦 Build se configurará en Fase 4'",
-    "preview": "echo '👀 Preview se configurará en Fase 4'"
-  },
-  "keywords": [
-    "facturacion",
-    "sunat",
-    "peru",
-    "react",
-    "typescript"
-  ],
+  "description": "Frontend para FELICITA - Sistema de Facturación Electrónica para Perú",
   "author": "Equipo FELICITA",
   "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {}
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "react-hook-form": "^7.48.2",
+    "react-query": "^3.39.3",
+    "axios": "^1.6.2",
+    "zustand": "^4.4.7",
+    "date-fns": "^2.30.0",
+    "clsx": "^2.0.0",
+    "class-variance-authority": "^0.7.0",
+    "tailwind-merge": "^2.0.0",
+    "lucide-react": "^0.292.0",
+    "recharts": "^2.8.0",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "react-hot-toast": "^2.4.1",
+    "react-table": "^7.8.0",
+    "@types/react-table": "^7.7.18",
+    "react-dropzone": "^14.2.3",
+    "react-select": "^5.8.0",
+    "react-datepicker": "^4.24.0",
+    "react-number-format": "^5.3.1",
+    "qrcode.react": "^3.1.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
+    "xlsx": "^0.18.5",
+    "file-saver": "^2.0.5",
+    "@types/file-saver": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@types/react-datepicker": "^4.19.4",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "@vitejs/plugin-react": "^4.1.1",
+    "vite": "^5.0.0",
+    "typescript": "^5.2.2",
+    "tailwindcss": "^3.3.6",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "prettier": "^3.1.0",
+    "prettier-plugin-tailwindcss": "^0.5.7",
+    "vitest": "^1.0.0",
+    "jsdom": "^23.0.1",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/user-event": "^14.5.1",
+    "@storybook/react": "^7.5.3",
+    "@storybook/react-vite": "^7.5.3",
+    "@storybook/addon-essentials": "^7.5.3",
+    "@storybook/addon-interactions": "^7.5.3",
+    "@storybook/testing-library": "^0.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "keywords": [
+    "facturación electrónica",
+    "sunat",
+    "perú",
+    "react",
+    "typescript",
+    "vite",
+    "pos",
+    "inventario",
+    "contabilidad"
+  ]
 }
