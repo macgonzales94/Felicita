@@ -2,668 +2,524 @@
 UTILS CORE - PROYECTO FELICITA
 Sistema de Facturación Electrónica para Perú
 
-Utilidades y funciones auxiliares del módulo core
+Funciones auxiliares y utilidades para todo el sistema
 """
 
 import re
-import requests
-import json
+import uuid
+import hashlib
+import random
+import string
+from datetime import datetime, date
 from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime, timedelta
-from django.conf import settings
-from django.core.cache import cache
+from typing import Union, Optional, Dict, Any, List
+from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.conf import settings
+import requests
 import logging
 
 logger = logging.getLogger('felicita.core')
 
 
 # =============================================================================
-# VALIDACIONES PERÚ
+# VALIDACIONES DOCUMENTOS PERÚ
 # =============================================================================
-def validar_ruc_algoritmo(ruc):
+def validar_ruc(ruc: str) -> bool:
     """
-    Validar RUC usando el algoritmo oficial de SUNAT
-    
-    Args:
-        ruc (str): Número de RUC a validar
-        
-    Returns:
-        bool: True si el RUC es válido, False en caso contrario
+    Validar RUC peruano (11 dígitos)
+    Implementa algoritmo oficial de SUNAT
     """
-    if not ruc or len(ruc) != 11 or not ruc.isdigit():
+    if not ruc or not isinstance(ruc, str):
         return False
     
-    try:
-        # Factores de multiplicación para cada posición
-        factores = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
-        
-        # Calcular suma ponderada
-        suma = sum(int(ruc[i]) * factores[i] for i in range(10))
-        
-        # Calcular resto
-        resto = suma % 11
-        
-        # Calcular dígito verificador
-        digito_verificador = 11 - resto if resto >= 2 else resto
-        
-        # Comparar con el último dígito del RUC
-        return digito_verificador == int(ruc[10])
-        
-    except (ValueError, IndexError):
+    # Limpiar RUC
+    ruc = ruc.strip().replace('-', '').replace(' ', '')
+    
+    # Verificar que sea solo números y tenga 11 dígitos
+    if not ruc.isdigit() or len(ruc) != 11:
         return False
+    
+    # Tipos de RUC válidos (primer dígito)
+    tipos_validos = ['1', '2']  # 10: DNI, 20: RUC empresa
+    if ruc[:2] not in ['10', '20', '15', '17']:
+        return False
+    
+    # Algoritmo de validación
+    factores = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+    suma = 0
+    
+    for i in range(10):
+        suma += int(ruc[i]) * factores[i]
+    
+    resto = suma % 11
+    digito_verificador = 11 - resto if resto >= 2 else resto
+    
+    return int(ruc[10]) == digito_verificador
 
 
-def validar_dni_algoritmo(dni):
+def validar_dni(dni: str) -> bool:
     """
-    Validar DNI peruano (verificación básica de formato)
-    
-    Args:
-        dni (str): Número de DNI a validar
-        
-    Returns:
-        bool: True si el DNI tiene formato válido
+    Validar DNI peruano (8 dígitos)
     """
-    if not dni or len(dni) != 8 or not dni.isdigit():
+    if not dni or not isinstance(dni, str):
         return False
     
-    # DNI no puede empezar con 0
-    if dni.startswith('0'):
+    # Limpiar DNI
+    dni = dni.strip().replace('-', '').replace(' ', '')
+    
+    # Verificar que sea solo números y tenga 8 dígitos
+    if not dni.isdigit() or len(dni) != 8:
+        return False
+    
+    # Verificar que no sea un número obviamente inválido
+    if dni == '00000000' or dni == '11111111':
         return False
     
     return True
 
 
-def validar_ruc_sunat(ruc):
+def validar_numero_documento(numero: str, tipo_documento: str) -> bool:
     """
-    Consultar RUC en SUNAT a través de API externa
+    Validar número de documento según su tipo
+    """
+    if not numero or not tipo_documento:
+        return False
     
-    Args:
-        ruc (str): Número de RUC a consultar
-        
-    Returns:
-        dict: Datos del RUC si existe, None si no existe o hay error
+    numero = numero.strip()
+    
+    if tipo_documento == 'DNI':
+        return validar_dni(numero)
+    elif tipo_documento == 'RUC':
+        return validar_ruc(numero)
+    elif tipo_documento == 'CARNET_EXTRANJERIA':
+        # Carnet de extranjería: 9 dígitos
+        return numero.isdigit() and len(numero) == 9
+    elif tipo_documento == 'PASAPORTE':
+        # Pasaporte: entre 6 y 12 caracteres alfanuméricos
+        return re.match(r'^[A-Z0-9]{6,12}$', numero.upper()) is not None
+    
+    return False
+
+
+# =============================================================================
+# CONSULTAS APIS EXTERNAS
+# =============================================================================
+def consultar_ruc_sunat(ruc: str) -> Optional[Dict[str, Any]]:
     """
-    if not validar_ruc_algoritmo(ruc):
+    Consultar datos de RUC en SUNAT (simulado)
+    En producción se conectaría a API real de SUNAT
+    """
+    if not validar_ruc(ruc):
         return None
     
-    # Verificar cache primero
-    cache_key = f"ruc_sunat_{ruc}"
-    datos_cached = cache.get(cache_key)
-    if datos_cached:
-        return datos_cached
-    
-    try:
-        # Configurar API de consulta
-        api_url = getattr(settings, 'SUNAT_API_URL', None)
-        api_token = getattr(settings, 'SUNAT_API_TOKEN', None)
-        
-        if not api_url or not api_token:
-            logger.warning("API de SUNAT no configurada")
-            return None
-        
-        # Realizar consulta
-        headers = {
-            'Authorization': f'Bearer {api_token}',
-            'Content-Type': 'application/json'
+    # Datos simulados para desarrollo
+    datos_simulados = {
+        '20100070970': {
+            'ruc': '20100070970',
+            'razon_social': 'SUPERMERCADOS PERUANOS SOCIEDAD ANONIMA',
+            'nombre_comercial': 'PLAZA VEA',
+            'estado': 'ACTIVO',
+            'condicion': 'HABIDO',
+            'direccion': 'AV. ARGENTINA NRO. 3093',
+            'distrito': 'LIMA',
+            'provincia': 'LIMA',
+            'departamento': 'LIMA',
+            'ubigeo': '150101'
+        },
+        '20131312955': {
+            'ruc': '20131312955',
+            'razon_social': 'CENCOSUD RETAIL PERU S.A.',
+            'nombre_comercial': 'METRO',
+            'estado': 'ACTIVO',
+            'condicion': 'HABIDO',
+            'direccion': 'AV. AVIACION NRO. 5405',
+            'distrito': 'SAN BORJA',
+            'provincia': 'LIMA',
+            'departamento': 'LIMA',
+            'ubigeo': '150141'
         }
-        
-        response = requests.get(
-            f"{api_url}?numero={ruc}",
-            headers=headers,
-            timeout=10
-        )
-        
-        if response.status_code == 200:
-            datos = response.json()
-            
-            # Formatear respuesta
-            resultado = {
-                'ruc': ruc,
-                'razon_social': datos.get('razonSocial', ''),
-                'nombre_comercial': datos.get('nombreComercial', ''),
-                'estado': datos.get('estado', ''),
-                'condicion': datos.get('condicion', ''),
-                'direccion': datos.get('direccion', ''),
-                'ubigeo': datos.get('ubigeo', ''),
-                'tipo_contribuyente': datos.get('tipoContribuyente', ''),
-                'fecha_inscripcion': datos.get('fechaInscripcion', ''),
-                'fecha_inicio_actividades': datos.get('fechaInicioActividades', ''),
-                'actividades_economicas': datos.get('actividadEconomica', []),
-                'comprobantes_pago': datos.get('comprobantesPago', []),
-                'consulta_timestamp': timezone.now().isoformat()
-            }
-            
-            # Guardar en cache por 24 horas
-            cache.set(cache_key, resultado, timeout=86400)
-            
-            return resultado
-        
-        elif response.status_code == 404:
-            logger.info(f"RUC {ruc} no encontrado en SUNAT")
-            return None
-        
-        else:
-            logger.error(f"Error consultando RUC {ruc} en SUNAT: {response.status_code}")
-            return None
-            
-    except requests.RequestException as e:
-        logger.error(f"Error de conexión consultando RUC {ruc}: {e}")
-        return None
+    }
     
-    except Exception as e:
-        logger.error(f"Error inesperado consultando RUC {ruc}: {e}")
-        return None
+    return datos_simulados.get(ruc)
 
 
-def validar_dni_reniec(dni):
+def consultar_dni_reniec(dni: str) -> Optional[Dict[str, Any]]:
     """
-    Consultar DNI en RENIEC a través de API externa
-    
-    Args:
-        dni (str): Número de DNI a consultar
-        
-    Returns:
-        dict: Datos del DNI si existe, None si no existe o hay error
+    Consultar datos de DNI en RENIEC (simulado)
+    En producción se conectaría a API real de RENIEC
     """
-    if not validar_dni_algoritmo(dni):
+    if not validar_dni(dni):
         return None
     
-    # Verificar cache primero
-    cache_key = f"dni_reniec_{dni}"
-    datos_cached = cache.get(cache_key)
-    if datos_cached:
-        return datos_cached
-    
-    try:
-        # Configurar API de consulta
-        api_url = getattr(settings, 'RENIEC_API_URL', None)
-        api_token = getattr(settings, 'RENIEC_API_TOKEN', None)
-        
-        if not api_url or not api_token:
-            logger.warning("API de RENIEC no configurada")
-            return None
-        
-        # Realizar consulta
-        headers = {
-            'Authorization': f'Bearer {api_token}',
-            'Content-Type': 'application/json'
+    # Datos simulados para desarrollo
+    datos_simulados = {
+        '12345678': {
+            'dni': '12345678',
+            'nombres': 'JUAN CARLOS',
+            'apellido_paterno': 'PEREZ',
+            'apellido_materno': 'GARCIA',
+            'estado_civil': 'SOLTERO',
+            'fecha_nacimiento': '1990-05-15'
+        },
+        '87654321': {
+            'dni': '87654321',
+            'nombres': 'MARIA ELENA',
+            'apellido_paterno': 'RODRIGUEZ',
+            'apellido_materno': 'LOPEZ',
+            'estado_civil': 'CASADA',
+            'fecha_nacimiento': '1985-12-20'
         }
-        
-        response = requests.get(
-            f"{api_url}?numero={dni}",
-            headers=headers,
-            timeout=10
-        )
-        
-        if response.status_code == 200:
-            datos = response.json()
-            
-            # Formatear respuesta
-            resultado = {
-                'dni': dni,
-                'nombres': datos.get('nombres', ''),
-                'apellido_paterno': datos.get('apellidoPaterno', ''),
-                'apellido_materno': datos.get('apellidoMaterno', ''),
-                'nombre_completo': f"{datos.get('nombres', '')} {datos.get('apellidoPaterno', '')} {datos.get('apellidoMaterno', '')}".strip(),
-                'consulta_timestamp': timezone.now().isoformat()
-            }
-            
-            # Guardar en cache por 7 días
-            cache.set(cache_key, resultado, timeout=604800)
-            
-            return resultado
-        
-        elif response.status_code == 404:
-            logger.info(f"DNI {dni} no encontrado en RENIEC")
-            return None
-        
-        else:
-            logger.error(f"Error consultando DNI {dni} en RENIEC: {response.status_code}")
-            return None
-            
-    except requests.RequestException as e:
-        logger.error(f"Error de conexión consultando DNI {dni}: {e}")
-        return None
+    }
     
-    except Exception as e:
-        logger.error(f"Error inesperado consultando DNI {dni}: {e}")
-        return None
+    return datos_simulados.get(dni)
 
 
 # =============================================================================
-# UTILIDADES DE FORMATO
+# UTILIDADES FINANCIERAS
 # =============================================================================
-def formatear_ruc(ruc):
+def calcular_igv(monto_base: Union[Decimal, float], tasa_igv: float = 0.18) -> Decimal:
     """
-    Formatear RUC para visualización
-    
-    Args:
-        ruc (str): RUC sin formato
-        
-    Returns:
-        str: RUC formateado (XX-XXXXXXXX-X)
+    Calcular IGV sobre un monto base
     """
-    if not ruc or len(ruc) != 11:
-        return ruc
-    
-    return f"{ruc[:2]}-{ruc[2:10]}-{ruc[10]}"
-
-
-def formatear_dni(dni):
-    """
-    Formatear DNI para visualización
-    
-    Args:
-        dni (str): DNI sin formato
-        
-    Returns:
-        str: DNI formateado (XXXX-XXXX)
-    """
-    if not dni or len(dni) != 8:
-        return dni
-    
-    return f"{dni[:4]}-{dni[4:]}"
-
-
-def formatear_telefono(telefono):
-    """
-    Formatear teléfono peruano
-    
-    Args:
-        telefono (str): Teléfono sin formato
-        
-    Returns:
-        str: Teléfono formateado
-    """
-    if not telefono:
-        return telefono
-    
-    # Limpiar teléfono
-    telefono_limpio = re.sub(r'[^\d]', '', telefono)
-    
-    # Formatear según longitud
-    if len(telefono_limpio) == 9:  # Celular
-        return f"{telefono_limpio[:3]}-{telefono_limpio[3:6]}-{telefono_limpio[6:]}"
-    elif len(telefono_limpio) == 7:  # Fijo Lima
-        return f"{telefono_limpio[:3]}-{telefono_limpio[3:]}"
-    elif len(telefono_limpio) == 8:  # Fijo provincia
-        return f"{telefono_limpio[:2]}-{telefono_limpio[2:6]}-{telefono_limpio[6:]}"
-    
-    return telefono
-
-
-def formatear_moneda(monto, simbolo="S/", decimales=2):
-    """
-    Formatear monto como moneda peruana
-    
-    Args:
-        monto (float|Decimal): Monto a formatear
-        simbolo (str): Símbolo de moneda
-        decimales (int): Número de decimales
-        
-    Returns:
-        str: Monto formateado
-    """
-    if monto is None:
-        return f"{simbolo} 0.00"
-    
-    try:
-        # Convertir a Decimal para precisión
-        if not isinstance(monto, Decimal):
-            monto = Decimal(str(monto))
-        
-        # Redondear a los decimales especificados
-        factor = Decimal(10) ** decimales
-        monto_redondeado = monto.quantize(Decimal(1) / factor, rounding=ROUND_HALF_UP)
-        
-        # Formatear con separadores de miles
-        formato = f"{{:,.{decimales}f}}"
-        monto_formateado = formato.format(float(monto_redondeado))
-        
-        return f"{simbolo} {monto_formateado}"
-        
-    except (ValueError, TypeError):
-        return f"{simbolo} 0.00"
-
-
-def formatear_porcentaje(valor, decimales=2):
-    """
-    Formatear valor como porcentaje
-    
-    Args:
-        valor (float|Decimal): Valor a formatear
-        decimales (int): Número de decimales
-        
-    Returns:
-        str: Porcentaje formateado
-    """
-    if valor is None:
-        return "0.00%"
-    
-    try:
-        if not isinstance(valor, Decimal):
-            valor = Decimal(str(valor))
-        
-        formato = f"{{:.{decimales}f}}"
-        return formato.format(float(valor)) + "%"
-        
-    except (ValueError, TypeError):
-        return "0.00%"
-
-
-# =============================================================================
-# UTILIDADES DE CÁLCULO
-# =============================================================================
-def calcular_igv(monto_base, porcentaje_igv=None):
-    """
-    Calcular IGV de un monto base
-    
-    Args:
-        monto_base (Decimal): Monto base sin IGV
-        porcentaje_igv (Decimal): Porcentaje de IGV (default: 18%)
-        
-    Returns:
-        Decimal: Monto del IGV
-    """
-    if porcentaje_igv is None:
-        porcentaje_igv = Decimal('18.00')
-    
     if not isinstance(monto_base, Decimal):
         monto_base = Decimal(str(monto_base))
     
-    if not isinstance(porcentaje_igv, Decimal):
-        porcentaje_igv = Decimal(str(porcentaje_igv))
-    
-    igv = monto_base * (porcentaje_igv / Decimal('100'))
+    igv = monto_base * Decimal(str(tasa_igv))
     return igv.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-def calcular_precio_con_igv(precio_sin_igv, porcentaje_igv=None):
+def calcular_total_con_igv(monto_base: Union[Decimal, float], tasa_igv: float = 0.18) -> Decimal:
     """
-    Calcular precio con IGV incluido
+    Calcular total incluyendo IGV
+    """
+    if not isinstance(monto_base, Decimal):
+        monto_base = Decimal(str(monto_base))
     
-    Args:
-        precio_sin_igv (Decimal): Precio sin IGV
-        porcentaje_igv (Decimal): Porcentaje de IGV
-        
-    Returns:
-        Decimal: Precio con IGV incluido
-    """
-    igv = calcular_igv(precio_sin_igv, porcentaje_igv)
-    precio_con_igv = precio_sin_igv + igv
-    return precio_con_igv.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    igv = calcular_igv(monto_base, tasa_igv)
+    total = monto_base + igv
+    return total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-def calcular_precio_sin_igv(precio_con_igv, porcentaje_igv=None):
+def calcular_base_sin_igv(monto_con_igv: Union[Decimal, float], tasa_igv: float = 0.18) -> Decimal:
     """
-    Calcular precio sin IGV desde precio con IGV
-    
-    Args:
-        precio_con_igv (Decimal): Precio con IGV incluido
-        porcentaje_igv (Decimal): Porcentaje de IGV
-        
-    Returns:
-        Decimal: Precio sin IGV
+    Calcular monto base sin IGV a partir de monto con IGV
     """
-    if porcentaje_igv is None:
-        porcentaje_igv = Decimal('18.00')
+    if not isinstance(monto_con_igv, Decimal):
+        monto_con_igv = Decimal(str(monto_con_igv))
     
-    if not isinstance(precio_con_igv, Decimal):
-        precio_con_igv = Decimal(str(precio_con_igv))
-    
-    if not isinstance(porcentaje_igv, Decimal):
-        porcentaje_igv = Decimal(str(porcentaje_igv))
-    
-    factor = Decimal('1') + (porcentaje_igv / Decimal('100'))
-    precio_sin_igv = precio_con_igv / factor
-    
-    return precio_sin_igv.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    factor = Decimal('1') + Decimal(str(tasa_igv))
+    monto_base = monto_con_igv / factor
+    return monto_base.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-def calcular_descuento(precio_base, porcentaje_descuento):
+def redondear_moneda(monto: Union[Decimal, float]) -> Decimal:
     """
-    Calcular monto de descuento
-    
-    Args:
-        precio_base (Decimal): Precio base
-        porcentaje_descuento (Decimal): Porcentaje de descuento
-        
-    Returns:
-        Decimal: Monto del descuento
+    Redondear monto a 2 decimales para moneda
     """
-    if not isinstance(precio_base, Decimal):
-        precio_base = Decimal(str(precio_base))
+    if not isinstance(monto, Decimal):
+        monto = Decimal(str(monto))
     
-    if not isinstance(porcentaje_descuento, Decimal):
-        porcentaje_descuento = Decimal(str(porcentaje_descuento))
-    
-    descuento = precio_base * (porcentaje_descuento / Decimal('100'))
-    return descuento.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    return monto.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-# =============================================================================
-# UTILIDADES DE FECHA
-# =============================================================================
-def obtener_fecha_hora_peru():
+def convertir_numero_a_letras(numero: Union[int, float, Decimal]) -> str:
     """
-    Obtener fecha y hora actual en zona horaria de Perú
-    
-    Returns:
-        datetime: Fecha y hora en Perú
+    Convertir número a letras (para facturas)
     """
-    import pytz
-    
-    zona_peru = pytz.timezone('America/Lima')
-    return timezone.now().astimezone(zona_peru)
-
-
-def formatear_fecha_peru(fecha, formato=None):
-    """
-    Formatear fecha según estándar peruano
-    
-    Args:
-        fecha (datetime): Fecha a formatear
-        formato (str): Formato personalizado
-        
-    Returns:
-        str: Fecha formateada
-    """
-    if not fecha:
+    # Implementación básica - en producción usar librería como num2words
+    if not isinstance(numero, (int, float, Decimal)):
         return ""
     
-    if formato is None:
-        formato = "%d/%m/%Y"
-    
-    return fecha.strftime(formato)
-
-
-def formatear_fecha_hora_peru(fecha_hora, formato=None):
-    """
-    Formatear fecha y hora según estándar peruano
-    
-    Args:
-        fecha_hora (datetime): Fecha y hora a formatear
-        formato (str): Formato personalizado
-        
-    Returns:
-        str: Fecha y hora formateada
-    """
-    if not fecha_hora:
-        return ""
-    
-    if formato is None:
-        formato = "%d/%m/%Y %H:%M"
-    
-    return fecha_hora.strftime(formato)
+    # Por ahora retorna formato simple
+    return f"{numero:.2f} SOLES"
 
 
 # =============================================================================
-# UTILIDADES DE CÓDIGO
+# UTILIDADES DE FECHAS
 # =============================================================================
-def generar_codigo_producto(categoria_codigo=None, secuencial=None):
+def obtener_fecha_actual() -> date:
     """
-    Generar código de producto automático
-    
-    Args:
-        categoria_codigo (str): Código de categoría
-        secuencial (int): Número secuencial
-        
-    Returns:
-        str: Código de producto generado
+    Obtener fecha actual del sistema
     """
-    if categoria_codigo and secuencial:
-        return f"{categoria_codigo}{secuencial:04d}"
-    
-    # Si no se proporcionan parámetros, generar basado en timestamp
-    timestamp = int(timezone.now().timestamp())
-    return f"PROD{timestamp}"
+    return timezone.now().date()
 
 
-def generar_codigo_cliente(tipo_documento="CLI", secuencial=None):
+def obtener_datetime_actual() -> datetime:
     """
-    Generar código de cliente automático
-    
-    Args:
-        tipo_documento (str): Tipo de documento
-        secuencial (int): Número secuencial
-        
-    Returns:
-        str: Código de cliente generado
+    Obtener datetime actual del sistema
     """
-    if secuencial:
-        return f"{tipo_documento}{secuencial:06d}"
+    return timezone.now()
+
+
+def formatear_fecha_peru(fecha: Union[date, datetime]) -> str:
+    """
+    Formatear fecha al formato peruano (DD/MM/YYYY)
+    """
+    if isinstance(fecha, datetime):
+        fecha = fecha.date()
     
-    # Si no se proporciona secuencial, usar timestamp
-    timestamp = int(timezone.now().timestamp())
-    return f"{tipo_documento}{timestamp}"
+    return fecha.strftime('%d/%m/%Y')
+
+
+def formatear_datetime_peru(dt: datetime) -> str:
+    """
+    Formatear datetime al formato peruano (DD/MM/YYYY HH:MM)
+    """
+    return dt.strftime('%d/%m/%Y %H:%M')
+
+
+def validar_fecha_formato(fecha_str: str, formato: str = '%Y-%m-%d') -> bool:
+    """
+    Validar si una fecha string tiene el formato correcto
+    """
+    try:
+        datetime.strptime(fecha_str, formato)
+        return True
+    except ValueError:
+        return False
+
+
+def calcular_edad(fecha_nacimiento: date) -> int:
+    """
+    Calcular edad en años
+    """
+    hoy = obtener_fecha_actual()
+    edad = hoy.year - fecha_nacimiento.year
+    
+    # Ajustar si aún no ha cumplido años este año
+    if hoy.month < fecha_nacimiento.month or \
+       (hoy.month == fecha_nacimiento.month and hoy.day < fecha_nacimiento.day):
+        edad -= 1
+    
+    return edad
 
 
 # =============================================================================
-# UTILIDADES DE VALIDACIÓN DE DATOS
+# UTILIDADES DE STRINGS
 # =============================================================================
-def limpiar_texto(texto):
+def limpiar_texto(texto: str) -> str:
     """
-    Limpiar texto removiendo caracteres especiales
-    
-    Args:
-        texto (str): Texto a limpiar
-        
-    Returns:
-        str: Texto limpio
+    Limpiar texto eliminando caracteres especiales y espacios extra
     """
     if not texto:
         return ""
     
-    # Remover caracteres especiales pero conservar acentos
-    texto_limpio = re.sub(r'[^\w\s\-\.áéíóúüñÁÉÍÓÚÜÑ]', '', texto)
+    # Eliminar espacios extra
+    texto = re.sub(r'\s+', ' ', texto.strip())
     
-    # Normalizar espacios
-    texto_limpio = re.sub(r'\s+', ' ', texto_limpio)
+    # Eliminar caracteres especiales problemáticos
+    texto = re.sub(r'[^\w\s\-.,()áéíóúÁÉÍÓÚñÑ]', '', texto)
     
-    return texto_limpio.strip()
+    return texto
 
 
-def normalizar_email(email):
+def normalizar_email(email: str) -> str:
     """
-    Normalizar dirección de email
-    
-    Args:
-        email (str): Email a normalizar
-        
-    Returns:
-        str: Email normalizado
+    Normalizar email a minúsculas y sin espacios
     """
     if not email:
         return ""
     
-    # Convertir a minúsculas y limpiar espacios
-    email_normalizado = email.lower().strip()
-    
-    # Validar formato básico
-    if '@' not in email_normalizado or '.' not in email_normalizado:
-        return email_normalizado
-    
-    return email_normalizado
+    return email.strip().lower()
 
 
-def validar_email_formato(email):
+def generar_codigo_unico(prefijo: str = "", longitud: int = 8) -> str:
+    """
+    Generar código único alfanumérico
+    """
+    caracteres = string.ascii_uppercase + string.digits
+    codigo = ''.join(random.choices(caracteres, k=longitud))
+    
+    if prefijo:
+        return f"{prefijo}-{codigo}"
+    
+    return codigo
+
+
+def validar_email_formato(email: str) -> bool:
     """
     Validar formato de email
-    
-    Args:
-        email (str): Email a validar
-        
-    Returns:
-        bool: True si el formato es válido
     """
-    if not email:
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
+    return re.match(patron, email) is not None
+
+
+def validar_telefono_peru(telefono: str) -> bool:
+    """
+    Validar número de teléfono peruano
+    """
+    if not telefono:
         return False
     
-    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(patron, email))
+    # Limpiar número
+    telefono = re.sub(r'\D', '', telefono)
+    
+    # Formatos válidos:
+    # Celular: 9 dígitos (empezando con 9)
+    # Fijo Lima: 7 dígitos (empezando con 1-9)
+    # Fijo provincia: 6 dígitos
+    
+    if len(telefono) == 9 and telefono.startswith('9'):
+        return True
+    elif len(telefono) == 7 and telefono[0] in '123456789':
+        return True
+    elif len(telefono) == 6:
+        return True
+    
+    return False
 
 
 # =============================================================================
-# UTILIDADES DE CONVERSIÓN
+# UTILIDADES DE ARCHIVOS
 # =============================================================================
-def convertir_a_decimal(valor, decimales=2):
+def validar_extension_archivo(nombre_archivo: str, extensiones_permitidas: List[str]) -> bool:
     """
-    Convertir valor a Decimal con precisión especificada
-    
-    Args:
-        valor: Valor a convertir
-        decimales (int): Número de decimales
-        
-    Returns:
-        Decimal: Valor convertido
+    Validar extensión de archivo
     """
-    if valor is None:
-        return Decimal('0')
+    if not nombre_archivo:
+        return False
     
+    extension = nombre_archivo.lower().split('.')[-1]
+    return extension in [ext.lower() for ext in extensiones_permitidas]
+
+
+def generar_nombre_archivo_unico(nombre_original: str) -> str:
+    """
+    Generar nombre único para archivo
+    """
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    nombre, extension = nombre_original.rsplit('.', 1) if '.' in nombre_original else (nombre_original, '')
+    
+    nombre_limpio = re.sub(r'[^\w\-_.]', '_', nombre)
+    codigo_unico = generar_codigo_unico("", 6)
+    
+    if extension:
+        return f"{nombre_limpio}_{timestamp}_{codigo_unico}.{extension}"
+    else:
+        return f"{nombre_limpio}_{timestamp}_{codigo_unico}"
+
+
+def calcular_hash_archivo(archivo_path: str) -> str:
+    """
+    Calcular hash MD5 de un archivo
+    """
+    hash_md5 = hashlib.md5()
     try:
-        if isinstance(valor, Decimal):
-            return valor.quantize(Decimal(10) ** -decimales, rounding=ROUND_HALF_UP)
-        
-        decimal_valor = Decimal(str(valor))
-        return decimal_valor.quantize(Decimal(10) ** -decimales, rounding=ROUND_HALF_UP)
-        
-    except (ValueError, TypeError):
-        return Decimal('0')
+        with open(archivo_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+    except FileNotFoundError:
+        return ""
 
 
-def convertir_a_entero(valor):
+# =============================================================================
+# UTILIDADES DE VALIDACIÓN
+# =============================================================================
+def validar_rango_numero(numero: Union[int, float], minimo: Union[int, float], maximo: Union[int, float]) -> bool:
     """
-    Convertir valor a entero de forma segura
-    
-    Args:
-        valor: Valor a convertir
-        
-    Returns:
-        int: Valor convertido
+    Validar que un número esté en un rango específico
     """
-    if valor is None:
-        return 0
+    return minimo <= numero <= maximo
+
+
+def validar_longitud_texto(texto: str, minimo: int = 0, maximo: int = None) -> bool:
+    """
+    Validar longitud de texto
+    """
+    if not texto:
+        texto = ""
     
+    longitud = len(texto)
+    
+    if longitud < minimo:
+        return False
+    
+    if maximo is not None and longitud > maximo:
+        return False
+    
+    return True
+
+
+def es_numero_valido(valor: str) -> bool:
+    """
+    Verificar si un string representa un número válido
+    """
     try:
-        return int(float(valor))
+        float(valor)
+        return True
     except (ValueError, TypeError):
-        return 0
+        return False
 
 
 # =============================================================================
-# UTILIDADES DE LOGGING
+# UTILIDADES DE UBIGEO PERÚ
 # =============================================================================
-def log_actividad_usuario(usuario, accion, modulo, descripcion, objeto_id=None):
+def obtener_ubigeo_lima() -> str:
     """
-    Registrar actividad de usuario para auditoría
+    Obtener código de ubigeo de Lima
+    """
+    return "150101"  # Lima, Lima, Lima
+
+
+def validar_ubigeo(ubigeo: str) -> bool:
+    """
+    Validar formato de ubigeo peruano (6 dígitos)
+    """
+    if not ubigeo:
+        return False
     
-    Args:
-        usuario: Usuario que realiza la acción
-        accion (str): Tipo de acción
-        modulo (str): Módulo donde se realiza la acción
-        descripcion (str): Descripción de la acción
-        objeto_id (str): ID del objeto afectado
+    return ubigeo.isdigit() and len(ubigeo) == 6
+
+
+def obtener_departamento_por_ubigeo(ubigeo: str) -> str:
+    """
+    Obtener nombre del departamento por código de ubigeo
+    """
+    if not validar_ubigeo(ubigeo):
+        return ""
+    
+    # Primeros 2 dígitos son el código del departamento
+    codigo_departamento = ubigeo[:2]
+    
+    departamentos = {
+        '01': 'AMAZONAS',
+        '02': 'ANCASH',
+        '03': 'APURIMAC',
+        '04': 'AREQUIPA',
+        '05': 'AYACUCHO',
+        '06': 'CAJAMARCA',
+        '07': 'CALLAO',
+        '08': 'CUSCO',
+        '09': 'HUANCAVELICA',
+        '10': 'HUANUCO',
+        '11': 'ICA',
+        '12': 'JUNIN',
+        '13': 'LA LIBERTAD',
+        '14': 'LAMBAYEQUE',
+        '15': 'LIMA',
+        '16': 'LORETO',
+        '17': 'MADRE DE DIOS',
+        '18': 'MOQUEGUA',
+        '19': 'PASCO',
+        '20': 'PIURA',
+        '21': 'PUNO',
+        '22': 'SAN MARTIN',
+        '23': 'TACNA',
+        '24': 'TUMBES',
+        '25': 'UCAYALI'
+    }
+    
+    return departamentos.get(codigo_departamento, "")
+
+
+# =============================================================================
+# UTILIDADES DE LOGGING Y DEBUG
+# =============================================================================
+def log_actividad_usuario(usuario, accion: str, modulo: str, descripcion: str = "", ip_address: str = ""):
+    """
+    Registrar actividad del usuario en el log
     """
     try:
         from aplicaciones.usuarios.models import LogActividadUsuario
@@ -673,62 +529,168 @@ def log_actividad_usuario(usuario, accion, modulo, descripcion, objeto_id=None):
             accion=accion,
             modulo=modulo,
             descripcion=descripcion,
-            objeto_id=str(objeto_id) if objeto_id else "",
-            ip_address=getattr(usuario, '_ip_address', '127.0.0.1'),
-            datos_adicionales={}
+            ip_address=ip_address
         )
-        
     except Exception as e:
-        logger.error(f"Error registrando actividad de usuario: {e}")
+        logger.error(f"Error al registrar log de actividad: {e}")
 
 
-# =============================================================================
-# UTILIDADES DE CACHÉ
-# =============================================================================
-def limpiar_cache_modelo(modelo_nombre):
+def generar_id_transaccion() -> str:
     """
-    Limpiar cache relacionado con un modelo específico
+    Generar ID único para transacciones
+    """
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    codigo = generar_codigo_unico("", 6)
+    return f"TXN-{timestamp}-{codigo}"
+
+
+def validar_json_estructura(data: Dict, campos_requeridos: List[str]) -> tuple[bool, List[str]]:
+    """
+    Validar que un diccionario tenga los campos requeridos
+    """
+    campos_faltantes = []
     
-    Args:
-        modelo_nombre (str): Nombre del modelo
+    for campo in campos_requeridos:
+        if campo not in data or data[campo] is None:
+            campos_faltantes.append(campo)
+    
+    return len(campos_faltantes) == 0, campos_faltantes
+
+
+# =============================================================================
+# UTILIDADES DE CONFIGURACIÓN
+# =============================================================================
+def obtener_configuracion(clave: str, valor_por_defecto: Any = None) -> Any:
     """
+    Obtener valor de configuración del sistema
+    """
+    return getattr(settings, clave, valor_por_defecto)
+
+
+def es_ambiente_desarrollo() -> bool:
+    """
+    Verificar si estamos en ambiente de desarrollo
+    """
+    return obtener_configuracion('DEBUG', False)
+
+
+def es_ambiente_produccion() -> bool:
+    """
+    Verificar si estamos en ambiente de producción
+    """
+    return not es_ambiente_desarrollo()
+
+
+# =============================================================================
+# UTILIDADES DE FACTURACIÓN ELECTRÓNICA
+# =============================================================================
+def generar_numero_serie_factura(tipo_documento: str = "01") -> str:
+    """
+    Generar número de serie para documentos electrónicos
+    Formato: LNNN (L=letra, N=número)
+    """
+    # F001, F002, etc. para facturas
+    # B001, B002, etc. para boletas
+    
+    prefijos = {
+        "01": "F",  # Factura
+        "03": "B",  # Boleta
+        "07": "N",  # Nota de crédito
+        "08": "D"   # Nota de débito
+    }
+    
+    prefijo = prefijos.get(tipo_documento, "F")
+    numero = random.randint(1, 999)
+    
+    return f"{prefijo}{numero:03d}"
+
+
+def validar_numero_correlativo(correlativo: str) -> bool:
+    """
+    Validar formato de número correlativo (máximo 8 dígitos)
+    """
+    if not correlativo:
+        return False
+    
+    return correlativo.isdigit() and 1 <= len(correlativo) <= 8
+
+
+def formatear_numero_documento(serie: str, correlativo: Union[str, int]) -> str:
+    """
+    Formatear número completo de documento (serie-correlativo)
+    """
+    if isinstance(correlativo, int):
+        correlativo = str(correlativo)
+    
+    return f"{serie}-{correlativo.zfill(8)}"
+
+
+# =============================================================================
+# UTILIDADES DE CONVERSIÓN
+# =============================================================================
+def convertir_texto_a_decimal(texto: str) -> Optional[Decimal]:
+    """
+    Convertir texto a Decimal de forma segura
+    """
+    if not texto:
+        return None
+    
     try:
-        # Obtener claves de cache relacionadas
-        pattern = f"{modelo_nombre}_*"
-        
-        # En Redis se puede usar pattern, en otros backends hay que iterar
-        if hasattr(cache, 'delete_pattern'):
-            cache.delete_pattern(pattern)
-        else:
-            # Implementación alternativa para otros backends
-            logger.info(f"Cache pattern delete no disponible para {modelo_nombre}")
-            
-    except Exception as e:
-        logger.error(f"Error limpiando cache para {modelo_nombre}: {e}")
+        # Limpiar texto
+        texto = texto.strip().replace(',', '.')
+        return Decimal(texto)
+    except (ValueError, TypeError):
+        return None
 
 
-def obtener_configuracion_cache(clave, valor_defecto=None, timeout=3600):
+def convertir_texto_a_entero(texto: str) -> Optional[int]:
     """
-    Obtener configuración con cache
-    
-    Args:
-        clave (str): Clave de configuración
-        valor_defecto: Valor por defecto
-        timeout (int): Tiempo de cache en segundos
-        
-    Returns:
-        Valor de configuración
+    Convertir texto a entero de forma segura
     """
-    cache_key = f"config_{clave}"
-    valor = cache.get(cache_key)
+    if not texto:
+        return None
     
-    if valor is None:
-        try:
-            from .models import ConfiguracionSistema
-            config = ConfiguracionSistema.objects.get(clave=clave)
-            valor = config.valor
-            cache.set(cache_key, valor, timeout=timeout)
-        except Exception:
-            valor = valor_defecto
+    try:
+        return int(texto.strip())
+    except (ValueError, TypeError):
+        return None
+
+
+def convertir_booleano_a_texto(valor: bool) -> str:
+    """
+    Convertir booleano a texto en español
+    """
+    return "Sí" if valor else "No"
+
+
+# =============================================================================
+# UTILIDADES DE PAGINACIÓN
+# =============================================================================
+def calcular_paginacion(total_items: int, items_por_pagina: int, pagina_actual: int) -> Dict[str, Any]:
+    """
+    Calcular información de paginación
+    """
+    if items_por_pagina <= 0:
+        items_por_pagina = 10
     
-    return valor
+    if pagina_actual <= 0:
+        pagina_actual = 1
+    
+    total_paginas = (total_items + items_por_pagina - 1) // items_por_pagina
+    
+    if pagina_actual > total_paginas:
+        pagina_actual = total_paginas if total_paginas > 0 else 1
+    
+    inicio = (pagina_actual - 1) * items_por_pagina
+    fin = min(inicio + items_por_pagina, total_items)
+    
+    return {
+        'total_items': total_items,
+        'items_por_pagina': items_por_pagina,
+        'pagina_actual': pagina_actual,
+        'total_paginas': total_paginas,
+        'inicio': inicio,
+        'fin': fin,
+        'tiene_siguiente': pagina_actual < total_paginas,
+        'tiene_anterior': pagina_actual > 1
+    }

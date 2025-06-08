@@ -1,207 +1,163 @@
 # =============================================================================
-# DOCKERFILE BACKEND - PROYECTO FELICITA
+# DOCKERFILE BACKEND - PROYECTO FELICITA (CORREGIDO)
 # Sistema de Facturación Electrónica para Perú
 # =============================================================================
 
-# Usar Python 3.11 slim como base
-FROM python:3.11-slim
+# =============================================================================
+# STAGE 1: BASE IMAGE
+# =============================================================================
+FROM python:3.11-slim AS base
 
-# Metadatos del contenedor
-LABEL maintainer="Equipo FELICITA <dev@felicita.pe>"
-LABEL description="Backend API para FELICITA - Sistema de Facturación Electrónica"
+# Metadatos
+LABEL maintainer="FELICITA Development Team"
+LABEL description="Backend Django para Sistema de Facturación Electrónica FELICITA"
 LABEL version="1.0.0"
 
 # Variables de entorno
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    DEBIAN_FRONTEND=noninteractive \
-    APP_HOME=/app \
-    DJANGO_SETTINGS_MODULE=felicita.configuracion.produccion
-
-# Crear usuario no-root para seguridad
-RUN groupadd -r felicita && useradd -r -g felicita felicita
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    # Dependencias de PostgreSQL
+    build-essential \
     libpq-dev \
-    # Dependencias de compilación
-    gcc \
-    g++ \
-    # Utilidades
+    libssl-dev \
+    libffi-dev \
     curl \
-    wget \
-    git \
-    # Dependencias para PIL/Pillow
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    # Dependencias para reportes PDF
-    libfontconfig1 \
-    libxrender1 \
-    # Herramientas de sistema
-    procps \
-    # Limpiar cache
-    && apt-get clean \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Crear directorios necesarios
-RUN mkdir -p $APP_HOME \
-    && mkdir -p $APP_HOME/static \
-    && mkdir -p $APP_HOME/media \
-    && mkdir -p $APP_HOME/logs \
-    && mkdir -p $APP_HOME/backups \
-    && chown -R felicita:felicita $APP_HOME
+# Crear usuario no-root
+RUN groupadd -r felicita && useradd --no-log-init -r -g felicita felicita
+
+# Crear directorios
+RUN mkdir -p /app /app/logs /app/media /app/staticfiles && \
+    chown -R felicita:felicita /app
 
 # Establecer directorio de trabajo
-WORKDIR $APP_HOME
+WORKDIR /app
 
-# Actualizar pip y instalar herramientas de Python
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# =============================================================================
+# STAGE 2: DEPENDENCIES
+# =============================================================================
+FROM base AS dependencies
 
-# Copiar requirements primero para aprovechar cache de Docker
-COPY --chown=felicita:felicita requirements.txt .
+# Copiar requirements
+COPY requirements.txt /app/
 
-# Instalar dependencias de Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar dependencias Python
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
-# Copiar código de la aplicación
-COPY --chown=felicita:felicita . .
+# =============================================================================
+# STAGE 3: DEVELOPMENT
+# =============================================================================
+FROM dependencies AS development
 
-# Crear script de entrada
-RUN cat > /entrypoint.sh << 'EOF'
+# Instalar dependencias adicionales para desarrollo
+RUN pip install \
+    django-debug-toolbar \
+    django-extensions \
+    ipython \
+    pytest \
+    pytest-django \
+    coverage
+
+# Copiar código fuente
+COPY . /app/
+
+# Establecer permisos
+RUN chown -R felicita:felicita /app
+
+# Crear script de entrypoint para desarrollo
+RUN cat > /entrypoint-dev.sh << 'EOF'
 #!/bin/bash
 set -e
 
-echo "🚀 Iniciando FELICITA Backend..."
+echo "🚀 FELICITA Backend - Modo Desarrollo"
 
-# Función para esperar a que PostgreSQL esté listo
-wait_for_db() {
-    echo "⏳ Esperando a que PostgreSQL esté listo..."
-    while ! python manage.py dbshell < /dev/null; do
-        echo "⏳ PostgreSQL no está listo - esperando..."
-        sleep 1
-    done
-    echo "✅ PostgreSQL está listo!"
-}
+# Esperar a PostgreSQL
+echo "⏳ Esperando a PostgreSQL..."
+while ! nc -z ${DB_HOST:-db} ${DB_PORT:-5432}; do
+  sleep 1
+done
+echo "✅ PostgreSQL está listo"
 
-# Función para aplicar migraciones
-apply_migrations() {
-    echo "📊 Aplicando migraciones de base de datos..."
-    python manage.py makemigrations --noinput
-    python manage.py migrate --noinput
-    echo "✅ Migraciones aplicadas!"
-}
+# Aplicar migraciones
+echo "🔄 Aplicando migraciones..."
+python manage.py migrate --noinput
 
-# Función para crear superusuario si no existe
-create_superuser() {
-    echo "👤 Verificando superusuario..."
-    python manage.py shell << PYEOF
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(is_superuser=True).exists():
-    User.objects.create_superuser(
-        email='admin@felicita.pe',
-        password='admin123',
-        username='admin',
-        nombres='Administrador',
-        apellido_paterno='Sistema',
-        apellido_materno='FELICITA',
-        numero_documento='00000000'
-    )
-    print("✅ Superusuario creado: admin@felicita.pe / admin123")
-else:
-    print("ℹ️  Superusuario ya existe")
-PYEOF
-}
+# Recopilar archivos estáticos
+echo "📦 Recopilando archivos estáticos..."
+python manage.py collectstatic --noinput --clear
 
-# Función para recopilar archivos estáticos
-collect_static() {
-    echo "📦 Recopilando archivos estáticos..."
-    python manage.py collectstatic --noinput --clear
-    echo "✅ Archivos estáticos recopilados!"
-}
-
-# Función para cargar datos iniciales
-load_initial_data() {
-    if [ -f "fixtures/datos_iniciales.json" ]; then
-        echo "📋 Cargando datos iniciales..."
-        python manage.py loaddata fixtures/datos_iniciales.json || echo "⚠️  Datos iniciales ya cargados o error en carga"
-    fi
-}
-
-# Función principal
-main() {
-    case "$1" in
-        "development")
-            echo "🔧 Modo desarrollo"
-            wait_for_db
-            apply_migrations
-            create_superuser
-            load_initial_data
-            echo "🚀 Iniciando servidor de desarrollo..."
-            python manage.py runserver 0.0.0.0:8000
-            ;;
-        "production")
-            echo "🏭 Modo producción"
-            wait_for_db
-            apply_migrations
-            collect_static
-            create_superuser
-            load_initial_data
-            echo "🚀 Iniciando servidor Gunicorn..."
-            gunicorn felicita.wsgi:application \
-                --bind 0.0.0.0:8000 \
-                --workers 3 \
-                --worker-class sync \
-                --worker-connections 1000 \
-                --max-requests 1000 \
-                --max-requests-jitter 50 \
-                --timeout 30 \
-                --keep-alive 2 \
-                --preload \
-                --access-logfile - \
-                --error-logfile - \
-                --log-level info
-            ;;
-        "migrate")
-            echo "📊 Solo migraciones"
-            wait_for_db
-            apply_migrations
-            ;;
-        "shell")
-            echo "🐚 Iniciando shell"
-            wait_for_db
-            python manage.py shell
-            ;;
-        "test")
-            echo "🧪 Ejecutando tests"
-            python manage.py test
-            ;;
-        *)
-            echo "🚀 Iniciando con comando personalizado: $@"
-            exec "$@"
-            ;;
-    esac
-}
-
-# Ejecutar función principal con todos los argumentos
-main "$@"
+# Ejecutar comando
+echo "🎯 Ejecutando: $@"
+exec "$@"
 EOF
 
-# Hacer el script ejecutable
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint-dev.sh
 
-# Cambiar al usuario no-root
+# Cambiar a usuario no-root
 USER felicita
 
-# Exponer puerto
+# Puerto por defecto
 EXPOSE 8000
 
-# Configurar healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health/ || exit 1
 
-# Comando por defecto
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["production"]
+# Punto de entrada
+ENTRYPOINT ["/entrypoint-dev.sh"]
+
+# Comando por defecto para desarrollo
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# =============================================================================
+# STAGE 4: PRODUCTION
+# =============================================================================
+FROM dependencies AS production
+
+# Variables de producción
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
+
+# Copiar código fuente
+COPY . /app/
+
+# Establecer permisos
+RUN chown -R felicita:felicita /app
+
+# Crear script de entrypoint para producción
+RUN cat > /entrypoint-prod.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 FELICITA Backend - Modo Producción"
+
+# Esperar a PostgreSQL
+while ! nc -z ${DB_HOST} ${DB_PORT}; do
+  sleep 1
+done
+
+# Aplicar migraciones
+python manage.py migrate --noinput
+
+# Recopilar archivos estáticos
+python manage.py collectstatic --noinput --clear
+
+# Ejecutar comando
+exec "$@"
+EOF
+
+RUN chmod +x /entrypoint-prod.sh
+
+# Cambiar a usuario no-root
+USER felicita
+
+# Punto de entrada
+ENTRYPOINT ["/entrypoint-prod.sh"]
+
+# Comando por defecto para producción
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "config.wsgi:application"]

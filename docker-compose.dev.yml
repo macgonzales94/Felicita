@@ -1,0 +1,492 @@
+# =============================================================================
+# DOCKER COMPOSE DESARROLLO - PROYECTO FELICITA
+# Sistema de Facturación Electrónica para Perú
+# 
+# Configuración completa para ambiente de desarrollo local
+# =============================================================================
+
+# =============================================================================
+# SERVICIOS
+# =============================================================================
+services:
+  
+  # ===========================================================================
+  # BASE DE DATOS POSTGRESQL
+  # ===========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: felicita_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: felicita_dev
+      POSTGRES_USER: felicita_user
+      POSTGRES_PASSWORD: felicita_password_dev_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=es_PE.UTF-8 --lc-ctype=es_PE.UTF-8"
+      TZ: America/Lima
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+      - ./database/backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - felicita_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U felicita_user -d felicita_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================================================
+  # REDIS CACHE Y SESIONES
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: felicita_redis_dev
+    restart: unless-stopped
+    environment:
+      TZ: America/Lima
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass felicita_redis_dev_2024
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data_dev:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6379:6379"
+    networks:
+      - felicita_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ===========================================================================
+  # BACKEND DJANGO
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: felicita_backend_dev
+    restart: unless-stopped
+    environment:
+      # Django Settings
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DEBUG: "True"
+      SECRET_KEY: "dev-secret-key-felicita-2024-not-for-production"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,backend,0.0.0.0"
+      
+      # Database
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: felicita_dev
+      DB_USER: felicita_user
+      DB_PASSWORD: felicita_password_dev_2024
+      DB_HOST: db
+      DB_PORT: 5432
+      
+      # Redis
+      REDIS_URL: redis://:felicita_redis_dev_2024@redis:6379/0
+      CACHE_URL: redis://:felicita_redis_dev_2024@redis:6379/1
+      SESSION_REDIS_URL: redis://:felicita_redis_dev_2024@redis:6379/2
+      
+      # CORS
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,http://frontend:5173"
+      CORS_ALLOW_CREDENTIALS: "True"
+      
+      # Email (desarrollo)
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+      EMAIL_HOST: localhost
+      EMAIL_PORT: 1025
+      
+      # Celery
+      CELERY_BROKER_URL: redis://:felicita_redis_dev_2024@redis:6379/3
+      CELERY_RESULT_BACKEND: redis://:felicita_redis_dev_2024@redis:6379/4
+      
+      # Timezone
+      TZ: America/Lima
+      USE_TZ: "True"
+      TIME_ZONE: America/Lima
+      
+      # Media y Static
+      MEDIA_ROOT: /app/media
+      STATIC_ROOT: /app/staticfiles
+      
+      # APIs Externas (desarrollo)
+      SUNAT_API_URL: https://api.sunat.gob.pe
+      RENIEC_API_URL: https://api.reniec.gob.pe
+      
+      # Logging
+      LOG_LEVEL: DEBUG
+      
+      # Security (desarrollo)
+      SECURE_SSL_REDIRECT: "False"
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+    volumes:
+      - ./backend:/app
+      - backend_media_dev:/app/media
+      - backend_static_dev:/app/staticfiles
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    networks:
+      - felicita_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    stdin_open: true
+    tty: true
+
+  # ===========================================================================
+  # FRONTEND REACT
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: felicita_frontend_dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:8000
+      VITE_APP_NAME: "FELICITA"
+      VITE_APP_VERSION: "1.0.0"
+      VITE_APP_DESCRIPTION: "Sistema de Facturación Electrónica para Perú"
+      
+      # Hot Module Replacement
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      
+      # Timezone
+      TZ: America/Lima
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - frontend_cache_dev:/app/.vite
+    ports:
+      - "5173:5173"
+    networks:
+      - felicita_network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    stdin_open: true
+    tty: true
+
+  # ===========================================================================
+  # CELERY WORKER
+  # ===========================================================================
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: felicita_celery_worker_dev
+    restart: unless-stopped
+    command: >
+      celery -A config worker
+      --loglevel=DEBUG
+      --concurrency=2
+      --max-tasks-per-child=100
+      --time-limit=300
+      --soft-time-limit=240
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DB_HOST: db
+      REDIS_URL: redis://:felicita_redis_dev_2024@redis:6379/0
+      CELERY_BROKER_URL: redis://:felicita_redis_dev_2024@redis:6379/3
+      CELERY_RESULT_BACKEND: redis://:felicita_redis_dev_2024@redis:6379/4
+      TZ: America/Lima
+    volumes:
+      - ./backend:/app
+      - backend_media_dev:/app/media
+      - ./logs:/app/logs
+    networks:
+      - felicita_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "celery", "-A", "config", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===========================================================================
+  # CELERY BEAT SCHEDULER
+  # ===========================================================================
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: felicita_celery_beat_dev
+    restart: unless-stopped
+    command: >
+      celery -A config beat
+      --loglevel=DEBUG
+      --schedule=/app/celerybeat-schedule
+      --pidfile=/app/celerybeat.pid
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DB_HOST: db
+      REDIS_URL: redis://:felicita_redis_dev_2024@redis:6379/0
+      CELERY_BROKER_URL: redis://:felicita_redis_dev_2024@redis:6379/3
+      CELERY_RESULT_BACKEND: redis://:felicita_redis_dev_2024@redis:6379/4
+      TZ: America/Lima
+    volumes:
+      - ./backend:/app
+      - celery_beat_data_dev:/app/celerybeat
+      - ./logs:/app/logs
+    networks:
+      - felicita_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ===========================================================================
+  # MAILHOG (DESARROLLO EMAIL)
+  # ===========================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: felicita_mailhog_dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - felicita_network
+    environment:
+      TZ: America/Lima
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ===========================================================================
+  # PGADMIN (DESARROLLO DB)
+  # ===========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: felicita_pgadmin_dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@felicita.dev
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      TZ: America/Lima
+    volumes:
+      - pgadmin_data_dev:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - felicita_network
+    depends_on:
+      - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ===========================================================================
+  # FLOWER (MONITOREO CELERY)
+  # ===========================================================================
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: felicita_flower_dev
+    restart: unless-stopped
+    command: >
+      celery -A config flower
+      --port=5555
+      --basic_auth=admin:flower123
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      CELERY_BROKER_URL: redis://:felicita_redis_dev_2024@redis:6379/3
+      CELERY_RESULT_BACKEND: redis://:felicita_redis_dev_2024@redis:6379/4
+      TZ: America/Lima
+    volumes:
+      - ./backend:/app
+    ports:
+      - "5555:5555"
+    networks:
+      - felicita_network
+    depends_on:
+      - redis
+      - celery_worker
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ===========================================================================
+  # NGINX PROXY (OPCIONAL)
+  # ===========================================================================
+  proxy:
+    image: nginx:alpine
+    container_name: felicita_proxy_dev
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - felicita_network
+    depends_on:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    profiles:
+      - proxy  # Opcional: activar con --profile proxy
+
+# =============================================================================
+# REDES
+# =============================================================================
+networks:
+  felicita_network:
+    driver: bridge
+    name: felicita_dev_network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# =============================================================================
+# VOLÚMENES PERSISTENTES
+# =============================================================================
+volumes:
+  # Base de datos
+  postgres_data_dev:
+    name: felicita_postgres_data_dev
+  
+  # Redis
+  redis_data_dev:
+    name: felicita_redis_data_dev
+  
+  # Backend
+  backend_media_dev:
+    name: felicita_backend_media_dev
+  backend_static_dev:
+    name: felicita_backend_static_dev
+  
+  # Frontend
+  frontend_cache_dev:
+    name: felicita_frontend_cache_dev
+  
+  # Celery
+  celery_beat_data_dev:
+    name: felicita_celery_beat_data_dev
+  
+  # PgAdmin
+  pgadmin_data_dev:
+    name: felicita_pgadmin_data_dev
+
+# =============================================================================
+# CONFIGURACIÓN ADICIONAL
+# =============================================================================
+
+# Para usar este archivo:
+# docker-compose -f docker-compose.dev.yml up -d
+
+# Para construir imágenes:
+# docker-compose -f docker-compose.dev.yml build
+
+# Para ver logs:
+# docker-compose -f docker-compose.dev.yml logs -f
+
+# Para acceder al shell del backend:
+# docker-compose -f docker-compose.dev.yml exec backend bash
+
+# Para ejecutar migraciones:
+# docker-compose -f docker-compose.dev.yml exec backend python manage.py migrate
+
+# Para crear superusuario:
+# docker-compose -f docker-compose.dev.yml exec backend python manage.py createsuperuser
+
+# Para cargar datos iniciales:
+# docker-compose -f docker-compose.dev.yml exec backend python manage.py loaddata fixtures/initial_data.json
+
+# URLs de desarrollo:
+# - Frontend: http://localhost:5173
+# - Backend API: http://localhost:8000/api
+# - Admin Django: http://localhost:8000/admin
+# - PgAdmin: http://localhost:5050
+# - MailHog: http://localhost:8025
+# - Flower: http://localhost:5555
+# - Proxy (opcional): http://localhost
+
+# Credenciales desarrollo:
+# - Database: felicita_user / felicita_password_dev_2024
+# - Redis: felicita_redis_dev_2024
+# - PgAdmin: admin@felicita.dev / admin123
+# - Flower: admin / flower123
