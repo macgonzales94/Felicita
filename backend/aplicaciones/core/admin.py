@@ -112,8 +112,21 @@ class ClienteResource(resources.ModelResource):
     class Meta:
         model = Cliente
         fields = (
-            'tipo_documento', 'numero_documento', 'nombres', 'apellido_paterno',
-            'apellido_materno', 'razon_social', 'email', 'telefono'
+            'tipo_documento', 'numero_documento', 'razon_social',
+            'nombres', 'apellido_paterno', 'apellido_materno', 
+            'email', 'telefono', 'direccion'
+        )
+
+
+class ProveedorResource(resources.ModelResource):
+    """
+    Recurso para importar/exportar proveedores
+    """
+    class Meta:
+        model = Proveedor
+        fields = (
+            'ruc', 'razon_social', 'nombre_comercial', 'direccion',
+            'telefono', 'email', 'contacto_principal', 'dias_pago'
         )
 
 
@@ -125,8 +138,8 @@ class ProductoResource(resources.ModelResource):
         model = Producto
         fields = (
             'codigo', 'nombre', 'descripcion', 'categoria__nombre',
-            'unidad_medida__codigo', 'precio_venta', 'precio_compra',
-            'stock_actual', 'stock_minimo'
+            'unidad_medida', 'precio_venta', 'precio_compra',
+            'stock_minimo', 'tipo_producto', 'tipo_afectacion_igv'
         )
 
 
@@ -164,11 +177,11 @@ class EmpresaAdmin(ImportExportModelAdmin):
     resource_class = EmpresaResource
     list_display = [
         'ruc', 'razon_social_corta', 'nombre_comercial', 'telefono',
-        'email', 'estado_badge', 'regimen_tributario', 'sucursales_count',
+        'email', 'regimen_tributario', 'sucursales_count',
         'fecha_creacion'
     ]
     list_filter = [
-        'estado', 'regimen_tributario', 'departamento', 'provincia',
+        'regimen_tributario', 'departamento', 'provincia',
         FechaCreacionFilter, EstadoActivoFilter
     ]
     search_fields = ['ruc', 'razon_social', 'nombre_comercial', 'email']
@@ -178,7 +191,7 @@ class EmpresaAdmin(ImportExportModelAdmin):
     fieldsets = (
         ('Información Básica', {
             'fields': (
-                'ruc', 'razon_social', 'nombre_comercial', 'estado',
+                'ruc', 'razon_social', 'nombre_comercial',
                 'regimen_tributario'
             )
         }),
@@ -191,7 +204,7 @@ class EmpresaAdmin(ImportExportModelAdmin):
             )
         }),
         ('Configuración', {
-            'fields': ('activo', 'configuracion_facturacion')
+            'fields': ('activo', 'plan_cuentas', 'moneda_base')
         }),
         ('Metadatos', {
             'fields': ('id', 'creado_en', 'actualizado_en'),
@@ -205,20 +218,6 @@ class EmpresaAdmin(ImportExportModelAdmin):
             return f"{obj.razon_social[:50]}..."
         return obj.razon_social
     razon_social_corta.short_description = "Razón Social"
-    
-    def estado_badge(self, obj):
-        """Mostrar estado con badge colorido"""
-        colors = {
-            'ACTIVO': 'green',
-            'INACTIVO': 'red',
-            'SUSPENDIDO': 'orange'
-        }
-        color = colors.get(obj.estado, 'gray')
-        return format_html(
-            '<span style="color: {}; font-weight: bold;">{}</span>',
-            color, obj.estado
-        )
-    estado_badge.short_description = "Estado"
     
     def sucursales_count(self, obj):
         """Contar sucursales"""
@@ -243,7 +242,7 @@ class SucursalAdmin(admin.ModelAdmin):
         'codigo', 'nombre', 'empresa_link', 'telefono', 'es_principal_badge',
         'estado_badge', 'fecha_creacion'
     ]
-    list_filter = ['es_principal', 'provincia', 'departamento', EstadoActivoFilter]
+    list_filter = ['es_principal', EstadoActivoFilter]
     search_fields = ['codigo', 'nombre', 'empresa__razon_social', 'direccion']
     readonly_fields = ['id', 'creado_en', 'actualizado_en']
     
@@ -255,7 +254,7 @@ class SucursalAdmin(admin.ModelAdmin):
             'fields': ('telefono', 'email')
         }),
         ('Ubicación', {
-            'fields': ('direccion', 'distrito', 'provincia', 'departamento', 'ubigeo')
+            'fields': ('direccion',)
         }),
         ('Estado', {
             'fields': ('activo',)
@@ -302,30 +301,24 @@ class ClienteAdmin(ImportExportModelAdmin):
     resource_class = ClienteResource
     list_display = [
         'numero_documento', 'nombre_completo', 'tipo_documento',
-        'email', 'telefono', 'es_empresa_badge', 'estado_badge'
+        'email', 'telefono', 'tipo_cliente_badge', 'estado_badge'
     ]
     list_filter = [
-        'tipo_documento', 'es_empresa', 'provincia', 'departamento',
+        'tipo_documento', 'tipo_cliente', 'bloqueado',
         EstadoActivoFilter, FechaCreacionFilter
     ]
     search_fields = [
-        'numero_documento', 'nombres', 'apellido_paterno', 'apellido_materno',
-        'razon_social', 'email', 'telefono'
+        'numero_documento', 'razon_social', 'nombres', 'apellido_paterno', 
+        'apellido_materno', 'email', 'telefono'
     ]
     readonly_fields = ['id', 'creado_en', 'actualizado_en']
     
     fieldsets = (
         ('Identificación', {
-            'fields': ('tipo_documento', 'numero_documento')
+            'fields': ('tipo_documento', 'numero_documento', 'tipo_cliente')
         }),
-        ('Datos Personales', {
-            'fields': (
-                'nombres', 'apellido_paterno', 'apellido_materno',
-                'fecha_nacimiento', 'genero'
-            )
-        }),
-        ('Datos Empresariales', {
-            'fields': ('es_empresa', 'razon_social', 'nombre_comercial')
+        ('Datos Principales', {
+            'fields': ('razon_social', 'nombres', 'apellido_paterno', 'apellido_materno')
         }),
         ('Contacto', {
             'fields': ('telefono', 'email')
@@ -333,8 +326,11 @@ class ClienteAdmin(ImportExportModelAdmin):
         ('Ubicación', {
             'fields': ('direccion', 'distrito', 'provincia', 'departamento', 'ubigeo')
         }),
+        ('Configuración Comercial', {
+            'fields': ('limite_credito', 'dias_credito', 'descuento_maximo')
+        }),
         ('Estado', {
-            'fields': ('activo', 'observaciones')
+            'fields': ('activo', 'bloqueado', 'fecha_bloqueo', 'motivo_bloqueo')
         }),
         ('Metadatos', {
             'fields': ('id', 'creado_en', 'actualizado_en'),
@@ -344,23 +340,30 @@ class ClienteAdmin(ImportExportModelAdmin):
     
     def nombre_completo(self, obj):
         """Nombre completo del cliente"""
-        if obj.es_empresa:
-            return obj.razon_social or obj.nombre_comercial
-        return f"{obj.nombres} {obj.apellido_paterno} {obj.apellido_materno}".strip()
+        return obj.get_nombre_completo()
     nombre_completo.short_description = "Nombre/Razón Social"
     
-    def es_empresa_badge(self, obj):
-        """Badge para indicar si es empresa"""
-        if obj.es_empresa:
-            return format_html('<span style="color: blue;">Empresa</span>')
-        return "Persona"
-    es_empresa_badge.short_description = "Tipo"
+    def tipo_cliente_badge(self, obj):
+        """Badge para tipo de cliente"""
+        colors = {
+            'PERSONA_NATURAL': 'blue',
+            'PERSONA_JURIDICA': 'green',
+            'NO_DOMICILIADO': 'orange'
+        }
+        color = colors.get(obj.tipo_cliente, 'gray')
+        return format_html(
+            '<span style="color: {};">{}</span>',
+            color, obj.get_tipo_cliente_display()
+        )
+    tipo_cliente_badge.short_description = "Tipo Cliente"
     
     def estado_badge(self, obj):
         """Badge de estado"""
-        if obj.activo:
+        if obj.bloqueado:
+            return format_html('<span style="color: red;">Bloqueado</span>')
+        elif obj.activo:
             return format_html('<span style="color: green;">Activo</span>')
-        return format_html('<span style="color: red;">Inactivo</span>')
+        return format_html('<span style="color: gray;">Inactivo</span>')
     estado_badge.short_description = "Estado"
 
 
@@ -372,37 +375,34 @@ class ProveedorAdmin(ImportExportModelAdmin):
     """
     Admin para modelo Proveedor
     """
+    resource_class = ProveedorResource
     list_display = [
-        'numero_documento', 'razon_social', 'nombre_comercial',
-        'categoria', 'telefono', 'email', 'dias_credito', 'estado_badge'
+        'ruc', 'razon_social', 'nombre_comercial',
+        'telefono', 'email', 'dias_pago', 'estado_badge'
     ]
     list_filter = [
-        'tipo_documento', 'categoria', 'provincia', 'departamento',
-        EstadoActivoFilter, FechaCreacionFilter
+        'activo_comercial', EstadoActivoFilter, FechaCreacionFilter
     ]
     search_fields = [
-        'numero_documento', 'razon_social', 'nombre_comercial', 'email'
+        'ruc', 'razon_social', 'nombre_comercial', 'email'
     ]
     readonly_fields = ['id', 'creado_en', 'actualizado_en']
     
     fieldsets = (
         ('Identificación', {
-            'fields': ('tipo_documento', 'numero_documento')
-        }),
-        ('Información Comercial', {
-            'fields': ('razon_social', 'nombre_comercial', 'categoria')
+            'fields': ('ruc', 'razon_social', 'nombre_comercial')
         }),
         ('Contacto', {
             'fields': ('telefono', 'email', 'contacto_principal')
         }),
         ('Ubicación', {
-            'fields': ('direccion', 'distrito', 'provincia', 'departamento', 'ubigeo')
+            'fields': ('direccion', 'ubigeo')
         }),
         ('Condiciones Comerciales', {
-            'fields': ('dias_credito', 'limite_credito', 'moneda_preferida')
+            'fields': ('dias_pago', 'descuento_obtenido')
         }),
         ('Estado', {
-            'fields': ('activo', 'observaciones')
+            'fields': ('activo', 'activo_comercial')
         }),
         ('Metadatos', {
             'fields': ('id', 'creado_en', 'actualizado_en'),
@@ -412,8 +412,10 @@ class ProveedorAdmin(ImportExportModelAdmin):
     
     def estado_badge(self, obj):
         """Badge de estado"""
-        if obj.activo:
+        if obj.activo and obj.activo_comercial:
             return format_html('<span style="color: green;">Activo</span>')
+        elif not obj.activo_comercial:
+            return format_html('<span style="color: orange;">Inactivo Comercial</span>')
         return format_html('<span style="color: red;">Inactivo</span>')
     estado_badge.short_description = "Estado"
 
@@ -429,31 +431,37 @@ class ProductoAdmin(ImportExportModelAdmin):
     resource_class = ProductoResource
     list_display = [
         'codigo', 'nombre_corto', 'categoria', 'unidad_medida',
-        'precio_venta_formatted', 'stock_actual_badge', 'tipo_producto',
+        'precio_venta_formatted', 'stock_actual_badge', 'stock_minimo', 'tipo_producto',
         'igv_badge', 'estado_badge'
     ]
     list_filter = [
-        'categoria', 'unidad_medida', 'tipo_producto', 'afecto_igv',
-        EstadoActivoFilter, FechaCreacionFilter
+        'categoria', 'tipo_producto', 'tipo_afectacion_igv', 'controla_stock',
+        'activo_venta', 'activo_compra', EstadoActivoFilter, FechaCreacionFilter
     ]
-    search_fields = ['codigo', 'nombre', 'descripcion', 'codigo_barra']
+    search_fields = ['codigo', 'nombre', 'descripcion', 'codigo_barras']
     readonly_fields = ['id', 'creado_en', 'actualizado_en']
     
     fieldsets = (
         ('Información Básica', {
-            'fields': ('codigo', 'nombre', 'descripcion', 'categoria')
+            'fields': ('codigo', 'codigo_barras', 'codigo_sunat', 'nombre', 'descripcion')
         }),
         ('Clasificación', {
-            'fields': ('tipo_producto', 'unidad_medida', 'codigo_barra')
+            'fields': ('tipo_producto', 'categoria', 'unidad_medida')
         }),
         ('Precios', {
-            'fields': ('precio_venta', 'precio_compra', 'afecto_igv')
+            'fields': ('precio_compra', 'precio_venta', 'precio_venta_minimo', 'incluye_igv')
+        }),
+        ('Configuración Tributaria', {
+            'fields': ('tipo_afectacion_igv',)
         }),
         ('Inventario', {
-            'fields': ('stock_actual', 'stock_minimo', 'stock_maximo')
+            'fields': ('controla_stock', 'stock_actual', 'stock_minimo', 'stock_maximo')
+        }),
+        ('Información Adicional', {
+            'fields': ('marca', 'modelo', 'peso', 'imagen')
         }),
         ('Estado', {
-            'fields': ('activo', 'observaciones')
+            'fields': ('activo', 'activo_venta', 'activo_compra')
         }),
         ('Metadatos', {
             'fields': ('id', 'creado_en', 'actualizado_en'),
@@ -474,7 +482,10 @@ class ProductoAdmin(ImportExportModelAdmin):
     precio_venta_formatted.short_description = "Precio Venta"
     
     def stock_actual_badge(self, obj):
-        """Badge de stock con colores"""
+        """Badge de stock actual con colores"""
+        if not obj.controla_stock:
+            return "No controla"
+        
         if obj.stock_actual == 0:
             color = "red"
             text = "Sin Stock"
@@ -489,20 +500,36 @@ class ProductoAdmin(ImportExportModelAdmin):
             '<span style="color: {}; font-weight: bold;">{}</span>',
             color, text
         )
-    stock_actual_badge.short_description = "Stock"
+    stock_actual_badge.short_description = "Stock Actual"
+    
+    def stock_minimo_badge(self, obj):
+        """Badge de stock mínimo"""
+        if obj.controla_stock:
+            return format_html(
+                '<span style="color: blue;">{}</span>',
+                obj.stock_minimo
+            )
+        return "No controla"
+    stock_minimo_badge.short_description = "Stock Mínimo"
     
     def igv_badge(self, obj):
         """Badge para IGV"""
-        if obj.afecto_igv:
-            return format_html('<span style="color: blue;">Con IGV</span>')
-        return "Sin IGV"
+        if obj.tipo_afectacion_igv == '10':
+            return format_html('<span style="color: blue;">Gravado</span>')
+        elif obj.tipo_afectacion_igv == '20':
+            return format_html('<span style="color: green;">Exonerado</span>')
+        elif obj.tipo_afectacion_igv == '30':
+            return format_html('<span style="color: orange;">Inafecto</span>')
+        return obj.get_tipo_afectacion_igv_display()
     igv_badge.short_description = "IGV"
     
     def estado_badge(self, obj):
         """Badge de estado"""
-        if obj.activo:
-            return format_html('<span style="color: green;">Activo</span>')
-        return format_html('<span style="color: red;">Inactivo</span>')
+        if not obj.activo:
+            return format_html('<span style="color: red;">Inactivo</span>')
+        elif not obj.activo_venta:
+            return format_html('<span style="color: orange;">No Venta</span>')
+        return format_html('<span style="color: green;">Activo</span>')
     estado_badge.short_description = "Estado"
 
 
@@ -595,10 +622,10 @@ class ConfiguracionSistemaAdmin(admin.ModelAdmin):
     """
     Admin para Configuración del Sistema
     """
-    list_display = ['clave', 'descripcion', 'tipo_dato', 'categoria', 'valor_preview']
-    list_filter = ['tipo_dato', 'categoria']
+    list_display = ['clave', 'descripcion', 'tipo_dato', 'valor_preview']
+    list_filter = ['tipo_dato']
     search_fields = ['clave', 'descripcion']
-    readonly_fields = ['creado_en', 'actualizado_en']
+    readonly_fields = ['actualizado_en']
     
     def valor_preview(self, obj):
         """Preview del valor"""

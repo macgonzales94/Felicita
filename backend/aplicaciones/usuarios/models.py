@@ -37,6 +37,13 @@ class UsuarioManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('activo', True)
         
+        extra_fields.setdefault('username', 'admin')
+        extra_fields.setdefault('nombres', 'Super')
+        extra_fields.setdefault('apellido_paterno', 'Usuario')
+        extra_fields.setdefault('apellido_materno', '')
+        extra_fields.setdefault('numero_documento', '00000000')
+        extra_fields.setdefault('tipo_documento', 'DNI')
+        
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser debe tener is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
@@ -49,7 +56,6 @@ class UsuarioManager(BaseUserManager):
 # =============================================================================
 class Usuario(AbstractBaseUser, PermissionsMixin, ModeloBase):
     """
-    Modelo de usuario personalizado para FELICITA
     """
     
     TIPO_DOCUMENTO_CHOICES = [

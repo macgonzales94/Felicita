@@ -38,7 +38,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'django_extensions',
+    #'django_extensions',
     'django_filters',
     'import_export',
     'drf_yasg',
@@ -47,12 +47,12 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'aplicaciones.core',
     'aplicaciones.usuarios',
-    'aplicaciones.facturacion',
-    'aplicaciones.inventario',
-    'aplicaciones.contabilidad',
-    'aplicaciones.punto_venta',
-    'aplicaciones.reportes',
-    'aplicaciones.integraciones',
+    #'aplicaciones.facturacion',
+    #'aplicaciones.inventario',
+    #'aplicaciones.contabilidad',
+    #'aplicaciones.punto_venta',
+    #'aplicaciones.reportes',
+    #'aplicaciones.integraciones',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

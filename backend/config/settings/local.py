@@ -2,7 +2,8 @@
 CONFIGURACIÓN DESARROLLO LOCAL - PROYECTO FELICITA
 Sistema de Facturación Electrónica para Perú
 """
-
+import sys
+import os
 from .base import *
 from decouple import config
 
@@ -69,7 +70,9 @@ DATABASES = {
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
-            'charset': 'utf8',
+            #'charset': 'utf8',
+            # Para PostgreSQL usa esto en su lugar:
+            'client_encoding': 'UTF8',  
         },
         'CONN_MAX_AGE': 0,  # Sin pooling en desarrollo
         'ATOMIC_REQUESTS': True,
@@ -224,14 +227,14 @@ SECURE_SSL_REDIRECT = False
 SHELL_PLUS_PRINT_SQL = config('SQL_DEBUG', default=False, cast=bool)
 SHELL_PLUS_IMPORTS = [
     'from aplicaciones.core.models import *',
-    'from aplicaciones.usuarios.models import *',
-    'from aplicaciones.facturacion.models import *',
-    'from aplicaciones.inventario.models import *',
-    'from aplicaciones.contabilidad.models import *',
-    'from decimal import Decimal',
-    'from datetime import datetime, date, timedelta',
-    'import json',
-    'import requests',
+    #'from aplicaciones.usuarios.models import *',
+    #'from aplicaciones.facturacion.models import *',
+    #'from aplicaciones.inventario.models import *',
+    #'from aplicaciones.contabilidad.models import *',
+    #'from decimal import Decimal',
+    #'from datetime import datetime, date, timedelta',
+    #'import json',
+    #'import requests',
 ]
 
 # =============================================================================

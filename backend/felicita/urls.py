@@ -102,16 +102,16 @@ urlpatterns = [
     # =============================================================================
     path('api/', include([
         # Autenticación y usuarios
-        path('auth/', include('aplicaciones.usuarios.urls')),
+        #path('auth/', include('aplicaciones.usuarios.urls')),
         
         # Módulos principales
         path('core/', include('aplicaciones.core.urls')),
-        path('facturacion/', include('aplicaciones.facturacion.urls')),
-        path('inventario/', include('aplicaciones.inventario.urls')),
-        path('contabilidad/', include('aplicaciones.contabilidad.urls')),
-        path('pos/', include('aplicaciones.punto_venta.urls')),
-        path('reportes/', include('aplicaciones.reportes.urls')),
-        path('integraciones/', include('aplicaciones.integraciones.urls')),
+        #path('facturacion/', include('aplicaciones.facturacion.urls')),
+        #path('inventario/', include('aplicaciones.inventario.urls')),
+        #path('contabilidad/', include('aplicaciones.contabilidad.urls')),
+        #path('pos/', include('aplicaciones.punto_venta.urls')),
+        #path('reportes/', include('aplicaciones.reportes.urls')),
+        #path('integraciones/', include('aplicaciones.integraciones.urls')),
     ])),
     
     # =============================================================================

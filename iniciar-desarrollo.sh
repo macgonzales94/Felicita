@@ -201,6 +201,14 @@ start_base_services() {
 # Configurar base de datos
 setup_database() {
     show_progress "Configurando base de datos..."
+
+    # PRIMERO: Iniciar el backend
+    docker-compose -f "$COMPOSE_FILE" up -d backend
+    
+    # Esperar a que el backend esté listo
+    show_info "Esperando a que el backend esté listo..."
+    sleep 20
+    
     
     # Aplicar migraciones
     show_info "Aplicando migraciones de Django..."

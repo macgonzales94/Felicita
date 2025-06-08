@@ -14,10 +14,14 @@ from . import views
 # =============================================================================
 router = DefaultRouter()
 router.register(r'empresas', views.EmpresaViewSet, basename='empresa')
+router.register(r'sucursales', views.SucursalViewSet, basename='sucursal')
 router.register(r'clientes', views.ClienteViewSet, basename='cliente')
 router.register(r'proveedores', views.ProveedorViewSet, basename='proveedor')
 router.register(r'categorias-productos', views.CategoriaProductoViewSet, basename='categoriaproducto')
 router.register(r'productos', views.ProductoViewSet, basename='producto')
+router.register(r'unidades-medida', views.UnidadMedidaViewSet, basename='unidadmedida')
+router.register(r'monedas', views.MonedaViewSet, basename='moneda')
+router.register(r'tipos-cambio', views.TipoCambioViewSet, basename='tipocambio')
 router.register(r'configuraciones', views.ConfiguracionSistemaViewSet, basename='configuracion')
 
 # =============================================================================

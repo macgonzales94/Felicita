@@ -80,36 +80,36 @@ def crear_configuraciones_empresa(empresa):
             'clave': f'empresa_{empresa.id}_facturacion_serie_factura',
             'valor': 'F001',
             'descripcion': 'Serie por defecto para facturas',
-            'tipo_dato': 'STRING',
-            'categoria': 'facturacion'
+            'tipo_dato': 'STRING'
+            #'categoria': 'facturacion'
         },
         {
             'clave': f'empresa_{empresa.id}_facturacion_serie_boleta',
             'valor': 'B001',
             'descripcion': 'Serie por defecto para boletas',
-            'tipo_dato': 'STRING',
-            'categoria': 'facturacion'
+            'tipo_dato': 'STRING'
+            #'categoria': 'facturacion'
         },
         {
             'clave': f'empresa_{empresa.id}_facturacion_correlativo_inicial',
             'valor': '1',
             'descripcion': 'Número correlativo inicial',
-            'tipo_dato': 'INTEGER',
-            'categoria': 'facturacion'
+            'tipo_dato': 'INTEGER'
+            #'categoria': 'facturacion'
         },
         {
             'clave': f'empresa_{empresa.id}_igv_tasa',
             'valor': '0.18',
             'descripcion': 'Tasa de IGV aplicable',
-            'tipo_dato': 'DECIMAL',
-            'categoria': 'tributario'
+            'tipo_dato': 'DECIMAL'
+            #'categoria': 'tributario'
         },
         {
             'clave': f'empresa_{empresa.id}_moneda_default',
             'valor': 'PEN',
             'descripcion': 'Moneda por defecto',
-            'tipo_dato': 'STRING',
-            'categoria': 'general'
+            'tipo_dato': 'STRING'
+            #'categoria': 'general'
         }
     ]
     

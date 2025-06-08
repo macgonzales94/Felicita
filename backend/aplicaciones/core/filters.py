@@ -7,7 +7,7 @@ Filtros personalizados para APIs Django REST Framework
 
 import django_filters
 from django_filters import rest_framework as filters
-from django.db.models import Q
+from django.db.models import Q, F
 from datetime import datetime, date, timedelta
 from django.utils import timezone
 
@@ -27,7 +27,7 @@ class BaseFilterSet(filters.FilterSet):
     # Filtros de fecha comunes
     fecha_desde = filters.DateFilter(method='filtrar_fecha_desde')
     fecha_hasta = filters.DateFilter(method='filtrar_fecha_hasta')
-    fecha_rango = filters.DateFromToRangeFilter()
+    fecha_rango = filters.DateFromToRangeFilter(field_name='creado_en')
     
     # Filtros de búsqueda
     buscar = filters.CharFilter(method='buscar_general')
@@ -68,16 +68,11 @@ class EmpresaFilter(BaseFilterSet):
     ruc = filters.CharFilter(lookup_expr='icontains')
     razon_social = filters.CharFilter(lookup_expr='icontains')
     nombre_comercial = filters.CharFilter(lookup_expr='icontains')
-    estado = filters.ChoiceFilter(choices=[
-        ('ACTIVO', 'Activo'),
-        ('INACTIVO', 'Inactivo'),
-        ('SUSPENDIDO', 'Suspendido')
-    ])
     regimen_tributario = filters.ChoiceFilter(choices=[
         ('GENERAL', 'Régimen General'),
-        ('ESPECIAL', 'Régimen Especial'),
-        ('MYPE', 'Régimen MYPE'),
-        ('RUS', 'Régimen Único Simplificado')
+        ('ESPECIAL', 'Régimen Especial de Renta'),
+        ('MYPE', 'Régimen MYPE Tributario'),
+        ('RUS', 'Nuevo RUS')
     ])
     
     # Filtros por ubicación
@@ -88,8 +83,9 @@ class EmpresaFilter(BaseFilterSet):
     class Meta:
         model = Empresa
         fields = [
-            'ruc', 'razon_social', 'nombre_comercial', 'estado',
-            'regimen_tributario', 'departamento', 'provincia', 'distrito'
+            'ruc', 'razon_social', 'nombre_comercial',
+            'regimen_tributario', 'departamento', 'provincia', 'distrito',
+            'activo'
         ]
     
     def buscar_general(self, queryset, name, value):
@@ -117,16 +113,10 @@ class SucursalFilter(BaseFilterSet):
     nombre = filters.CharFilter(lookup_expr='icontains')
     es_principal = filters.BooleanFilter()
     
-    # Filtros por ubicación
-    departamento = filters.CharFilter(lookup_expr='icontains')
-    provincia = filters.CharFilter(lookup_expr='icontains')
-    distrito = filters.CharFilter(lookup_expr='icontains')
-    
     class Meta:
         model = Sucursal
         fields = [
-            'empresa', 'codigo', 'nombre', 'es_principal',
-            'departamento', 'provincia', 'distrito', 'activo'
+            'empresa', 'codigo', 'nombre', 'es_principal', 'activo'
         ]
     
     def buscar_general(self, queryset, name, value):
@@ -150,26 +140,34 @@ class ClienteFilter(BaseFilterSet):
     Filtros para modelo Cliente
     """
     tipo_documento = filters.ChoiceFilter(choices=[
-        ('DNI', 'DNI'),
-        ('RUC', 'RUC'),
-        ('CARNET_EXTRANJERIA', 'Carnet de Extranjería'),
-        ('PASAPORTE', 'Pasaporte')
+        ('DNI', 'DNI - Documento Nacional de Identidad'),
+        ('RUC', 'RUC - Registro Único de Contribuyente'),
+        ('CE', 'CE - Carnet de Extranjería'),
+        ('PASSPORT', 'Pasaporte'),
+        ('OTROS', 'Otros documentos')
     ])
     numero_documento = filters.CharFilter(lookup_expr='icontains')
+    razon_social = filters.CharFilter(lookup_expr='icontains')
     nombres = filters.CharFilter(lookup_expr='icontains')
     apellido_paterno = filters.CharFilter(lookup_expr='icontains')
     apellido_materno = filters.CharFilter(lookup_expr='icontains')
-    razon_social = filters.CharFilter(lookup_expr='icontains')
     email = filters.CharFilter(lookup_expr='icontains')
     telefono = filters.CharFilter(lookup_expr='icontains')
     
-    # Filtros por tipo
-    es_empresa = filters.BooleanFilter()
+    # Filtros por tipo - CORREGIDO: usar tipo_cliente en lugar de es_empresa
+    tipo_cliente = filters.ChoiceFilter(choices=[
+        ('PERSONA_NATURAL', 'Persona Natural'),
+        ('PERSONA_JURIDICA', 'Persona Jurídica'),
+        ('NO_DOMICILIADO', 'No Domiciliado')
+    ])
     
     # Filtros por ubicación
     departamento = filters.CharFilter(lookup_expr='icontains')
     provincia = filters.CharFilter(lookup_expr='icontains')
     distrito = filters.CharFilter(lookup_expr='icontains')
+    
+    # Filtros por estado
+    bloqueado = filters.BooleanFilter()
     
     # Filtros por fecha
     fecha_registro_desde = filters.DateFilter(field_name='creado_en', lookup_expr='date__gte')
@@ -178,9 +176,10 @@ class ClienteFilter(BaseFilterSet):
     class Meta:
         model = Cliente
         fields = [
-            'tipo_documento', 'numero_documento', 'nombres', 'apellido_paterno',
-            'apellido_materno', 'razon_social', 'email', 'telefono', 'es_empresa',
-            'departamento', 'provincia', 'distrito', 'activo'
+            'tipo_documento', 'numero_documento', 'razon_social', 'nombres', 
+            'apellido_paterno', 'apellido_materno', 'email', 'telefono', 
+            'tipo_cliente', 'departamento', 'provincia', 'distrito', 
+            'activo', 'bloqueado'
         ]
     
     def buscar_general(self, queryset, name, value):
@@ -190,10 +189,10 @@ class ClienteFilter(BaseFilterSet):
         if value:
             return queryset.filter(
                 Q(numero_documento__icontains=value) |
+                Q(razon_social__icontains=value) |
                 Q(nombres__icontains=value) |
                 Q(apellido_paterno__icontains=value) |
                 Q(apellido_materno__icontains=value) |
-                Q(razon_social__icontains=value) |
                 Q(email__icontains=value) |
                 Q(telefono__icontains=value)
             )
@@ -207,36 +206,25 @@ class ProveedorFilter(BaseFilterSet):
     """
     Filtros para modelo Proveedor
     """
-    tipo_documento = filters.ChoiceFilter(choices=[
-        ('DNI', 'DNI'),
-        ('RUC', 'RUC'),
-        ('CARNET_EXTRANJERIA', 'Carnet de Extranjería'),
-        ('PASAPORTE', 'Pasaporte')
-    ])
-    numero_documento = filters.CharFilter(lookup_expr='icontains')
+    ruc = filters.CharFilter(lookup_expr='icontains')
     razon_social = filters.CharFilter(lookup_expr='icontains')
     nombre_comercial = filters.CharFilter(lookup_expr='icontains')
     email = filters.CharFilter(lookup_expr='icontains')
     telefono = filters.CharFilter(lookup_expr='icontains')
+    contacto_principal = filters.CharFilter(lookup_expr='icontains')
     
-    # Filtros por categoría
-    categoria = filters.CharFilter(lookup_expr='icontains')
+    # Filtros por condiciones comerciales - CORREGIDO: usar dias_pago en lugar de dias_credito
+    dias_pago_min = filters.NumberFilter(field_name='dias_pago', lookup_expr='gte')
+    dias_pago_max = filters.NumberFilter(field_name='dias_pago', lookup_expr='lte')
     
-    # Filtros por ubicación
-    departamento = filters.CharFilter(lookup_expr='icontains')
-    provincia = filters.CharFilter(lookup_expr='icontains')
-    distrito = filters.CharFilter(lookup_expr='icontains')
-    
-    # Filtros por condiciones comerciales
-    dias_credito_min = filters.NumberFilter(field_name='dias_credito', lookup_expr='gte')
-    dias_credito_max = filters.NumberFilter(field_name='dias_credito', lookup_expr='lte')
+    # Filtros por estado
+    activo_comercial = filters.BooleanFilter()
     
     class Meta:
         model = Proveedor
         fields = [
-            'tipo_documento', 'numero_documento', 'razon_social', 'nombre_comercial',
-            'email', 'telefono', 'categoria', 'departamento', 'provincia',
-            'distrito', 'activo'
+            'ruc', 'razon_social', 'nombre_comercial', 'email', 'telefono',
+            'contacto_principal', 'activo', 'activo_comercial'
         ]
     
     def buscar_general(self, queryset, name, value):
@@ -245,11 +233,12 @@ class ProveedorFilter(BaseFilterSet):
         """
         if value:
             return queryset.filter(
-                Q(numero_documento__icontains=value) |
+                Q(ruc__icontains=value) |
                 Q(razon_social__icontains=value) |
                 Q(nombre_comercial__icontains=value) |
                 Q(email__icontains=value) |
-                Q(telefono__icontains=value)
+                Q(telefono__icontains=value) |
+                Q(contacto_principal__icontains=value)
             )
         return queryset
 
@@ -262,10 +251,11 @@ class ProductoFilter(BaseFilterSet):
     Filtros para modelo Producto
     """
     codigo = filters.CharFilter(lookup_expr='icontains')
+    codigo_barras = filters.CharFilter(lookup_expr='icontains')
+    codigo_sunat = filters.CharFilter(lookup_expr='icontains')
     nombre = filters.CharFilter(lookup_expr='icontains')
     descripcion = filters.CharFilter(lookup_expr='icontains')
     categoria = filters.ModelChoiceFilter(queryset=Categoria.objects.all())
-    unidad_medida = filters.ModelChoiceFilter(queryset=UnidadMedida.objects.all())
     
     # Filtros por tipo
     tipo_producto = filters.ChoiceFilter(choices=[
@@ -279,21 +269,58 @@ class ProductoFilter(BaseFilterSet):
     precio_compra_min = filters.NumberFilter(field_name='precio_compra', lookup_expr='gte')
     precio_compra_max = filters.NumberFilter(field_name='precio_compra', lookup_expr='lte')
     
-    # Filtros por stock
-    stock_min = filters.NumberFilter(field_name='stock_actual', lookup_expr='gte')
-    stock_max = filters.NumberFilter(field_name='stock_actual', lookup_expr='lte')
+    # Filtros por stock - CORREGIDO: ahora que agregamos stock_actual al modelo
+    stock_actual_min = filters.NumberFilter(field_name='stock_actual', lookup_expr='gte')
+    stock_actual_max = filters.NumberFilter(field_name='stock_actual', lookup_expr='lte')
     con_stock = filters.BooleanFilter(method='filtrar_con_stock')
     sin_stock = filters.BooleanFilter(method='filtrar_sin_stock')
     stock_bajo = filters.BooleanFilter(method='filtrar_stock_bajo')
     
+    # Filtros por configuración tributaria - CORREGIDO: usar tipo_afectacion_igv
+    tipo_afectacion_igv = filters.ChoiceFilter(choices=[
+        ('10', 'Gravado - Operación Onerosa'),
+        ('11', 'Gravado - Retiro por premio'),
+        ('12', 'Gravado - Retiro por donación'),
+        ('13', 'Gravado - Retiro'),
+        ('14', 'Gravado - Retiro por publicidad'),
+        ('15', 'Gravado - Bonificaciones'),
+        ('16', 'Gravado - Retiro por entrega a trabajadores'),
+        ('17', 'Gravado - IVAP'),
+        ('20', 'Exonerado - Operación Onerosa'),
+        ('21', 'Exonerado - Transferencia Gratuita'),
+        ('30', 'Inafecto - Operación Onerosa'),
+        ('31', 'Inafecto - Retiro por Bonificación'),
+        ('32', 'Inafecto - Retiro'),
+        ('33', 'Inafecto - Retiro por Muestras Médicas'),
+        ('34', 'Inafecto - Retiro por Convenio Colectivo'),
+        ('35', 'Inafecto - Retiro por premio'),
+        ('36', 'Inafecto - Retiro por publicidad'),
+        ('40', 'Exportación de Bienes o Servicios'),
+    ])
+    incluye_igv = filters.BooleanFilter()
+    
+    # Filtros por inventario
+    controla_stock = filters.BooleanFilter()
+    stock_minimo_min = filters.NumberFilter(field_name='stock_minimo', lookup_expr='gte')
+    stock_minimo_max = filters.NumberFilter(field_name='stock_minimo', lookup_expr='lte')
+    stock_maximo_min = filters.NumberFilter(field_name='stock_maximo', lookup_expr='gte')
+    stock_maximo_max = filters.NumberFilter(field_name='stock_maximo', lookup_expr='lte')
+    
     # Filtros por estado
-    con_igv = filters.BooleanFilter(field_name='afecto_igv')
+    activo_venta = filters.BooleanFilter()
+    activo_compra = filters.BooleanFilter()
+    
+    # Filtros por información adicional
+    marca = filters.CharFilter(lookup_expr='icontains')
+    modelo = filters.CharFilter(lookup_expr='icontains')
     
     class Meta:
         model = Producto
         fields = [
-            'codigo', 'nombre', 'descripcion', 'categoria', 'unidad_medida',
-            'tipo_producto', 'afecto_igv', 'activo'
+            'codigo', 'codigo_barras', 'codigo_sunat', 'nombre', 'descripcion',
+            'categoria', 'tipo_producto', 'unidad_medida', 'tipo_afectacion_igv',
+            'incluye_igv', 'controla_stock', 'stock_actual', 'stock_minimo', 'stock_maximo',
+            'activo', 'activo_venta', 'activo_compra', 'marca', 'modelo'
         ]
     
     def filtrar_con_stock(self, queryset, name, value):
@@ -317,7 +344,7 @@ class ProductoFilter(BaseFilterSet):
         Filtrar productos con stock bajo (menor al mínimo)
         """
         if value:
-            return queryset.filter(stock_actual__lt=models.F('stock_minimo'))
+            return queryset.filter(stock_actual__lt=F('stock_minimo'))
         return queryset
     
     def buscar_general(self, queryset, name, value):
@@ -329,7 +356,10 @@ class ProductoFilter(BaseFilterSet):
                 Q(codigo__icontains=value) |
                 Q(nombre__icontains=value) |
                 Q(descripcion__icontains=value) |
-                Q(codigo_barra__icontains=value)
+                Q(codigo_barras__icontains=value) |
+                Q(codigo_sunat__icontains=value) |
+                Q(marca__icontains=value) |
+                Q(modelo__icontains=value)
             )
         return queryset
 
@@ -384,6 +414,62 @@ class CategoriaFilter(BaseFilterSet):
 
 
 # =============================================================================
+# FILTROS DE UNIDAD DE MEDIDA
+# =============================================================================
+class UnidadMedidaFilter(BaseFilterSet):
+    """
+    Filtros para modelo UnidadMedida
+    """
+    codigo = filters.CharFilter(lookup_expr='icontains')
+    nombre = filters.CharFilter(lookup_expr='icontains')
+    descripcion = filters.CharFilter(lookup_expr='icontains')
+    
+    class Meta:
+        model = UnidadMedida
+        fields = ['codigo', 'nombre', 'descripcion', 'activo']
+    
+    def buscar_general(self, queryset, name, value):
+        """
+        Búsqueda general en unidades de medida
+        """
+        if value:
+            return queryset.filter(
+                Q(codigo__icontains=value) |
+                Q(nombre__icontains=value) |
+                Q(descripcion__icontains=value)
+            )
+        return queryset
+
+
+# =============================================================================
+# FILTROS DE MONEDA
+# =============================================================================
+class MonedaFilter(BaseFilterSet):
+    """
+    Filtros para modelo Moneda
+    """
+    codigo = filters.CharFilter(lookup_expr='icontains')
+    nombre = filters.CharFilter(lookup_expr='icontains')
+    simbolo = filters.CharFilter(lookup_expr='icontains')
+    
+    class Meta:
+        model = Moneda
+        fields = ['codigo', 'nombre', 'simbolo', 'activo']
+    
+    def buscar_general(self, queryset, name, value):
+        """
+        Búsqueda general en monedas
+        """
+        if value:
+            return queryset.filter(
+                Q(codigo__icontains=value) |
+                Q(nombre__icontains=value) |
+                Q(simbolo__icontains=value)
+            )
+        return queryset
+
+
+# =============================================================================
 # FILTROS DE CONFIGURACIÓN
 # =============================================================================
 class TipoCambioFilter(BaseFilterSet):
@@ -404,9 +490,12 @@ class TipoCambioFilter(BaseFilterSet):
     valor_venta_min = filters.NumberFilter(field_name='valor_venta', lookup_expr='gte')
     valor_venta_max = filters.NumberFilter(field_name='valor_venta', lookup_expr='lte')
     
+    # Filtro por fuente
+    fuente = filters.CharFilter(lookup_expr='icontains')
+    
     class Meta:
         model = TipoCambio
-        fields = ['moneda_origen', 'moneda_destino', 'fecha']
+        fields = ['moneda_origen', 'moneda_destino', 'fecha', 'fuente']
     
     def buscar_general(self, queryset, name, value):
         """
@@ -417,7 +506,8 @@ class TipoCambioFilter(BaseFilterSet):
                 Q(moneda_origen__codigo__icontains=value) |
                 Q(moneda_destino__codigo__icontains=value) |
                 Q(moneda_origen__nombre__icontains=value) |
-                Q(moneda_destino__nombre__icontains=value)
+                Q(moneda_destino__nombre__icontains=value) |
+                Q(fuente__icontains=value)
             )
         return queryset
 
@@ -429,18 +519,16 @@ class ConfiguracionSistemaFilter(BaseFilterSet):
     clave = filters.CharFilter(lookup_expr='icontains')
     descripcion = filters.CharFilter(lookup_expr='icontains')
     tipo_dato = filters.ChoiceFilter(choices=[
-        ('STRING', 'Texto'),
-        ('INTEGER', 'Entero'),
-        ('DECIMAL', 'Decimal'),
-        ('BOOLEAN', 'Booleano'),
-        ('DATE', 'Fecha'),
-        ('JSON', 'JSON')
+        ('string', 'Texto'),
+        ('integer', 'Número Entero'),
+        ('decimal', 'Número Decimal'),
+        ('boolean', 'Verdadero/Falso'),
+        ('json', 'JSON')
     ])
-    categoria = filters.CharFilter(lookup_expr='icontains')
     
     class Meta:
         model = ConfiguracionSistema
-        fields = ['clave', 'descripcion', 'tipo_dato', 'categoria']
+        fields = ['clave', 'descripcion', 'tipo_dato']
     
     def buscar_general(self, queryset, name, value):
         """
@@ -450,7 +538,7 @@ class ConfiguracionSistemaFilter(BaseFilterSet):
             return queryset.filter(
                 Q(clave__icontains=value) |
                 Q(descripcion__icontains=value) |
-                Q(categoria__icontains=value)
+                Q(valor__icontains=value)
             )
         return queryset
 
@@ -494,11 +582,56 @@ class FiltroFechaAvanzado(filters.FilterSet):
             return queryset.filter(creado_en__date__gte=inicio_semana)
         return queryset
     
+    def filtrar_semana_pasada(self, queryset, name, value):
+        if value:
+            hoy = timezone.now().date()
+            inicio_semana_actual = hoy - timedelta(days=hoy.weekday())
+            inicio_semana_pasada = inicio_semana_actual - timedelta(days=7)
+            fin_semana_pasada = inicio_semana_actual - timedelta(days=1)
+            return queryset.filter(
+                creado_en__date__gte=inicio_semana_pasada,
+                creado_en__date__lte=fin_semana_pasada
+            )
+        return queryset
+    
     def filtrar_este_mes(self, queryset, name, value):
         if value:
             hoy = timezone.now().date()
             inicio_mes = hoy.replace(day=1)
             return queryset.filter(creado_en__date__gte=inicio_mes)
+        return queryset
+    
+    def filtrar_mes_pasado(self, queryset, name, value):
+        if value:
+            hoy = timezone.now().date()
+            inicio_mes_actual = hoy.replace(day=1)
+            if inicio_mes_actual.month == 1:
+                inicio_mes_pasado = inicio_mes_actual.replace(year=inicio_mes_actual.year-1, month=12)
+            else:
+                inicio_mes_pasado = inicio_mes_actual.replace(month=inicio_mes_actual.month-1)
+            fin_mes_pasado = inicio_mes_actual - timedelta(days=1)
+            return queryset.filter(
+                creado_en__date__gte=inicio_mes_pasado,
+                creado_en__date__lte=fin_mes_pasado
+            )
+        return queryset
+    
+    def filtrar_este_año(self, queryset, name, value):
+        if value:
+            hoy = timezone.now().date()
+            inicio_año = hoy.replace(month=1, day=1)
+            return queryset.filter(creado_en__date__gte=inicio_año)
+        return queryset
+    
+    def filtrar_año_pasado(self, queryset, name, value):
+        if value:
+            hoy = timezone.now().date()
+            inicio_año_pasado = date(hoy.year - 1, 1, 1)
+            fin_año_pasado = date(hoy.year - 1, 12, 31)
+            return queryset.filter(
+                creado_en__date__gte=inicio_año_pasado,
+                creado_en__date__lte=fin_año_pasado
+            )
         return queryset
     
     def filtrar_ultimos_7_dias(self, queryset, name, value):

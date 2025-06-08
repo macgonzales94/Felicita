@@ -642,10 +642,17 @@ class Producto(ModeloBase):
         verbose_name='Precio incluye IGV'
     )
     
-    # Control de inventario
     controla_stock = models.BooleanField(
         default=True,
         verbose_name='Controla Stock'
+    )
+    
+    stock_actual = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0.0000'))],
+        verbose_name='Stock Actual'
     )
     
     stock_minimo = models.DecimalField(
@@ -656,6 +663,13 @@ class Producto(ModeloBase):
         verbose_name='Stock Mínimo'
     )
     
+    stock_maximo = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        validators=[MinValueValidator(Decimal('0.0000'))],
+        verbose_name='Stock Máximo'
+    )
     # Información adicional
     marca = models.CharField(
         max_length=100,
@@ -788,3 +802,78 @@ class ConfiguracionSistema(models.Model):
             return config.valor
         except cls.DoesNotExist:
             return valor_defecto
+
+# =============================================================================
+# MODELOS ADICIONALES PARA COMPATIBILIDAD
+# =============================================================================
+
+class Sucursal(ModeloBase):
+    """Sucursales de la empresa"""
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='sucursales')
+    codigo = models.CharField(max_length=10)
+    nombre = models.CharField(max_length=100)
+    direccion = models.TextField(blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    es_principal = models.BooleanField(default=False)
+    distrito = models.CharField(max_length=100, blank=True)
+    provincia = models.CharField(max_length=100, blank=True)
+    departamento = models.CharField(max_length=100, blank=True)
+    ubigeo = models.CharField(max_length=6, blank=True)
+    
+    class Meta:
+        db_table = 'core_sucursal'
+        verbose_name = 'Sucursal'
+        verbose_name_plural = 'Sucursales'
+    
+    def __str__(self):
+        return f"{self.empresa.razon_social} - {self.nombre}"
+
+# Alias para compatibilidad
+Categoria = CategoriaProducto
+
+class UnidadMedida(ModeloBase):
+    """Unidades de medida"""
+    codigo = models.CharField(max_length=10, unique=True)
+    nombre = models.CharField(max_length=50)
+    descripcion = models.TextField(blank=True)
+    
+    class Meta:
+        db_table = 'core_unidad_medida'
+        verbose_name = 'Unidad de Medida'
+        verbose_name_plural = 'Unidades de Medida'
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
+
+class Moneda(ModeloBase):
+    """Monedas del sistema"""
+    codigo = models.CharField(max_length=3, unique=True)
+    nombre = models.CharField(max_length=50)
+    simbolo = models.CharField(max_length=5)
+    
+    class Meta:
+        db_table = 'core_moneda'
+        verbose_name = 'Moneda'
+        verbose_name_plural = 'Monedas'
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
+
+class TipoCambio(ModeloBase):
+    """Tipos de cambio"""
+    moneda_origen = models.ForeignKey(Moneda, on_delete=models.CASCADE, related_name='cambios_origen')
+    moneda_destino = models.ForeignKey(Moneda, on_delete=models.CASCADE, related_name='cambios_destino')
+    fecha = models.DateField()
+    valor_compra = models.DecimalField(max_digits=10, decimal_places=4)
+    valor_venta = models.DecimalField(max_digits=10, decimal_places=4)
+    fuente = models.CharField(max_length=50, default='SUNAT')
+    
+    class Meta:
+        db_table = 'core_tipo_cambio'
+        verbose_name = 'Tipo de Cambio'
+        verbose_name_plural = 'Tipos de Cambio'
+        unique_together = ['moneda_origen', 'moneda_destino', 'fecha']
+    
+    def __str__(self):
+        return f"{self.moneda_origen.codigo}/{self.moneda_destino.codigo} - {self.fecha}"
