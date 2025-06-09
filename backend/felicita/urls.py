@@ -12,6 +12,8 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 from django.utils import timezone
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,6 +22,7 @@ from rest_framework import status
 # VISTAS BÁSICAS DE SISTEMA
 # =============================================================================
 @api_view(['GET'])
+@permission_classes([AllowAny]) 
 def health_check(request):
     """
     Endpoint para verificar el estado del sistema
@@ -34,6 +37,7 @@ def health_check(request):
     })
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def sistema_info(request):
     """
     Información general del sistema
@@ -101,11 +105,16 @@ urlpatterns = [
     # API PRINCIPAL
     # =============================================================================
     path('api/', include([
+        
+        path('health/', health_check, name='api_health_check'),
         # Autenticación y usuarios
         #path('auth/', include('aplicaciones.usuarios.urls')),
         
+        # Autenticación y usuarios
+        path('usuarios/', include('aplicaciones.usuarios.urls')),
+        
         # Módulos principales
-        path('core/', include('aplicaciones.core.urls')),
+        path('core/', include('aplicaciones.core.urls'))
         #path('facturacion/', include('aplicaciones.facturacion.urls')),
         #path('inventario/', include('aplicaciones.inventario.urls')),
         #path('contabilidad/', include('aplicaciones.contabilidad.urls')),
@@ -117,20 +126,20 @@ urlpatterns = [
     # =============================================================================
     # DOCUMENTACIÓN API
     # =============================================================================
-    path('docs/', include([
-        path('', TemplateView.as_view(
-            template_name='docs/api_docs.html',
-            extra_context={'title': 'FELICITA API Documentation'}
-        ), name='api_docs'),
-        path('swagger/', TemplateView.as_view(
-            template_name='docs/swagger.html',
-            extra_context={'title': 'FELICITA API Swagger'}
-        ), name='swagger_docs'),
-        path('redoc/', TemplateView.as_view(
-            template_name='docs/redoc.html',
-            extra_context={'title': 'FELICITA API ReDoc'}
-        ), name='redoc_docs'),
-    ])),
+    #path('docs/', include([
+    #    path('', TemplateView.as_view(
+    #        template_name='docs/api_docs.html',
+    #        extra_context={'title': 'FELICITA API Documentation'}
+    #    ), name='api_docs'),
+    #    path('swagger/', TemplateView.as_view(
+    #        template_name='docs/swagger.html',
+    #        extra_context={'title': 'FELICITA API Swagger'}
+    #    ), name='swagger_docs'),
+    #    path('redoc/', TemplateView.as_view(
+    #        template_name='docs/redoc.html',
+    #        extra_context={'title': 'FELICITA API ReDoc'}
+     #   ), name='redoc_docs'),
+    #])),
     
     # =============================================================================
     # WEBHOOKS

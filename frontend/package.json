@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 3000",
+    "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -16,16 +16,14 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",
     "react-hook-form": "^7.48.2",
-    "react-query": "^3.39.3",
+    "@tanstack/react-query": "^5.8.4",
     "axios": "^1.6.2",
     "zustand": "^4.4.7",
     "date-fns": "^2.30.0",
@@ -37,18 +35,11 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "react-hot-toast": "^2.4.1",
-    "react-table": "^7.8.0",
-    "@types/react-table": "^7.7.18",
+    "@tanstack/react-table": "^8.10.7",
     "react-dropzone": "^14.2.3",
     "react-select": "^5.8.0",
     "react-datepicker": "^4.24.0",
-    "react-number-format": "^5.3.1",
-    "qrcode.react": "^3.1.0",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "xlsx": "^0.18.5",
-    "file-saver": "^2.0.5",
-    "@types/file-saver": "^2.0.7"
+    "react-number-format": "^5.3.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
@@ -72,28 +63,11 @@
     "jsdom": "^23.0.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/user-event": "^14.5.1",
-    "@storybook/react": "^7.5.3",
-    "@storybook/react-vite": "^7.5.3",
-    "@storybook/addon-essentials": "^7.5.3",
-    "@storybook/addon-interactions": "^7.5.3",
-    "@storybook/testing-library": "^0.2.2"
+    "@testing-library/user-event": "^14.5.1"
   },
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=7.0.0"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": [
     "facturación electrónica",

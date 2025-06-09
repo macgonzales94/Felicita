@@ -1,24 +1,21 @@
 # =============================================================================
-# DOCKERFILE FRONTEND - PROYECTO FELICITA
+# DOCKERFILE FRONTEND CORREGIDO - PROYECTO FELICITA
 # Sistema de Facturación Electrónica para Perú
-# 
-# Multi-stage build para optimizar el tamaño de la imagen
 # =============================================================================
 
 # =============================================================================
-# STAGE 1: BUILD
+# STAGE 1: BASE
 # =============================================================================
-FROM node:18-alpine AS builder
+FROM node:18-alpine AS base
 
 # Metadatos
 LABEL maintainer="FELICITA Development Team"
 LABEL description="Frontend React para Sistema de Facturación Electrónica FELICITA"
 LABEL version="1.0.0"
 
-# Variables de entorno para el build
-ENV NODE_ENV=production
-ENV GENERATE_SOURCEMAP=false
-ENV DISABLE_ESLINT_PLUGIN=true
+# Variables de entorno
+ENV NODE_ENV=development
+ENV VITE_API_URL=http://localhost:8000
 
 # Instalar dependencias del sistema
 RUN apk add --no-cache \
@@ -28,33 +25,70 @@ RUN apk add --no-cache \
     g++ \
     && rm -rf /var/cache/apk/*
 
+# Crear usuario no-root para seguridad
+RUN addgroup -g 1001 -S felicita && \
+    adduser -S -D -H -u 1001 -h /app -s /bin/sh -G felicita -g felicita felicita
+
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de configuración de dependencias
-COPY package.json package-lock.json* ./
+# Cambiar ownership del directorio
+RUN chown -R felicita:felicita /app
 
-# Instalar dependencias con cache optimizado
+# =============================================================================
+# STAGE 2: DEVELOPMENT
+# =============================================================================
+FROM base AS development
+
+# Cambiar a usuario no-root
+USER felicita
+
+# Copiar archivos de configuración de dependencias
+COPY --chown=felicita:felicita package*.json ./
+
+# Instalar dependencias
+RUN npm ci --include=dev && \
+    npm cache clean --force
+
+# Copiar código fuente
+COPY --chown=felicita:felicita . .
+
+# Verificar que Vite está instalado
+RUN npx vite --version
+
+# Exponer puerto
+EXPOSE 5173
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5173/ || exit 1
+
+# Comando por defecto
+CMD ["npm", "run", "dev"]
+
+# =============================================================================
+# STAGE 3: PRODUCTION BUILD
+# =============================================================================
+FROM base AS builder
+
+# Cambiar a usuario no-root
+USER felicita
+
+# Copiar archivos de configuración
+COPY --chown=felicita:felicita package*.json ./
+
+# Instalar dependencias de producción
 RUN npm ci --only=production --silent && \
     npm cache clean --force
 
 # Copiar código fuente
-COPY . .
+COPY --chown=felicita:felicita . .
 
-# Construir aplicación para producción
+# Construir para producción
 RUN npm run build
 
-# Limpiar archivos innecesarios
-RUN rm -rf node_modules \
-    src \
-    public \
-    *.json \
-    *.js \
-    *.ts \
-    *.md
-
 # =============================================================================
-# STAGE 2: PRODUCTION
+# STAGE 4: PRODUCTION NGINX
 # =============================================================================
 FROM nginx:1.25-alpine AS production
 
@@ -62,56 +96,16 @@ FROM nginx:1.25-alpine AS production
 LABEL stage="production"
 
 # Variables de entorno
-ENV NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
-ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
-
-# Variables configurables para nginx
 ENV API_URL=http://backend:8000
-ENV CLIENT_MAX_BODY_SIZE=50M
-ENV GZIP_ENABLED=on
-ENV CACHE_CONTROL_MAX_AGE=31536000
 
-# Instalar dependencias adicionales
-RUN apk add --no-cache \
-    curl \
-    tzdata \
-    && rm -rf /var/cache/apk/*
-
-# Configurar zona horaria para Perú
-ENV TZ=America/Lima
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# Crear usuario no-root para seguridad
-RUN addgroup -g 1001 -S felicita && \
-    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G felicita -g felicita felicita
-
-# Copiar archivos construidos desde stage builder
-COPY --from=builder --chown=felicita:felicita /app/dist /usr/share/nginx/html
+# Copiar archivos construidos
+COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html
 
 # Copiar configuración personalizada de nginx
-COPY --chown=felicita:felicita nginx/nginx.conf /etc/nginx/nginx.conf
-COPY --chown=felicita:felicita nginx/default.conf.template /etc/nginx/templates/default.conf.template
-COPY --chown=felicita:felicita nginx/security.conf /etc/nginx/conf.d/security.conf
-COPY --chown=felicita:felicita nginx/compression.conf /etc/nginx/conf.d/compression.conf
-
-# Crear directorios necesarios
-RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run/nginx && \
-    chown -R felicita:felicita /var/cache/nginx /var/log/nginx /var/run/nginx /etc/nginx/conf.d
-
-# Configurar permisos
-RUN chmod 755 /usr/share/nginx/html && \
-    find /usr/share/nginx/html -type f -exec chmod 644 {} \; && \
-    find /usr/share/nginx/html -type d -exec chmod 755 {} \;
-
-# Script de inicio personalizado
-COPY --chown=felicita:felicita docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+COPY --chown=nginx:nginx nginx/default.conf.template /etc/nginx/templates/default.conf.template
 
 # Crear página de health check
 RUN echo '{"status":"healthy","service":"felicita-frontend","timestamp":"'$(date -Iseconds)'"}' > /usr/share/nginx/html/health.json
-
-# Cambiar a usuario no-root
-USER felicita
 
 # Exponer puerto
 EXPOSE 80
@@ -121,44 +115,43 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/health.json || exit 1
 
 # Comando de inicio
-ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
 # =============================================================================
 # CONFIGURACIÓN ADICIONAL PARA DESARROLLO
-# =============================================================================
+# ========================================================================
 
 # Stage para desarrollo
-FROM node:18-alpine AS development
+#FROM node:18-alpine AS development
 
 # Variables de entorno para desarrollo
-ENV NODE_ENV=development
-ENV CHOKIDAR_USEPOLLING=true
-ENV WATCHPACK_POLLING=true
+#ENV NODE_ENV=development
+#ENV CHOKIDAR_USEPOLLING=true
+#ENV WATCHPACK_POLLING=true
 
 # Instalar dependencias del sistema
-RUN apk add --no-cache \
-    git \
-    python3 \
-    make \
-    g++
+#RUN apk add --no-cache \
+#    git \
+#    python3 \
+#    make \
+#    g++
 
 # Crear directorio de trabajo
-WORKDIR /app
+#WORKDIR /app
 
 # Crear usuario para desarrollo
-RUN addgroup -g 1001 -S felicita && \
-    adduser -S -D -H -u 1001 -h /app -s /bin/sh -G felicita -g felicita felicita && \
-    chown -R felicita:felicita /app
+#RUN addgroup -g 1001 -S felicita && \
+#    adduser -S -D -H -u 1001 -h /app -s /bin/sh -G felicita -g felicita felicita && \
+#    chown -R felicita:felicita /app
 
 # Cambiar a usuario no-root
-USER felicita
+#SER felicita
 
 # Exponer puerto de desarrollo
-EXPOSE 5173
+#EXPOSE 5173
 
 # Comando para desarrollo
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+#CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # =============================================================================
 # ARCHIVOS DE CONFIGURACIÓN NGINX
