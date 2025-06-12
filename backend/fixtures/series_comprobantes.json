@@ -1,0 +1,122 @@
+[
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "serie": "F001",
+      "tipo_comprobante": "01",
+      "siguiente_numero": 1,
+      "activa": true,
+      "descripcion": "Serie principal para facturas electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "serie": "F002",
+      "tipo_comprobante": "01",
+      "siguiente_numero": 1,
+      "activa": false,
+      "descripcion": "Serie secundaria para facturas electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "serie": "B001",
+      "tipo_comprobante": "03",
+      "siguiente_numero": 1,
+      "activa": true,
+      "descripcion": "Serie principal para boletas de venta electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "serie": "B002",
+      "tipo_comprobante": "03",
+      "siguiente_numero": 1,
+      "activa": false,
+      "descripcion": "Serie secundaria para boletas de venta electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 5,
+    "fields": {
+      "empresa": 1,
+      "serie": "FC01",
+      "tipo_comprobante": "07",
+      "siguiente_numero": 1,
+      "activa": true,
+      "descripcion": "Serie principal para notas de crédito electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 6,
+    "fields": {
+      "empresa": 1,
+      "serie": "FD01",
+      "tipo_comprobante": "08",
+      "siguiente_numero": 1,
+      "activa": true,
+      "descripcion": "Serie principal para notas de débito electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 7,
+    "fields": {
+      "empresa": 1,
+      "serie": "T001",
+      "tipo_comprobante": "09",
+      "siguiente_numero": 1,
+      "activa": true,
+      "descripcion": "Serie principal para guías de remisión electrónicas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 8,
+    "fields": {
+      "empresa": 1,
+      "serie": "E001",
+      "tipo_comprobante": "01",
+      "siguiente_numero": 1,
+      "activa": false,
+      "descripcion": "Serie especial para facturas de exportación"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 9,
+    "fields": {
+      "empresa": 1,
+      "serie": "BC01",
+      "tipo_comprobante": "07",
+      "siguiente_numero": 1,
+      "activa": false,
+      "descripcion": "Serie especial para notas de crédito de boletas"
+    }
+  },
+  {
+    "model": "facturacion.seriecomprobante",
+    "pk": 10,
+    "fields": {
+      "empresa": 1,
+      "serie": "BD01",
+      "tipo_comprobante": "08",
+      "siguiente_numero": 1,
+      "activa": false,
+      "descripcion": "Serie especial para notas de débito de boletas"
+    }
+  }
+]

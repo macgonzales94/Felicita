@@ -1,0 +1,722 @@
+[
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 1,
+    "fields": {
+      "codigo_cuenta": "1",
+      "nombre_cuenta": "ACTIVO",
+      "descripcion": "Agrupa las cuentas de la 10 hasta la 19. Incluye las inversiones financieras, los activos adquiridos en operaciones de arrendamiento financiero, los recursos biológicos; los desembolsos por obras en curso de inmuebles, maquinaria y equipo, intangibles; los costos de financiación capitalizados; las inversiones inmobiliarias; entre otros conceptos.",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "1"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 2,
+    "fields": {
+      "codigo_cuenta": "10",
+      "nombre_cuenta": "EFECTIVO Y EQUIVALENTES DE EFECTIVO",
+      "descripcion": "Agrupa las subcuentas que representan medios de pago como dinero en efectivo, cheques, giros, entre otros, así como los depósitos en instituciones financieras, y otros equivalentes de efectivo disponibles a requerimiento del titular.",
+      "cuenta_padre": 1,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "10"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 3,
+    "fields": {
+      "codigo_cuenta": "101",
+      "nombre_cuenta": "Caja",
+      "descripcion": "Efectivo en caja.",
+      "cuenta_padre": 2,
+      "nivel": 3,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "101"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 4,
+    "fields": {
+      "codigo_cuenta": "1011",
+      "nombre_cuenta": "Caja",
+      "descripcion": "Dinero en efectivo, cheques al día no depositados, giros bancarios, giros postales y money orders.",
+      "cuenta_padre": 3,
+      "nivel": 4,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "1011"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 5,
+    "fields": {
+      "codigo_cuenta": "10111",
+      "nombre_cuenta": "Caja Principal",
+      "descripcion": "Efectivo disponible en caja principal.",
+      "cuenta_padre": 4,
+      "nivel": 5,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "10111"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 6,
+    "fields": {
+      "codigo_cuenta": "104",
+      "nombre_cuenta": "Cuentas corrientes en instituciones financieras",
+      "descripcion": "Saldos en cuentas corrientes de disponibilidad inmediata.",
+      "cuenta_padre": 2,
+      "nivel": 3,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "104"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 7,
+    "fields": {
+      "codigo_cuenta": "1041",
+      "nombre_cuenta": "Cuentas corrientes operativas",
+      "descripcion": "Cuentas corrientes en moneda nacional y extranjera que se mantienen en el sistema financiero nacional y del exterior.",
+      "cuenta_padre": 6,
+      "nivel": 4,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "1041"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 8,
+    "fields": {
+      "codigo_cuenta": "10411",
+      "nombre_cuenta": "Banco Continental",
+      "descripcion": "Cuenta corriente en Banco Continental.",
+      "cuenta_padre": 7,
+      "nivel": 5,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "10411"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 9,
+    "fields": {
+      "codigo_cuenta": "12",
+      "nombre_cuenta": "CUENTAS POR COBRAR COMERCIALES - TERCEROS",
+      "descripcion": "Agrupa las subcuentas que representan los derechos de cobro a terceros que se derivan de las ventas de bienes y/o servicios que realiza la empresa en el curso ordinario de sus operaciones comerciales.",
+      "cuenta_padre": 1,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "12"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 10,
+    "fields": {
+      "codigo_cuenta": "121",
+      "nombre_cuenta": "Facturas, boletas y otros comprobantes por cobrar",
+      "descripcion": "Derechos de cobro a clientes, derivados de las ventas de bienes y/o prestación de servicios.",
+      "cuenta_padre": 9,
+      "nivel": 3,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "121"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 11,
+    "fields": {
+      "codigo_cuenta": "1211",
+      "nombre_cuenta": "Facturas, boletas y otros comprobantes por cobrar",
+      "descripcion": "Derechos de cobro provenientes de ventas de bienes o prestación de servicios.",
+      "cuenta_padre": 10,
+      "nivel": 4,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": true,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "1211"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 12,
+    "fields": {
+      "codigo_cuenta": "12111",
+      "nombre_cuenta": "Facturas por cobrar",
+      "descripcion": "Facturas emitidas pendientes de cobro.",
+      "cuenta_padre": 11,
+      "nivel": 5,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": true,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "12111"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 13,
+    "fields": {
+      "codigo_cuenta": "20",
+      "nombre_cuenta": "MERCADERÍAS",
+      "descripcion": "Agrupa las subcuentas que representan los bienes adquiridos por la empresa para ser destinados a la venta, sin someterse a proceso de transformación.",
+      "cuenta_padre": 1,
+      "nivel": 2,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "20"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 14,
+    "fields": {
+      "codigo_cuenta": "201",
+      "nombre_cuenta": "Mercaderías manufacturadas",
+      "descripcion": "Productos adquiridos ya elaborados y listos para la venta.",
+      "cuenta_padre": 13,
+      "nivel": 3,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "201"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 15,
+    "fields": {
+      "codigo_cuenta": "2011",
+      "nombre_cuenta": "Mercaderías manufacturadas",
+      "descripcion": "Costo de productos terminados adquiridos para la venta.",
+      "cuenta_padre": 14,
+      "nivel": 4,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "2011"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 16,
+    "fields": {
+      "codigo_cuenta": "4",
+      "nombre_cuenta": "PASIVO",
+      "descripcion": "Agrupa las cuentas de la 40 hasta la 49. Incluye las obligaciones presentes como resultado de hechos pasados, previendo que su liquidación produzca para la empresa una salida de recursos que incorporan beneficios económicos.",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "4"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 17,
+    "fields": {
+      "codigo_cuenta": "40",
+      "nombre_cuenta": "TRIBUTOS, CONTRAPRESTACIONES Y APORTES AL SISTEMA DE PENSIONES Y DE SALUD POR PAGAR",
+      "descripcion": "Agrupa las subcuentas que representan obligaciones por impuestos, contribuciones y otros tributos, a cargo de la empresa por cuenta propia, así como los tributos trasladados que debe liquidar a las autoridades competentes.",
+      "cuenta_padre": 16,
+      "nivel": 2,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "40"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 18,
+    "fields": {
+      "codigo_cuenta": "401",
+      "nombre_cuenta": "Gobierno central",
+      "descripcion": "Tributos por pagar al gobierno central.",
+      "cuenta_padre": 17,
+      "nivel": 3,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "401"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 19,
+    "fields": {
+      "codigo_cuenta": "4011",
+      "nombre_cuenta": "Impuesto general a las ventas",
+      "descripcion": "IGV por pagar resultante del régimen general o regímenes especiales.",
+      "cuenta_padre": 18,
+      "nivel": 4,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "4011"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 20,
+    "fields": {
+      "codigo_cuenta": "40111",
+      "nombre_cuenta": "IGV - Cuenta propia",
+      "descripcion": "IGV por pagar por cuenta propia.",
+      "cuenta_padre": 19,
+      "nivel": 5,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "40111"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 21,
+    "fields": {
+      "codigo_cuenta": "4019",
+      "nombre_cuenta": "IGV por acreditar",
+      "descripcion": "IGV de las compras que constituye crédito fiscal.",
+      "cuenta_padre": 18,
+      "nivel": 4,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "4019"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 22,
+    "fields": {
+      "codigo_cuenta": "40119",
+      "nombre_cuenta": "IGV por acreditar",
+      "descripcion": "Crédito fiscal del IGV de compras.",
+      "cuenta_padre": 21,
+      "nivel": 5,
+      "tipo_cuenta": "ACTIVO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "40119"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 23,
+    "fields": {
+      "codigo_cuenta": "42",
+      "nombre_cuenta": "CUENTAS POR PAGAR COMERCIALES - TERCEROS",
+      "descripcion": "Agrupa las subcuentas que representan obligaciones que contrae la empresa derivada de la compra de bienes y servicios en operaciones objeto del negocio.",
+      "cuenta_padre": 16,
+      "nivel": 2,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "42"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 24,
+    "fields": {
+      "codigo_cuenta": "421",
+      "nombre_cuenta": "Facturas, boletas y otros comprobantes por pagar",
+      "descripcion": "Obligaciones con terceros por la compra de bienes y servicios.",
+      "cuenta_padre": 23,
+      "nivel": 3,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "421"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 25,
+    "fields": {
+      "codigo_cuenta": "4211",
+      "nombre_cuenta": "Facturas, boletas y otros comprobantes por pagar",
+      "descripcion": "Obligaciones por compra de bienes y servicios.",
+      "cuenta_padre": 24,
+      "nivel": 4,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": true,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "4211"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 26,
+    "fields": {
+      "codigo_cuenta": "42111",
+      "nombre_cuenta": "Facturas por pagar",
+      "descripcion": "Facturas recibidas pendientes de pago.",
+      "cuenta_padre": 25,
+      "nivel": 5,
+      "tipo_cuenta": "PASIVO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": true,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "42111"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 27,
+    "fields": {
+      "codigo_cuenta": "6",
+      "nombre_cuenta": "GASTOS POR NATURALEZA",
+      "descripcion": "Agrupa las cuentas de la 60 hasta la 69. Comprende las cuentas de gastos por su naturaleza económica, las cuales representan consumos de beneficios económicos.",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "6"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 28,
+    "fields": {
+      "codigo_cuenta": "60",
+      "nombre_cuenta": "COMPRAS",
+      "descripcion": "Agrupa las subcuentas que representan las compras de bienes que efectúa la empresa, para ser destinados a la venta o para ser utilizados en el proceso productivo.",
+      "cuenta_padre": 27,
+      "nivel": 2,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "60"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 29,
+    "fields": {
+      "codigo_cuenta": "601",
+      "nombre_cuenta": "Mercaderías",
+      "descripcion": "Compras de bienes para ser vendidos sin transformación.",
+      "cuenta_padre": 28,
+      "nivel": 3,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "601"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 30,
+    "fields": {
+      "codigo_cuenta": "6011",
+      "nombre_cuenta": "Mercaderías",
+      "descripcion": "Costo de mercaderías adquiridas para la venta.",
+      "cuenta_padre": 29,
+      "nivel": 4,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "6011"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 31,
+    "fields": {
+      "codigo_cuenta": "60111",
+      "nombre_cuenta": "Compras de mercaderías",
+      "descripcion": "Compras de mercaderías manufacturadas.",
+      "cuenta_padre": 30,
+      "nivel": 5,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "60111"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 32,
+    "fields": {
+      "codigo_cuenta": "7",
+      "nombre_cuenta": "INGRESOS",
+      "descripcion": "Agrupa las cuentas de la 70 hasta la 79. Comprende las cuentas de ingresos por la explotación de la actividad económica de las empresas.",
+      "cuenta_padre": null,
+      "nivel": 1,
+      "tipo_cuenta": "INGRESO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "7"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 33,
+    "fields": {
+      "codigo_cuenta": "70",
+      "nombre_cuenta": "VENTAS",
+      "descripcion": "Agrupa las subcuentas que representan los ingresos por ventas de bienes y/o servicios inherentes a las operaciones del giro del negocio, desagregando las que corresponden a las ventas de producción propia de las que corresponden a las ventas de mercaderías adquiridas de terceros.",
+      "cuenta_padre": 32,
+      "nivel": 2,
+      "tipo_cuenta": "INGRESO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "70"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 34,
+    "fields": {
+      "codigo_cuenta": "701",
+      "nombre_cuenta": "Mercaderías",
+      "descripcion": "Ingresos por ventas de mercaderías.",
+      "cuenta_padre": 33,
+      "nivel": 3,
+      "tipo_cuenta": "INGRESO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "701"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 35,
+    "fields": {
+      "codigo_cuenta": "7011",
+      "nombre_cuenta": "Mercaderías",
+      "descripcion": "Ingresos por venta de mercaderías adquiridas de terceros.",
+      "cuenta_padre": 34,
+      "nivel": 4,
+      "tipo_cuenta": "INGRESO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "7011"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 36,
+    "fields": {
+      "codigo_cuenta": "70111",
+      "nombre_cuenta": "Venta de mercaderías",
+      "descripcion": "Ingresos por venta de mercaderías manufacturadas.",
+      "cuenta_padre": 35,
+      "nivel": 5,
+      "tipo_cuenta": "INGRESO",
+      "naturaleza": "ACREEDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "70111"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 37,
+    "fields": {
+      "codigo_cuenta": "69",
+      "nombre_cuenta": "COSTO DE VENTAS",
+      "descripcion": "Agrupa las subcuentas que representan el costo de los bienes y servicios inherentes al giro del negocio, transferidos a título oneroso.",
+      "cuenta_padre": 27,
+      "nivel": 2,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "69"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 38,
+    "fields": {
+      "codigo_cuenta": "691",
+      "nombre_cuenta": "Mercaderías",
+      "descripcion": "Costo de mercaderías vendidas.",
+      "cuenta_padre": 37,
+      "nivel": 3,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": false,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "691"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 39,
+    "fields": {
+      "codigo_cuenta": "6911",
+      "nombre_cuenta": "Mercaderías",
+      "descripcion": "Costo de las mercaderías vendidas.",
+      "cuenta_padre": 38,
+      "nivel": 4,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "6911"
+    }
+  },
+  {
+    "model": "contabilidad.plancuentas",
+    "pk": 40,
+    "fields": {
+      "codigo_cuenta": "69111",
+      "nombre_cuenta": "Costo de mercaderías vendidas",
+      "descripcion": "Costo de mercaderías manufacturadas vendidas.",
+      "cuenta_padre": 39,
+      "nivel": 5,
+      "tipo_cuenta": "GASTO",
+      "naturaleza": "DEUDORA",
+      "acepta_movimientos": true,
+      "requiere_tercero": false,
+      "requiere_centro_costo": false,
+      "activa": true,
+      "codigo_sunat": "69111"
+    }
+  }
+]

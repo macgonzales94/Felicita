@@ -309,7 +309,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'felicita.log',
+            'filename': os.path.join(BASE_DIR, 'logs', 'felicita_dev.log'),
             'maxBytes': config('LOG_FILE_MAX_SIZE', default=10485760, cast=int),
             'backupCount': config('LOG_BACKUP_COUNT', default=5, cast=int),
             'formatter': 'verbose',

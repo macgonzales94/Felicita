@@ -64,3 +64,6 @@ USER felicita
 EXPOSE 8000
 
 CMD ["/entrypoint-dev.sh"]
+
+# Crear directorio de logs con permisos
+RUN mkdir -p /app/logs && chmod -R 755 /app/logs

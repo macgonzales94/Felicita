@@ -368,6 +368,7 @@ services:
       TZ: America/Lima
     volumes:
       - ./backend:/app
+      - ./logs:/logs
     ports:
       - "5555:5555"
     networks:

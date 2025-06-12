@@ -1,123 +1,148 @@
-# =============================================================================
-# REQUIREMENTS.TXT - PROYECTO FELICITA
+# REQUIREMENTS PROYECTO FELICITA
 # Sistema de Facturación Electrónica para Perú
-# =============================================================================
+# Actualizado para FASE 3: API Core y Nubefact
 
-# Django Framework
+# =============================================================================
+# CORE DJANGO
+# =============================================================================
 Django==4.2.7
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==23.3
 django-extensions==3.2.3
 
-# Authentication & Security
+# =============================================================================
+# BASE DE DATOS
+# =============================================================================
+psycopg2-binary==2.9.7
+django-environ==0.11.2
+
+# =============================================================================
+# AUTENTICACIÓN Y SEGURIDAD
+# =============================================================================
 djangorestframework-simplejwt==5.3.0
 django-oauth-toolkit==1.7.1
 cryptography==41.0.7
+bcrypt==4.0.1
 
-# Database
-psycopg2-binary==2.9.7
-redis==4.5.4
+# =============================================================================
+# CACHE Y PERFORMANCE
+# =============================================================================
+redis==5.0.1
 django-redis==5.4.0
+django-cachalot==2.6.1
 
-# Celery & Background Tasks
+# =============================================================================
+# TAREAS ASÍNCRONAS
+# =============================================================================
 celery==5.3.4
 celery[redis]==5.3.4
-flower==2.0.1
+django-celery-beat==2.5.0
+django-celery-results==2.5.1
 
-# API Documentation
-drf-spectacular==0.26.5
-django-rest-swagger==2.2.0
-
-# File Handling
-Pillow==10.1.0
-python-magic==0.4.27
-django-storages==1.14.2
-
-# Data Processing
-pandas==2.1.3
-openpyxl==3.1.2
-reportlab==4.0.7
-weasyprint==60.1
-
-# HTTP Requests
+# =============================================================================
+# APIS E INTEGRACIONES
+# =============================================================================
 requests==2.31.0
-urllib3==2.1.0
+urllib3==2.0.7
+httpx==0.25.2
 
-# Environment & Configuration
-python-decouple==3.8
-python-dotenv==1.0.0
+# Integración SUNAT/Nubefact
+zeep==4.2.1
+lxml==4.9.3
+xmltodict==0.13.0
 
-# Date & Time
+# Validaciones Perú
+python-ruc==1.0.0
+python-dni==1.0.0
+
+# =============================================================================
+# MANEJO DE ARCHIVOS Y DOCUMENTOS
+# =============================================================================
+Pillow==10.1.0
+reportlab==4.0.6
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+pypdf2==3.0.1
+
+# Generación de XML para SUNAT
+xmlschema==2.5.1
+xmlsec==1.3.13
+
+# =============================================================================
+# UTILITARIOS
+# =============================================================================
 python-dateutil==2.8.2
 pytz==2023.3
+python-decouple==3.8
 
-# Validation
-pydantic==2.5.0
-marshmallow==3.20.1
+# Números y decimales
+python-decimal==1.0.0
 
-# Utilities
-uuid==1.30
+# UUID y generación de códigos
 shortuuid==1.0.11
+python-barcode==0.15.1
+qrcode==7.4.2
 
-# Logging
-structlog==23.2.0
+# =============================================================================
+# VALIDACIONES Y SERIALIZACIÓN
+# =============================================================================
+marshmallow==3.20.1
+cerberus==1.3.5
+jsonschema==4.19.2
 
-# Testing (Development)
+# =============================================================================
+# LOGGING Y MONITOREO
+# =============================================================================
+sentry-sdk==1.38.0
+django-debug-toolbar==4.2.0
+django-silk==5.0.4
+
+# =============================================================================
+# TESTING
+# =============================================================================
 pytest==7.4.3
 pytest-django==4.7.0
 pytest-cov==4.1.0
 factory-boy==3.3.0
+faker==20.1.0
 
-# Linting & Formatting (Development)
-flake8==6.1.0
-black==23.11.0
-isort==5.12.0
+# =============================================================================
+# DOCUMENTACIÓN API
+# =============================================================================
+drf-spectacular==0.26.5
+django-rest-swagger==2.2.0
+drf-yasg==1.21.7
 
-# Documentation (Development)
-sphinx==7.2.6
+# =============================================================================
+# ESPECÍFICOS PARA FACTURACIÓN ELECTRÓNICA PERÚ
+# =============================================================================
 
-# Monitoring
-sentry-sdk==1.38.0
+# Códigos SUNAT
+python-sunat==1.0.0
 
-# Peru Specific
-# (Placeholder para librerías específicas de Perú)
-# sunat-api==1.0.0
-# reniec-client==1.0.0
+# Generación de PDF para comprobantes
+weasyprint==60.2
+html2text==2020.1.16
 
-# Excel/CSV Import/Export
-django-import-export==3.3.1
-tablib==3.5.0
+# Firma digital (para futuras implementaciones)
+pyOpenSSL==23.3.0
+pycryptodome==3.19.0
 
-# Email
-django-anymail==10.2
-
-# Forms & UI
-django-crispy-forms==2.1
-crispy-bootstrap5==0.7
-
-# Internationalization
-django-modeltranslation==0.18.11
-
-# Performance
-django-debug-toolbar==4.2.0
-django-silk==5.0.4
-
-# Security
-django-ratelimit==4.1.0
-#django-security==0.1.12
-
-# Cache
-django-cachalot==2.6.1
-
-# Backup
-django-dbbackup==4.0.2
-
-# Health Checks
-django-health-check==3.17.0
-
-# WSGI Server
+# =============================================================================
+# PRODUCCIÓN
+# =============================================================================
 gunicorn==21.2.0
 whitenoise==6.6.0
+django-storages==1.14.2
 
-drf_yasg==1.21.6
+# AWS (opcional para producción)
+boto3==1.34.0
+botocore==1.34.0
+
+# =============================================================================
+# DESARROLLO
+# =============================================================================
+ipython==8.17.2
+django-livereload-server==0.4
+pre-commit==3.5.0
