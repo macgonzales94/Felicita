@@ -17,6 +17,7 @@ from django.utils import timezone
 from decimal import Decimal
 from aplicaciones.core.models import ModeloBase, Empresa
 from aplicaciones.usuarios.models import Usuario
+
 import uuid
 
 # =============================================================================
@@ -893,11 +894,7 @@ class LibroElectronico(ModeloBase):
     def __str__(self):
         return f"PLE {self.tipo_libro} - {self.periodo} - {self.empresa.razon_social}"
 
-# =============================================================================
-# MODELOS DE CONTABILIDAD FALTANTES
-# =============================================================================
-
-# 4. MODELO BALANCE DE COMPROBACIÓN (backend/aplicaciones/contabilidad/models.py)
+# 4. MODELO BALANCE DE COMPROBACIÓN 
 class BalanceComprobacion(ModeloBase):
     """
     Balance de comprobación por períodos
@@ -1036,8 +1033,7 @@ class BalanceComprobacion(ModeloBase):
                 self.saldo_final_haber = Decimal('0.00')
                 self.saldo_final_debe = abs(saldo_neto)
 
-
-# 5. MODELO PERÍODO CONTABLE (backend/aplicaciones/contabilidad/models.py)
+# 5. MODELO PERÍODO CONTABLE 
 class PeriodoContable(ModeloBase):
     """
     Períodos contables para control de ejercicios
@@ -1282,7 +1278,6 @@ class CuentaPorCobrar(ModeloBase):
         """Verifica si la cuenta está vencida"""
         return self.dias_vencimiento() > 0
 
-
 # =============================================================================
 # MODELO CUENTA POR PAGAR
 # =============================================================================
@@ -1405,7 +1400,6 @@ class CuentaPorPagar(ModeloBase):
         """Verifica si la cuenta está vencida"""
         return self.dias_vencimiento() > 0
 
-
 # =============================================================================
 # MODELO LIBRO MAYOR
 # =============================================================================
@@ -1501,15 +1495,181 @@ class LibroMayor(ModeloBase):
     def __str__(self):
         return f"Mayor {self.cuenta.codigo} - {self.fecha_desde} a {self.fecha_hasta}"
 
-# =============================================================================
-# ALIAS PARA COMPATIBILIDAD CON SERIALIZERS
-# =============================================================================
 
-# Los serializers referencian estos nombres, crear alias para compatibilidad
-#ItemFactura = FacturaItem
-#ItemBoleta = BoletaItem
-
-
+class MovimientoContable(ModeloBase):
+    """
+    Movimientos contables individuales para análisis y reportes
+    """
+    
+    TIPO_MOVIMIENTO_CHOICES = [
+        ('debe', 'Debe'),
+        ('haber', 'Haber'),
+    ]
+    
+    ORIGEN_MOVIMIENTO_CHOICES = [
+        ('manual', 'Manual'),
+        ('factura', 'Factura'),
+        ('boleta', 'Boleta'),
+        ('nota_credito', 'Nota de Crédito'),
+        ('nota_debito', 'Nota de Débito'),
+        ('compra', 'Compra'),
+        ('pago', 'Pago'),
+        ('cobro', 'Cobro'),
+        ('ajuste', 'Ajuste Contable'),
+        ('cierre', 'Cierre Contable'),
+        ('apertura', 'Apertura Contable'),
+    ]
+    
+    # Relaciones principales (SIN referencias problemáticas)
+    empresa = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.PROTECT,
+        related_name='movimientos_contables',
+        verbose_name='Empresa'
+    )
+    
+    periodo = models.ForeignKey(
+        'PeriodoContable',
+        on_delete=models.PROTECT,
+        related_name='movimientos_contables',
+        verbose_name='Período Contable'
+    )
+    
+    # Información temporal
+    fecha_movimiento = models.DateField(
+        verbose_name='Fecha del Movimiento'
+    )
+    
+    # Clasificación del movimiento
+    tipo_movimiento = models.CharField(
+        max_length=10,
+        choices=TIPO_MOVIMIENTO_CHOICES,
+        verbose_name='Tipo de Movimiento'
+    )
+    
+    origen_movimiento = models.CharField(
+        max_length=15,
+        choices=ORIGEN_MOVIMIENTO_CHOICES,
+        default='manual',
+        verbose_name='Origen del Movimiento'
+    )
+    
+    # Importes
+    importe_debe = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Importe Debe'
+    )
+    
+    importe_haber = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Importe Haber'
+    )
+    
+    importe_neto = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Importe Neto'
+    )
+    
+    # Descripción y referencias
+    concepto = models.TextField(
+        verbose_name='Concepto del Movimiento'
+    )
+    
+    numero_documento_origen = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Número de Documento'
+    )
+    
+    tipo_documento_origen = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Tipo de Documento'
+    )
+    
+    # Estado y control
+    es_movimiento_cierre = models.BooleanField(
+        default=False,
+        verbose_name='Es Movimiento de Cierre'
+    )
+    
+    es_movimiento_apertura = models.BooleanField(
+        default=False,
+        verbose_name='Es Movimiento de Apertura'
+    )
+    
+    anulado = models.BooleanField(
+        default=False,
+        verbose_name='Anulado'
+    )
+    
+    fecha_anulacion = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Anulación'
+    )
+    
+    class Meta:
+        db_table = 'contabilidad_movimiento_contable'
+        verbose_name = 'Movimiento Contable'
+        verbose_name_plural = 'Movimientos Contables'
+        indexes = [
+            models.Index(fields=['fecha_movimiento']),
+            models.Index(fields=['tipo_movimiento']),
+            models.Index(fields=['origen_movimiento']),
+            models.Index(fields=['empresa', 'fecha_movimiento']),
+            models.Index(fields=['anulado']),
+        ]
+        ordering = ['-fecha_movimiento', '-created_at']
+    
+    def __str__(self):
+        tipo_desc = 'D' if self.tipo_movimiento == 'debe' else 'H'
+        importe = self.importe_debe if self.tipo_movimiento == 'debe' else self.importe_haber
+        return f"{tipo_desc} {importe} - {self.fecha_movimiento}"
+    
+    def save(self, *args, **kwargs):
+        """Calcular valores automáticos antes de guardar"""
+        
+        # Determinar tipo de movimiento
+        if self.importe_debe > 0:
+            self.tipo_movimiento = 'debe'
+        elif self.importe_haber > 0:
+            self.tipo_movimiento = 'haber'
+        
+        # Calcular importe neto
+        self.importe_neto = self.importe_debe - self.importe_haber
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def importe_principal(self):
+        """Retorna el importe principal del movimiento"""
+        return self.importe_debe if self.tipo_movimiento == 'debe' else self.importe_haber
+    
+    @property
+    def es_debe(self):
+        """Retorna True si es un movimiento de debe"""
+        return self.tipo_movimiento == 'debe'
+    
+    @property
+    def es_haber(self):
+        """Retorna True si es un movimiento de haber"""
+        return self.tipo_movimiento == 'haber'
+    
+    def anular(self, usuario):
+        """Anular el movimiento contable"""
+        if not self.anulado:
+            self.anulado = True
+            self.fecha_anulacion = timezone.now()
+            self.save(update_fields=['anulado', 'fecha_anulacion'])
+            return True
+        return False
 # =============================================================================
 # ACTUALIZACIONES NECESARIAS EN MODELOS EXISTENTES
 # =============================================================================

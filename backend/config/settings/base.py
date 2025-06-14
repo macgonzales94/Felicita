@@ -54,9 +54,9 @@ if DEBUG:
 LOCAL_APPS = [
     'aplicaciones.core',
     'aplicaciones.usuarios',
-    'aplicaciones.facturacion',
     'aplicaciones.inventario',
-    'aplicaciones.contabilidad',
+     'aplicaciones.contabilidad',
+    'aplicaciones.facturacion', 
     # Comentados hasta que estén listos
     #'aplicaciones.punto_venta',
     #'aplicaciones.reportes',

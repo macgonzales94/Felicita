@@ -21,7 +21,7 @@ router.register(r'notas-credito', views.NotaCreditoViewSet, basename='notas-cred
 router.register(r'series', views.SerieComprobanteViewSet, basename='series')
 
 # Registrar ViewSets auxiliares
-router.register(r'estadisticas', views.EstadisticasFacturacionView, basename='estadisticas')
+# router.register(r'estadisticas', views.EstadisticasFacturacionView, basename='estadisticas')
 
 app_name = 'facturacion'
 
@@ -33,194 +33,194 @@ urlpatterns = [
     path('', include(router.urls)),
     
     # =============================================================================
-    # URLs ADICIONALES PERSONALIZADAS
+    # URLs ADICIONALES PERSONALIZADAS - COMENTADAS TEMPORALMENTE
     # =============================================================================
     
     # Endpoints para acciones masivas
-    path('facturas/acciones-masivas/', 
-         views.AccionesMasivasFacturasView.as_view(), 
-         name='facturas-acciones-masivas'),
+    # path('facturas/acciones-masivas/', 
+    #      views.AccionesMasivasFacturasView.as_view(), 
+    #      name='facturas-acciones-masivas'),
     
-    path('boletas/acciones-masivas/', 
-         views.AccionesMasivasBoletasView.as_view(), 
-         name='boletas-acciones-masivas'),
+    # path('boletas/acciones-masivas/', 
+    #      views.AccionesMasivasBoletasView.as_view(), 
+    #      name='boletas-acciones-masivas'),
     
     # Endpoints para validaciones previas
-    path('validar-numeracion/', 
-         views.ValidarNumeracionView.as_view(), 
-         name='validar-numeracion'),
+    # path('validar-numeracion/', 
+    #      views.ValidarNumeracionView.as_view(), 
+    #      name='validar-numeracion'),
     
-    path('validar-cliente-comprobante/', 
-         views.ValidarClienteComprobanteView.as_view(), 
-         name='validar-cliente-comprobante'),
+    # path('validar-cliente-comprobante/', 
+    #      views.ValidarClienteComprobanteView.as_view(), 
+    #      name='validar-cliente-comprobante'),
     
     # Endpoints para consultas SUNAT
-    path('consultar-ruc/<str:ruc>/', 
-         views.ConsultarRucView.as_view(), 
-         name='consultar-ruc'),
+    # path('consultar-ruc/<str:ruc>/', 
+    #      views.ConsultarRucView.as_view(), 
+    #      name='consultar-ruc'),
     
-    path('consultar-dni/<str:dni>/', 
-         views.ConsultarDniView.as_view(), 
-         name='consultar-dni'),
+    # path('consultar-dni/<str:dni>/', 
+    #      views.ConsultarDniView.as_view(), 
+    #      name='consultar-dni'),
     
     # Endpoints para reportes específicos
-    path('reportes/ventas-diarias/', 
-         views.ReporteVentasDiariasView.as_view(), 
-         name='reporte-ventas-diarias'),
+    # path('reportes/ventas-diarias/', 
+    #      views.ReporteVentasDiariasView.as_view(), 
+    #      name='reporte-ventas-diarias'),
     
-    path('reportes/top-clientes/', 
-         views.ReporteTopClientesView.as_view(), 
-         name='reporte-top-clientes'),
+    # path('reportes/top-clientes/', 
+    #      views.ReporteTopClientesView.as_view(), 
+    #      name='reporte-top-clientes'),
     
-    path('reportes/top-productos/', 
-         views.ReporteTopProductosView.as_view(), 
-         name='reporte-top-productos'),
+    # path('reportes/top-productos/', 
+    #      views.ReporteTopProductosView.as_view(), 
+    #      name='reporte-top-productos'),
     
-    path('reportes/estado-sunat/', 
-         views.ReporteEstadoSunatView.as_view(), 
-         name='reporte-estado-sunat'),
+    # path('reportes/estado-sunat/', 
+    #      views.ReporteEstadoSunatView.as_view(), 
+    #      name='reporte-estado-sunat'),
     
     # Endpoints para exportación
-    path('exportar/facturas-excel/', 
-         views.ExportarFacturasExcelView.as_view(), 
-         name='exportar-facturas-excel'),
+    # path('exportar/facturas-excel/', 
+    #      views.ExportarFacturasExcelView.as_view(), 
+    #      name='exportar-facturas-excel'),
     
-    path('exportar/boletas-excel/', 
-         views.ExportarBoletasExcelView.as_view(), 
-         name='exportar-boletas-excel'),
+    # path('exportar/boletas-excel/', 
+    #      views.ExportarBoletasExcelView.as_view(), 
+    #      name='exportar-boletas-excel'),
     
-    path('exportar/notas-credito-excel/', 
-         views.ExportarNotasCreditoExcelView.as_view(), 
-         name='exportar-notas-credito-excel'),
+    # path('exportar/notas-credito-excel/', 
+    #      views.ExportarNotasCreditoExcelView.as_view(), 
+    #      name='exportar-notas-credito-excel'),
     
     # Endpoints para libros electrónicos PLE
-    path('ple/registro-ventas/', 
-         views.GenerarPLERegistroVentasView.as_view(), 
-         name='ple-registro-ventas'),
+    # path('ple/registro-ventas/', 
+    #      views.GenerarPLERegistroVentasView.as_view(), 
+    #      name='ple-registro-ventas'),
     
-    path('ple/libro-diario/', 
-         views.GenerarPLELibroDiarioView.as_view(), 
-         name='ple-libro-diario'),
+    # path('ple/libro-diario/', 
+    #      views.GenerarPLELibroDiarioView.as_view(), 
+    #      name='ple-libro-diario'),
     
     # Endpoints para synchronización con Nubefact
-    path('sync/estados-sunat/', 
-         views.SincronizarEstadosSunatView.as_view(), 
-         name='sync-estados-sunat'),
+    # path('sync/estados-sunat/', 
+    #      views.SincronizarEstadosSunatView.as_view(), 
+    #      name='sync-estados-sunat'),
     
-    path('sync/reenviar-pendientes/', 
-         views.ReenviarComprobantePendientesView.as_view(), 
-         name='sync-reenviar-pendientes'),
+    # path('sync/reenviar-pendientes/', 
+    #      views.ReenviarComprobantePendientesView.as_view(), 
+    #      name='sync-reenviar-pendientes'),
     
     # Endpoints para utilidades
-    path('utilidades/limpiar-borradores/', 
-         views.LimpiarBorradoresView.as_view(), 
-         name='limpiar-borradores'),
+    # path('utilidades/limpiar-borradores/', 
+    #      views.LimpiarBorradoresView.as_view(), 
+    #      name='limpiar-borradores'),
     
-    path('utilidades/corregir-numeracion/', 
-         views.CorregirNumeracionView.as_view(), 
-         name='corregir-numeracion'),
+    # path('utilidades/corregir-numeracion/', 
+    #      views.CorregirNumeracionView.as_view(), 
+    #      name='corregir-numeracion'),
     
     # Endpoints para configuración
-    path('configuracion/series-activas/', 
-         views.SeriesActivasView.as_view(), 
-         name='series-activas'),
+    # path('configuracion/series-activas/', 
+    #      views.SeriesActivasView.as_view(), 
+    #      name='series-activas'),
     
-    path('configuracion/proximos-numeros/', 
-         views.ProximosNumerosView.as_view(), 
-         name='proximos-numeros'),
+    # path('configuracion/proximos-numeros/', 
+    #      views.ProximosNumerosView.as_view(), 
+    #      name='proximos-numeros'),
     
     # =============================================================================
-    # URLs PARA PUNTO DE VENTA
+    # URLs PARA PUNTO DE VENTA - COMENTADAS TEMPORALMENTE
     # =============================================================================
     
     # Endpoint especializado para POS
-    path('pos/crear-venta/', 
-         views.CrearVentaPOSView.as_view(), 
-         name='pos-crear-venta'),
+    # path('pos/crear-venta/', 
+    #      views.CrearVentaPOSView.as_view(), 
+    #      name='pos-crear-venta'),
     
-    path('pos/buscar-cliente/', 
-         views.BuscarClientePOSView.as_view(), 
-         name='pos-buscar-cliente'),
+    # path('pos/buscar-cliente/', 
+    #      views.BuscarClientePOSView.as_view(), 
+    #      name='pos-buscar-cliente'),
     
-    path('pos/buscar-producto/', 
-         views.BuscarProductoPOSView.as_view(), 
-         name='pos-buscar-producto'),
+    # path('pos/buscar-producto/', 
+    #      views.BuscarProductoPOSView.as_view(), 
+    #      name='pos-buscar-producto'),
     
-    path('pos/calcular-totales/', 
-         views.CalcularTotalesPOSView.as_view(), 
-         name='pos-calcular-totales'),
+    # path('pos/calcular-totales/', 
+    #      views.CalcularTotalesPOSView.as_view(), 
+    #      name='pos-calcular-totales'),
     
-    path('pos/aplicar-descuento/', 
-         views.AplicarDescuentoPOSView.as_view(), 
-         name='pos-aplicar-descuento'),
+    # path('pos/aplicar-descuento/', 
+    #      views.AplicarDescuentoPOSView.as_view(), 
+    #      name='pos-aplicar-descuento'),
     
     # =============================================================================
-    # URLs PARA INTEGRACIONES
+    # URLs PARA INTEGRACIONES - COMENTADAS TEMPORALMENTE
     # =============================================================================
     
     # Endpoints para integraciones con sistemas externos
-    path('integraciones/importar-ventas/', 
-         views.ImportarVentasView.as_view(), 
-         name='importar-ventas'),
+    # path('integraciones/importar-ventas/', 
+    #      views.ImportarVentasView.as_view(), 
+    #      name='importar-ventas'),
     
-    path('integraciones/exportar-contabilidad/', 
-         views.ExportarContabilidadView.as_view(), 
-         name='exportar-contabilidad'),
+    # path('integraciones/exportar-contabilidad/', 
+    #      views.ExportarContabilidadView.as_view(), 
+    #      name='exportar-contabilidad'),
     
     # =============================================================================
-    # URLs PARA DASHBOARDS Y ANALYTICS
+    # URLs PARA DASHBOARDS Y ANALYTICS - COMENTADAS TEMPORALMENTE
     # =============================================================================
     
     # Endpoints para métricas en tiempo real
-    path('analytics/kpis-tiempo-real/', 
-         views.KPIsTiempoRealView.as_view(), 
-         name='kpis-tiempo-real'),
+    # path('analytics/kpis-tiempo-real/', 
+    #      views.KPIsTiempoRealView.as_view(), 
+    #      name='kpis-tiempo-real'),
     
-    path('analytics/grafico-ventas-mes/', 
-         views.GraficoVentasMesView.as_view(), 
-         name='grafico-ventas-mes'),
+    # path('analytics/grafico-ventas-mes/', 
+    #      views.GraficoVentasMesView.as_view(), 
+    #      name='grafico-ventas-mes'),
     
-    path('analytics/comparativo-periodos/', 
-         views.ComparativoPeriodosView.as_view(), 
-         name='comparativo-periodos'),
+    # path('analytics/comparativo-periodos/', 
+    #      views.ComparativoPeriodosView.as_view(), 
+    #      name='comparativo-periodos'),
     
-    path('analytics/tendencias-cliente/', 
-         views.TendenciasClienteView.as_view(), 
-         name='tendencias-cliente'),
+    # path('analytics/tendencias-cliente/', 
+    #      views.TendenciasClienteView.as_view(), 
+    #      name='tendencias-cliente'),
     
     # =============================================================================
-    # URLs PARA ADMINISTRACIÓN
+    # URLs PARA ADMINISTRACIÓN - COMENTADAS TEMPORALMENTE
     # =============================================================================
     
     # Endpoints para administradores
-    path('admin/reset-numeracion/', 
-         views.ResetNumeracionView.as_view(), 
-         name='admin-reset-numeracion'),
+    # path('admin/reset-numeracion/', 
+    #      views.ResetNumeracionView.as_view(), 
+    #      name='admin-reset-numeracion'),
     
-    path('admin/audit-log/', 
-         views.AuditLogView.as_view(), 
-         name='admin-audit-log'),
+    # path('admin/audit-log/', 
+    #      views.AuditLogView.as_view(), 
+    #      name='admin-audit-log'),
     
-    path('admin/health-check/', 
-         views.HealthCheckFacturacionView.as_view(), 
-         name='admin-health-check'),
+    # path('admin/health-check/', 
+    #      views.HealthCheckFacturacionView.as_view(), 
+    #      name='admin-health-check'),
     
     # =============================================================================
-    # URLs PARA MÓVIL/APP
+    # URLs PARA MÓVIL/APP - COMENTADAS TEMPORALMENTE
     # =============================================================================
     
     # Endpoints optimizados para aplicaciones móviles
-    path('mobile/resumen-dia/', 
-         views.ResumenDiaMobileView.as_view(), 
-         name='mobile-resumen-dia'),
+    # path('mobile/resumen-dia/', 
+    #      views.ResumenDiaMobileView.as_view(), 
+    #      name='mobile-resumen-dia'),
     
-    path('mobile/ultimas-ventas/', 
-         views.UltimasVentasMobileView.as_view(), 
-         name='mobile-ultimas-ventas'),
+    # path('mobile/ultimas-ventas/', 
+    #      views.UltimasVentasMobileView.as_view(), 
+    #      name='mobile-ultimas-ventas'),
     
-    path('mobile/sync-offline/', 
-         views.SyncOfflineMobileView.as_view(), 
-         name='mobile-sync-offline'),
+    # path('mobile/sync-offline/', 
+    #      views.SyncOfflineMobileView.as_view(), 
+    #      name='mobile-sync-offline'),
 ]
 
 # =============================================================================
@@ -261,7 +261,7 @@ DOCUMENTACIÓN DE ENDPOINTS DE FACTURACIÓN
    - GET /por_tipo/               : Series por tipo
    - POST /{id}/reiniciar_numeracion/ : Reiniciar numeración
 
-=== ENDPOINTS ESPECIALIZADOS ===
+=== ENDPOINTS ESPECIALIZADOS (COMENTADOS TEMPORALMENTE) ===
 
 5. PUNTO DE VENTA (/api/pos/)
    - POST /crear-venta/           : Crear venta optimizada POS
@@ -336,9 +336,12 @@ POST /api/facturas/
 # Filtrar facturas del mes
 GET /api/facturas/?periodo=mes&estado_sunat=ACEPTADO
 
-# Buscar cliente en POS
+# Buscar cliente en POS (cuando esté implementado)
 GET /api/pos/buscar-cliente/?q=12345678
 
-# Exportar facturas
+# Exportar facturas (cuando esté implementado)
 GET /api/exportar/facturas-excel/?fecha_desde=2024-01-01&fecha_hasta=2024-01-31
+
+NOTA: Los endpoints comentados se pueden habilitar gradualmente
+      cuando se implementen las vistas correspondientes en views.py
 """

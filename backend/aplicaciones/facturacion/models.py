@@ -680,32 +680,50 @@ class NotaCredito(ComprobanteBase):
 # =============================================================================
 # MODELO NOTA DE DÉBITO
 # =============================================================================
+# Agregar este modelo al archivo backend/aplicaciones/facturacion/models.py
+
 class NotaDebito(ComprobanteBase):
     """
-    Notas de débito electrónicas
+    Notas de débito electrónicas según normativa SUNAT
     """
     
     TIPO_NOTA_DEBITO_CHOICES = [
         ('01', 'Intereses por mora'),
         ('02', 'Aumento en el valor'),
-        ('03', 'Penalidades/ otros conceptos'),
+        ('03', 'Penalidades/otros conceptos'),
         ('10', 'Ajustes de operaciones de exportación'),
         ('11', 'Ajustes afectos al IVAP'),
     ]
     
-    # Documento que se modifica
-    tipo_documento_modificado = models.CharField(
+    ESTADO_SUNAT_CHOICES = [
+        ('PENDIENTE', 'Pendiente de envío'),
+        ('ENVIADO', 'Enviado a SUNAT'),
+        ('ACEPTADO', 'Aceptado por SUNAT'),
+        ('RECHAZADO', 'Rechazado por SUNAT'),
+        ('ANULADO', 'Anulado'),
+        ('OBSERVADO', 'Observado por SUNAT'),
+    ]
+    
+    # Información del documento que se modifica
+    documento_modificado_tipo = models.CharField(
         max_length=2,
         choices=[
             ('01', 'Factura'),
-            ('03', 'Boleta'),
+            ('03', 'Boleta de venta'),
+            ('07', 'Nota de crédito'),
+            ('08', 'Nota de débito'),
         ],
         verbose_name='Tipo de Documento Modificado'
     )
     
-    numero_documento_modificado = models.CharField(
+    documento_modificado_serie = models.CharField(
+        max_length=10,
+        verbose_name='Serie del Documento Modificado'
+    )
+    
+    documento_modificado_numero = models.CharField(
         max_length=20,
-        verbose_name='Número de Documento Modificado'
+        verbose_name='Número del Documento Modificado'
     )
     
     # Motivo de la nota de débito
@@ -716,14 +734,376 @@ class NotaDebito(ComprobanteBase):
     )
     
     descripcion_motivo = models.TextField(
+        max_length=500,
         verbose_name='Descripción del Motivo'
+    )
+    
+    # Estado SUNAT específico
+    estado_sunat = models.CharField(
+        max_length=15,
+        choices=ESTADO_SUNAT_CHOICES,
+        default='PENDIENTE',
+        verbose_name='Estado SUNAT'
+    )
+    
+    # Integración con Nubefact
+    nubefact_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='ID de Nubefact'
+    )
+    
+    nubefact_url_cdr = models.URLField(
+        blank=True,
+        verbose_name='URL CDR Nubefact'
+    )
+    
+    nubefact_url_pdf = models.URLField(
+        blank=True,
+        verbose_name='URL PDF Nubefact'
+    )
+    
+    nubefact_url_xml = models.URLField(
+        blank=True,
+        verbose_name='URL XML Nubefact'
+    )
+    
+    # Respuesta de SUNAT
+    codigo_respuesta_sunat = models.CharField(
+        max_length=10,
+        blank=True,
+        verbose_name='Código de Respuesta SUNAT'
+    )
+    
+    descripcion_respuesta_sunat = models.TextField(
+        blank=True,
+        verbose_name='Descripción Respuesta SUNAT'
+    )
+    
+    # Fechas de control
+    fecha_envio_sunat = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Envío a SUNAT'
+    )
+    
+    fecha_respuesta_sunat = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Respuesta SUNAT'
+    )
+    
+    # Datos técnicos para SUNAT
+    hash_cdr = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Hash CDR'
+    )
+    
+    numero_ticket_sunat = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Número de Ticket SUNAT'
+    )
+    
+    # Control de reenvíos
+    intentos_envio = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Intentos de Envío'
+    )
+    
+    fecha_ultimo_intento = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha Último Intento'
+    )
+    
+    # Condiciones especiales
+    es_automatica = models.BooleanField(
+        default=False,
+        verbose_name='Es Automática',
+        help_text='Nota generada automáticamente por el sistema'
+    )
+    
+    motivo_automatico = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Motivo Automático',
+        help_text='Razón por la cual se generó automáticamente'
+    )
+    
+    # Datos del usuario que registra
+    usuario_registro = models.ForeignKey(
+        'usuarios.Usuario',
+        on_delete=models.PROTECT,
+        related_name='notas_debito_registradas',
+        verbose_name='Usuario que Registra'
+    )
+    
+    usuario_autorizacion = models.ForeignKey(
+        'usuarios.Usuario',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name='notas_debito_autorizadas',
+        verbose_name='Usuario que Autoriza'
+    )
+    
+    fecha_autorizacion = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Autorización'
+    )
+    
+    # Control contable
+    asiento_contable = models.ForeignKey(
+        'contabilidad.AsientoContable',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name='notas_debito',
+        verbose_name='Asiento Contable'
+    )
+    
+    # Archivos adjuntos
+    archivo_xml = models.FileField(
+        upload_to='notas_debito/xml/',
+        blank=True,
+        null=True,
+        verbose_name='Archivo XML'
+    )
+    
+    archivo_pdf = models.FileField(
+        upload_to='notas_debito/pdf/',
+        blank=True,
+        null=True,
+        verbose_name='Archivo PDF'
+    )
+    
+    archivo_cdr = models.FileField(
+        upload_to='notas_debito/cdr/',
+        blank=True,
+        null=True,
+        verbose_name='Archivo CDR'
     )
     
     class Meta:
         db_table = 'facturacion_nota_debito'
         verbose_name = 'Nota de Débito'
         verbose_name_plural = 'Notas de Débito'
-        unique_together = ['serie_comprobante', 'numero']
+        unique_together = [
+            ['serie_comprobante', 'numero'],
+            ['empresa', 'serie_comprobante', 'numero']
+        ]
+        indexes = [
+            #models.Index(fields=['numero_completo']),
+            models.Index(fields=['fecha_emision']),
+            models.Index(fields=['cliente']),
+            models.Index(fields=['estado_sunat']),
+            models.Index(fields=['nubefact_id']),
+            models.Index(fields=['documento_modificado_tipo', 'documento_modificado_serie', 'documento_modificado_numero']),
+            models.Index(fields=['codigo_motivo']),
+            models.Index(fields=['es_automatica']),
+            models.Index(fields=['empresa', 'fecha_emision']),
+        ]
+        ordering = ['-fecha_emision', '-numero']
+    
+    def __str__(self):
+        return f"Nota de Débito {self.numero_completo} - {self.cliente.razon_social if self.cliente else 'Sin cliente'}"
+    
+    def save(self, *args, **kwargs):
+        """Validaciones y cálculos automáticos"""
+        
+        # Generar número automático si no existe
+        if not self.numero and self.serie_comprobante:
+            self.numero = self._generar_numero_correlativo()
+        
+        # Validar que el total sea positivo
+        if self.total <= 0:
+            raise ValueError("El total de la nota de débito debe ser mayor a cero")
+        
+        # Validar que exista documento modificado
+        if not self.documento_modificado_numero:
+            raise ValueError("Debe especificar el documento que se modifica")
+        
+        super().save(*args, **kwargs)
+    
+    def _generar_numero_correlativo(self):
+        """Generar número correlativo para la serie"""
+        if not self.serie_comprobante:
+            raise ValueError("Se requiere serie de comprobante")
+        
+        ultimo_numero = NotaDebito.objects.filter(
+            serie_comprobante=self.serie_comprobante
+        ).aggregate(
+            max_numero=models.Max('numero')
+        )['max_numero']
+        
+        return (ultimo_numero or 0) + 1
+    
+    @property
+    def numero_completo(self):
+        """Número completo del comprobante (Serie-Número)"""
+        if self.serie_comprobante and self.numero:
+            return f"{self.serie_comprobante.serie}-{self.numero:08d}"
+        return ""
+    
+    @property
+    def puede_enviarse_sunat(self):
+        """Verificar si puede enviarse a SUNAT"""
+        return (
+            self.estado_sunat in ['PENDIENTE', 'RECHAZADO'] and
+            self.total > 0 and
+            self.cliente and
+            self.items.exists()
+        )
+    
+    @property
+    def esta_aceptada(self):
+        """Verificar si está aceptada por SUNAT"""
+        return self.estado_sunat == 'ACEPTADO'
+    
+    @property
+    def esta_anulada(self):
+        """Verificar si está anulada"""
+        return self.estado_sunat == 'ANULADO'
+    
+    def calcular_totales(self):
+        """Calcular totales de la nota de débito"""
+        items = self.items.all()
+        
+        subtotal = sum(item.valor_venta for item in items)
+        descuento_total = sum(item.descuento_unitario * item.cantidad for item in items)
+        igv = sum(item.igv for item in items)
+        total = subtotal + igv - descuento_total
+        
+        # Actualizar campos
+        self.subtotal = subtotal
+        self.descuento_global = descuento_total
+        self.igv = igv
+        self.total = total
+        
+        return {
+            'subtotal': subtotal,
+            'descuento_global': descuento_total,
+            'igv': igv,
+            'total': total
+        }
+    
+    def marcar_como_enviada(self, nubefact_id=None):
+        """Marcar nota como enviada a SUNAT"""
+        self.estado_sunat = 'ENVIADO'
+        self.fecha_envio_sunat = timezone.now()
+        self.intentos_envio += 1
+        self.fecha_ultimo_intento = timezone.now()
+        
+        if nubefact_id:
+            self.nubefact_id = nubefact_id
+        
+        self.save(update_fields=[
+            'estado_sunat', 'fecha_envio_sunat', 'intentos_envio',
+            'fecha_ultimo_intento', 'nubefact_id'
+        ])
+    
+    def marcar_como_aceptada(self, codigo_respuesta=None, descripcion_respuesta=None):
+        """Marcar nota como aceptada por SUNAT"""
+        self.estado_sunat = 'ACEPTADO'
+        self.fecha_respuesta_sunat = timezone.now()
+        
+        if codigo_respuesta:
+            self.codigo_respuesta_sunat = codigo_respuesta
+        if descripcion_respuesta:
+            self.descripcion_respuesta_sunat = descripcion_respuesta
+        
+        self.save(update_fields=[
+            'estado_sunat', 'fecha_respuesta_sunat',
+            'codigo_respuesta_sunat', 'descripcion_respuesta_sunat'
+        ])
+    
+    def marcar_como_rechazada(self, codigo_respuesta=None, descripcion_respuesta=None):
+        """Marcar nota como rechazada por SUNAT"""
+        self.estado_sunat = 'RECHAZADO'
+        self.fecha_respuesta_sunat = timezone.now()
+        
+        if codigo_respuesta:
+            self.codigo_respuesta_sunat = codigo_respuesta
+        if descripcion_respuesta:
+            self.descripcion_respuesta_sunat = descripcion_respuesta
+        
+        self.save(update_fields=[
+            'estado_sunat', 'fecha_respuesta_sunat',
+            'codigo_respuesta_sunat', 'descripcion_respuesta_sunat'
+        ])
+    
+    def anular(self, usuario, motivo=""):
+        """Anular la nota de débito"""
+        if self.estado_sunat in ['ACEPTADO', 'ENVIADO']:
+            # Si ya fue enviada/aceptada, requiere comunicación de baja
+            self.estado_sunat = 'ANULADO'
+            self.observaciones = f"ANULADA: {motivo}"
+            self.save(update_fields=['estado_sunat', 'observaciones'])
+            return True
+        elif self.estado_sunat == 'PENDIENTE':
+            # Si está pendiente, se puede anular directamente
+            self.estado_sunat = 'ANULADO'
+            self.observaciones = f"ANULADA: {motivo}"
+            self.save(update_fields=['estado_sunat', 'observaciones'])
+            return True
+        
+        return False
+    
+    def generar_para_intereses(self, factura_original, tasa_interes_diario, dias_mora):
+        """
+        Generar nota de débito automática por intereses de mora
+        
+        Args:
+            factura_original: Factura que genera los intereses
+            tasa_interes_diario: Tasa de interés por día
+            dias_mora: Días de mora
+        """
+        from decimal import Decimal
+        
+        # Calcular intereses
+        interes = factura_original.total * Decimal(str(tasa_interes_diario)) * dias_mora
+        
+        self.cliente = factura_original.cliente
+        self.moneda = factura_original.moneda
+        self.tipo_cambio = factura_original.tipo_cambio
+        self.documento_modificado_tipo = '01'  # Factura
+        self.documento_modificado_serie = factura_original.serie_comprobante.serie
+        self.documento_modificado_numero = str(factura_original.numero)
+        self.codigo_motivo = '01'  # Intereses por mora
+        self.descripcion_motivo = f"Intereses por mora de {dias_mora} días sobre factura {factura_original.numero_completo}"
+        self.es_automatica = True
+        self.motivo_automatico = f"Intereses mora - {dias_mora} días"
+        self.subtotal = interes
+        self.igv = interes * Decimal('0.18')  # IGV 18%
+        self.total = self.subtotal + self.igv
+        
+        return self
+    
+    class Meta:
+        db_table = 'facturacion_nota_debito'
+        verbose_name = 'Nota de Débito'
+        verbose_name_plural = 'Notas de Débito'
+        unique_together = [
+            ['serie_comprobante', 'numero'],
+            ['empresa', 'serie_comprobante', 'numero']
+        ]
+        indexes = [
+            # Quitar numero_completo si no existe en ComprobanteBase
+            models.Index(fields=['fecha_emision']),
+            models.Index(fields=['cliente']),
+            models.Index(fields=['estado_sunat']),
+            models.Index(fields=['nubefact_id']),
+            models.Index(fields=['documento_modificado_tipo', 'documento_modificado_serie', 'documento_modificado_numero']),
+            models.Index(fields=['codigo_motivo']),
+            models.Index(fields=['es_automatica']),
+            models.Index(fields=['empresa', 'fecha_emision']),
+        ]
+        ordering = ['-fecha_emision', '-numero']
+
 
 # =============================================================================
 # MODELO GUÍA DE REMISIÓN
@@ -937,7 +1317,6 @@ class ItemNotaCredito(ItemComprobanteBase):
         ordering = ['numero_item']
 
 
-# 2. MODELO ITEM NOTA DE DÉBITO (backend/aplicaciones/facturacion/models.py)
 class ItemNotaDebito(ItemComprobanteBase):
     """
     Items de notas de débito
@@ -961,8 +1340,6 @@ class ItemNotaDebito(ItemComprobanteBase):
         unique_together = ['nota_debito', 'numero_item']
         ordering = ['numero_item']
 
-
-# 3. MODELO ITEM GUÍA DE REMISIÓN (backend/aplicaciones/facturacion/models.py)
 class ItemGuiaRemision(ModeloBase):
     """
     Items de guías de remisión
