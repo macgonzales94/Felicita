@@ -28,7 +28,7 @@ from .serializers import (
     SerieComprobanteSerializer, ConsultaEstadoSerializer, NotaDebitoSerializer, GuiaRemisionSerializer,
     AnularComprobanteSerializer
 )
-from .filters import FacturaFilter, BoletaFilter, NotaCreditoFilter, NotaDebitoFilter
+from .filters import FacturaFilter, BoletaFilter, NotaCreditoFilter, NotaDebitoFilter, GuiaRemisionFilter
 from aplicaciones.core.permissions import TienePermisoModulo
 from aplicaciones.integraciones.services.nubefact import nubefact_service
 #from aplicaciones.inventario.services import actualizar_inventario_venta
