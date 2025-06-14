@@ -16,12 +16,15 @@ import logging
 
 from .models import (
     Factura, Boleta, NotaCredito, NotaDebito, GuiaRemision,
-    ItemFactura, ItemBoleta, ItemNotaCredito, SerieComprobante
+    ItemFactura, ItemBoleta, ItemNotaCredito, SerieComprobante, NotaDebito, 
+    GuiaRemision, ItemNotaCredito, ItemNotaDebito, ItemGuiaRemision,
+    SerieComprobante
 )
 from aplicaciones.core.models import Cliente
 from aplicaciones.inventario.models import Producto
 from aplicaciones.core.utils import validar_ruc, validar_dni
 from aplicaciones.integraciones.services.nubefact import nubefact_service
+from aplicaciones.contabilidad.models import BalanceComprobacion, PeriodoContable
 
 logger = logging.getLogger('felicita.facturacion')
 
@@ -682,3 +685,575 @@ class AnularComprobanteSerializer(serializers.Serializer):
         if value not in codigos_validos:
             raise serializers.ValidationError("Código de motivo inválido para anulación")
         return value
+    
+class ItemNotaCreditoSerializer(serializers.ModelSerializer):
+    """Serializer para items de notas de crédito"""
+    
+    producto_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ItemNotaCredito
+        fields = [
+            'id', 'numero_item', 'producto', 'producto_data', 'descripcion',
+            'unidad_medida', 'cantidad', 'precio_unitario', 'descuento_unitario',
+            'valor_venta', 'tipo_afectacion_igv', 'porcentaje_igv', 'igv',
+            'precio_total', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['valor_venta', 'igv', 'precio_total', 'created_at', 'updated_at']
+    
+    def get_producto_data(self, obj):
+        """Obtener datos del producto"""
+        if obj.producto:
+            return {
+                'id': obj.producto.id,
+                'codigo_producto': obj.producto.codigo_producto,
+                'descripcion': obj.producto.descripcion,
+                'precio_venta': float(obj.producto.precio_venta),
+                'unidad_medida': obj.producto.unidad_medida
+            }
+        return None
+
+
+class ItemNotaDebitoSerializer(serializers.ModelSerializer):
+    """Serializer para items de notas de débito"""
+    
+    producto_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ItemNotaDebito
+        fields = [
+            'id', 'numero_item', 'producto', 'producto_data', 'descripcion',
+            'unidad_medida', 'cantidad', 'precio_unitario', 'descuento_unitario',
+            'valor_venta', 'tipo_afectacion_igv', 'porcentaje_igv', 'igv',
+            'precio_total', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['valor_venta', 'igv', 'precio_total', 'created_at', 'updated_at']
+    
+    def get_producto_data(self, obj):
+        """Obtener datos del producto"""
+        if obj.producto:
+            return {
+                'id': obj.producto.id,
+                'codigo_producto': obj.producto.codigo_producto,
+                'descripcion': obj.producto.descripcion,
+                'precio_venta': float(obj.producto.precio_venta),
+                'unidad_medida': obj.producto.unidad_medida
+            }
+        return None
+
+
+class ItemGuiaRemisionSerializer(serializers.ModelSerializer):
+    """Serializer para items de guías de remisión"""
+    
+    producto_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ItemGuiaRemision
+        fields = [
+            'id', 'numero_item', 'producto', 'producto_data', 'descripcion',
+            'unidad_medida', 'cantidad', 'peso_unitario', 'peso_total',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['peso_total', 'created_at', 'updated_at']
+    
+    def get_producto_data(self, obj):
+        """Obtener datos del producto"""
+        if obj.producto:
+            return {
+                'id': obj.producto.id,
+                'codigo_producto': obj.producto.codigo_producto,
+                'descripcion': obj.producto.descripcion,
+                'peso_unitario': float(obj.producto.peso or 0),
+                'unidad_medida': obj.producto.unidad_medida
+            }
+        return None
+    
+    def validate_cantidad(self, value):
+        """Validar cantidad positiva"""
+        if value <= 0:
+            raise serializers.ValidationError("La cantidad debe ser mayor a cero")
+        return value
+
+
+# =============================================================================
+# SERIALIZER NOTA DE DÉBITO
+# =============================================================================
+
+class NotaDebitoSerializer(serializers.ModelSerializer):
+    """Serializer para notas de débito"""
+    
+    # Campos relacionales
+    cliente_data = serializers.SerializerMethodField()
+    items = ItemNotaDebitoSerializer(many=True, write_only=True)
+    items_detalle = serializers.SerializerMethodField()
+    
+    # Campos calculados
+    numero_completo = serializers.SerializerMethodField()
+    estado_sunat_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = NotaDebito
+        fields = [
+            'id', 'serie_comprobante', 'numero', 'numero_completo', 'fecha_emision',
+            'cliente', 'cliente_data', 'moneda', 'tipo_cambio',
+            'tipo_documento_modificado', 'numero_documento_modificado',
+            'codigo_motivo', 'descripcion_motivo',
+            'subtotal', 'descuento_global', 'igv', 'total',
+            'estado_sunat', 'estado_sunat_display', 'observaciones',
+            'items', 'items_detalle', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['numero', 'subtotal', 'igv', 'total', 'created_at', 'updated_at']
+    
+    def get_cliente_data(self, obj):
+        """Obtener datos completos del cliente"""
+        if obj.cliente:
+            return {
+                'id': obj.cliente.id,
+                'tipo_documento': obj.cliente.tipo_documento,
+                'numero_documento': obj.cliente.numero_documento,
+                'razon_social': obj.cliente.razon_social,
+                'direccion': obj.cliente.direccion,
+                'email': obj.cliente.email,
+                'telefono': obj.cliente.telefono
+            }
+        return None
+    
+    def get_numero_completo(self, obj):
+        """Obtener número completo del comprobante"""
+        return f"{obj.serie_comprobante.serie}-{obj.numero:08d}"
+    
+    def get_estado_sunat_display(self, obj):
+        """Obtener estado SUNAT legible"""
+        estados = {
+            'PENDIENTE': 'Pendiente',
+            'ACEPTADO': 'Aceptado',
+            'RECHAZADO': 'Rechazado',
+            'ANULADO': 'Anulado'
+        }
+        return estados.get(obj.estado_sunat, obj.estado_sunat)
+    
+    def get_items_detalle(self, obj):
+        """Obtener items de la nota de débito"""
+        items = []
+        for item in obj.items.all():
+            items.append({
+                'id': item.id,
+                'numero_item': item.numero_item,
+                'producto': {
+                    'id': item.producto.id,
+                    'codigo_producto': item.producto.codigo_producto,
+                    'descripcion': item.producto.descripcion
+                },
+                'descripcion': item.descripcion,
+                'cantidad': item.cantidad,
+                'precio_unitario': item.precio_unitario,
+                'descuento_unitario': item.descuento_unitario,
+                'valor_venta': item.valor_venta,
+                'igv': item.igv,
+                'precio_total': item.precio_total
+            })
+        return items
+    
+    def validate_codigo_motivo(self, value):
+        """Validar código de motivo según SUNAT"""
+        motivos_validos = ['01', '02', '03', '10', '11']
+        if value not in motivos_validos:
+            raise serializers.ValidationError(f"Código de motivo inválido. Use: {', '.join(motivos_validos)}")
+        return value
+    
+    def validate_tipo_documento_modificado(self, value):
+        """Validar tipo de documento que se modifica"""
+        tipos_validos = ['01', '03']  # Factura, Boleta
+        if value not in tipos_validos:
+            raise serializers.ValidationError("Tipo de documento modificado inválido")
+        return value
+    
+    def validate_items(self, value):
+        """Validar items de la nota de débito"""
+        if not value:
+            raise serializers.ValidationError("Debe incluir al menos un item")
+        
+        if len(value) > 200:
+            raise serializers.ValidationError("Máximo 200 items por comprobante")
+        
+        return value
+    
+    @transaction.atomic
+    def create(self, validated_data):
+        """Crear nota de débito con items"""
+        items_data = validated_data.pop('items')
+        
+        logger.info(f"Creando nota de débito para cliente {validated_data['cliente']}")
+        
+        # Obtener siguiente número de serie
+        serie_obj = validated_data['serie_comprobante']
+        validated_data['numero'] = serie_obj.numero_actual + 1
+        
+        # Crear nota de débito
+        nota_debito = NotaDebito.objects.create(**validated_data)
+        
+        # Crear items
+        for i, item_data in enumerate(items_data, 1):
+            item_data['numero_item'] = i
+            self._crear_item_nota_debito(nota_debito, item_data)
+        
+        # Calcular totales
+        self._calcular_totales(nota_debito)
+        
+        # Actualizar numeración de serie
+        serie_obj.numero_actual += 1
+        serie_obj.save()
+        
+        # Enviar automáticamente a Nubefact
+        if getattr(settings, 'NUBEFACT_AUTO_SEND', True):
+            self._enviar_a_nubefact(nota_debito)
+        
+        logger.info(f"Nota de débito {nota_debito.numero_completo} creada exitosamente")
+        
+        return nota_debito
+    
+    def _crear_item_nota_debito(self, nota_debito, item_data):
+        """Crear item de nota de débito"""
+        ItemNotaDebito.objects.create(
+            nota_debito=nota_debito,
+            **item_data
+        )
+    
+    def _calcular_totales(self, nota_debito):
+        """Calcular totales de la nota de débito"""
+        items = nota_debito.items.all()
+        
+        subtotal = sum(item.valor_venta for item in items)
+        igv = sum(item.igv for item in items)
+        total = subtotal + igv
+        
+        nota_debito.subtotal = subtotal
+        nota_debito.igv = igv
+        nota_debito.total = total
+        nota_debito.save()
+    
+    def _enviar_a_nubefact(self, nota_debito):
+        """Enviar nota de débito a Nubefact"""
+        try:
+            # Preparar datos para Nubefact
+            nota_data = self._preparar_datos_nubefact(nota_debito)
+            
+            # Enviar a Nubefact
+            response = nubefact_service.emitir_nota_debito(nota_data)
+            
+            if response.get('success'):
+                nota_debito.nubefact_id = response.get('invoice_id')
+                nota_debito.estado_sunat = response.get('estado_sunat', 'PENDIENTE')
+                nota_debito.hash_cpe = response.get('hash_documento')
+                nota_debito.save()
+                
+                logger.info(f"Nota de débito {nota_debito.numero_completo} enviada a Nubefact")
+                
+        except Exception as e:
+            logger.error(f"Error al enviar nota de débito a Nubefact: {e}")
+    
+    def _preparar_datos_nubefact(self, nota_debito):
+        """Preparar datos de nota de débito para Nubefact"""
+        items = []
+        for item in nota_debito.items.all():
+            items.append({
+                'producto': {'codigo': item.producto.codigo_producto},
+                'descripcion': item.descripcion,
+                'cantidad': float(item.cantidad),
+                'precio_unitario': float(item.precio_unitario),
+                'descuento': float(item.descuento_unitario),
+                'valor_venta': float(item.valor_venta),
+                'igv': float(item.igv),
+                'precio_total': float(item.precio_total),
+                'unidad_medida': item.unidad_medida,
+                'tipo_afectacion_igv': item.tipo_afectacion_igv
+            })
+        
+        return {
+            'serie': nota_debito.serie_comprobante.serie,
+            'numero': nota_debito.numero,
+            'fecha_emision': nota_debito.fecha_emision.strftime('%Y-%m-%d'),
+            'cliente': {
+                'tipo_documento': nota_debito.cliente.tipo_documento,
+                'numero_documento': nota_debito.cliente.numero_documento,
+                'razon_social': nota_debito.cliente.razon_social,
+                'direccion': nota_debito.cliente.direccion,
+                'email': nota_debito.cliente.email or ''
+            },
+            'moneda': nota_debito.moneda,
+            'tipo_cambio': float(nota_debito.tipo_cambio),
+            'tipo_documento_modificado': nota_debito.tipo_documento_modificado,
+            'numero_documento_modificado': nota_debito.numero_documento_modificado,
+            'codigo_motivo': nota_debito.codigo_motivo,
+            'descripcion_motivo': nota_debito.descripcion_motivo,
+            'subtotal': float(nota_debito.subtotal),
+            'descuento_global': float(nota_debito.descuento_global),
+            'igv': float(nota_debito.igv),
+            'total': float(nota_debito.total),
+            'items': items
+        }
+
+
+# =============================================================================
+# SERIALIZER GUÍA DE REMISIÓN
+# =============================================================================
+
+class GuiaRemisionSerializer(serializers.ModelSerializer):
+    """Serializer para guías de remisión"""
+    
+    items = ItemGuiaRemisionSerializer(many=True, write_only=True)
+    items_detalle = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = GuiaRemision
+        fields = [
+            'id', 'empresa', 'serie_numero', 'fecha_emision', 'tipo_traslado',
+            'modalidad_transporte', 'fecha_inicio_traslado', 'peso_bruto_total',
+            'direccion_origen', 'ubigeo_origen', 'direccion_destino', 'ubigeo_destino',
+            'transportista_ruc', 'transportista_nombre', 'vehiculo_placa',
+            'conductor_licencia', 'conductor_nombre', 'observaciones',
+            'estado_sunat', 'items', 'items_detalle', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['peso_bruto_total', 'created_at', 'updated_at']
+    
+    def get_items_detalle(self, obj):
+        """Obtener items de la guía de remisión"""
+        items = []
+        for item in obj.items.all():
+            items.append({
+                'id': item.id,
+                'numero_item': item.numero_item,
+                'producto': {
+                    'id': item.producto.id,
+                    'codigo_producto': item.producto.codigo_producto,
+                    'descripcion': item.producto.descripcion
+                },
+                'descripcion': item.descripcion,
+                'unidad_medida': item.unidad_medida,
+                'cantidad': item.cantidad,
+                'peso_unitario': item.peso_unitario,
+                'peso_total': item.peso_total
+            })
+        return items
+    
+    def validate_fecha_inicio_traslado(self, value):
+        """Validar fecha de inicio de traslado"""
+        from datetime import date
+        
+        if value <= date.today():
+            raise serializers.ValidationError("La fecha de inicio de traslado debe ser futura")
+        
+        return value
+    
+    def validate_items(self, value):
+        """Validar items de la guía de remisión"""
+        if not value:
+            raise serializers.ValidationError("Debe incluir al menos un item")
+        
+        return value
+    
+    @transaction.atomic
+    def create(self, validated_data):
+        """Crear guía de remisión con items"""
+        items_data = validated_data.pop('items')
+        
+        logger.info(f"Creando guía de remisión {validated_data.get('serie_numero')}")
+        
+        # Crear guía de remisión
+        guia_remision = GuiaRemision.objects.create(**validated_data)
+        
+        # Crear items
+        peso_total = Decimal('0.00')
+        for i, item_data in enumerate(items_data, 1):
+            item_data['numero_item'] = i
+            item = self._crear_item_guia_remision(guia_remision, item_data)
+            peso_total += item.peso_total
+        
+        # Actualizar peso bruto total
+        guia_remision.peso_bruto_total = peso_total
+        guia_remision.save()
+        
+        # Enviar automáticamente a Nubefact
+        if getattr(settings, 'NUBEFACT_AUTO_SEND', True):
+            self._enviar_a_nubefact(guia_remision)
+        
+        logger.info(f"Guía de remisión {guia_remision.serie_numero} creada exitosamente")
+        
+        return guia_remision
+    
+    def _crear_item_guia_remision(self, guia_remision, item_data):
+        """Crear item de guía de remisión"""
+        return ItemGuiaRemision.objects.create(
+            guia_remision=guia_remision,
+            **item_data
+        )
+    
+    def _enviar_a_nubefact(self, guia_remision):
+        """Enviar guía de remisión a Nubefact"""
+        try:
+            # Preparar datos para Nubefact
+            guia_data = self._preparar_datos_nubefact(guia_remision)
+            
+            # Enviar a Nubefact
+            response = nubefact_service.emitir_guia_remision(guia_data)
+            
+            if response.get('success'):
+                guia_remision.nubefact_id = response.get('invoice_id')
+                guia_remision.estado_sunat = response.get('estado_sunat', 'PENDIENTE')
+                guia_remision.hash_cpe = response.get('hash_documento')
+                guia_remision.save()
+                
+                logger.info(f"Guía de remisión {guia_remision.serie_numero} enviada a Nubefact")
+                
+        except Exception as e:
+            logger.error(f"Error al enviar guía de remisión a Nubefact: {e}")
+    
+    def _preparar_datos_nubefact(self, guia_remision):
+        """Preparar datos de guía de remisión para Nubefact"""
+        items = []
+        for item in guia_remision.items.all():
+            items.append({
+                'producto': {'codigo': item.producto.codigo_producto},
+                'descripcion': item.descripcion,
+                'unidad_medida': item.unidad_medida,
+                'cantidad': float(item.cantidad),
+                'peso_unitario': float(item.peso_unitario),
+                'peso_total': float(item.peso_total)
+            })
+        
+        return {
+            'serie_numero': guia_remision.serie_numero,
+            'fecha_emision': guia_remision.fecha_emision.strftime('%Y-%m-%d'),
+            'tipo_traslado': guia_remision.tipo_traslado,
+            'modalidad_transporte': guia_remision.modalidad_transporte,
+            'fecha_inicio_traslado': guia_remision.fecha_inicio_traslado.strftime('%Y-%m-%d'),
+            'peso_bruto_total': float(guia_remision.peso_bruto_total),
+            'direccion_origen': guia_remision.direccion_origen,
+            'ubigeo_origen': guia_remision.ubigeo_origen,
+            'direccion_destino': guia_remision.direccion_destino,
+            'ubigeo_destino': guia_remision.ubigeo_destino,
+            'transportista': {
+                'ruc': guia_remision.transportista_ruc,
+                'nombre': guia_remision.transportista_nombre
+            },
+            'vehiculo_placa': guia_remision.vehiculo_placa,
+            'conductor': {
+                'licencia': guia_remision.conductor_licencia,
+                'nombre': guia_remision.conductor_nombre
+            },
+            'items': items
+        }
+
+
+# =============================================================================
+# SERIALIZERS DE CONTABILIDAD FALTANTES
+# =============================================================================
+
+from aplicaciones.contabilidad.models import BalanceComprobacion, PeriodoContable
+
+
+class BalanceComprobacionSerializer(serializers.ModelSerializer):
+    """Serializer para balance de comprobación"""
+    
+    cuenta_data = serializers.SerializerMethodField()
+    periodo_data = serializers.SerializerMethodField()
+    usuario_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = BalanceComprobacion
+        fields = [
+            'id', 'empresa', 'periodo', 'periodo_data', 'cuenta', 'cuenta_data',
+            'fecha_desde', 'fecha_hasta', 'saldo_inicial_debe', 'saldo_inicial_haber',
+            'movimientos_debe', 'movimientos_haber', 'saldo_final_debe', 'saldo_final_haber',
+            'fecha_generacion', 'usuario_generacion', 'usuario_data', 'es_balance_oficial',
+            'observaciones', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'saldo_final_debe', 'saldo_final_haber', 'fecha_generacion',
+            'created_at', 'updated_at'
+        ]
+    
+    def get_cuenta_data(self, obj):
+        """Obtener datos de la cuenta"""
+        return {
+            'id': obj.cuenta.id,
+            'codigo': obj.cuenta.codigo,
+            'nombre': obj.cuenta.nombre,
+            'naturaleza': obj.cuenta.naturaleza,
+            'tipo_cuenta': obj.cuenta.tipo_cuenta
+        }
+    
+    def get_periodo_data(self, obj):
+        """Obtener datos del período"""
+        return {
+            'id': obj.periodo.id,
+            'nombre': obj.periodo.nombre,
+            'año': obj.periodo.año,
+            'mes': obj.periodo.mes
+        }
+    
+    def get_usuario_data(self, obj):
+        """Obtener datos del usuario"""
+        return {
+            'id': obj.usuario_generacion.id,
+            'username': obj.usuario_generacion.username,
+            'nombre_completo': obj.usuario_generacion.get_full_name()
+        }
+
+
+class PeriodoContableSerializer(serializers.ModelSerializer):
+    """Serializer para períodos contables"""
+    
+    usuario_cierre_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PeriodoContable
+        fields = [
+            'id', 'empresa', 'año', 'mes', 'nombre', 'fecha_inicio', 'fecha_fin',
+            'estado', 'es_periodo_principal', 'fecha_cierre', 'usuario_cierre',
+            'usuario_cierre_data', 'observaciones_cierre', 'permite_reapertura',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['fecha_cierre', 'usuario_cierre', 'created_at', 'updated_at']
+    
+    def get_usuario_cierre_data(self, obj):
+        """Obtener datos del usuario que cerró"""
+        if obj.usuario_cierre:
+            return {
+                'id': obj.usuario_cierre.id,
+                'username': obj.usuario_cierre.username,
+                'nombre_completo': obj.usuario_cierre.get_full_name()
+            }
+        return None
+    
+    def validate_fecha_fin(self, value):
+        """Validar que fecha fin sea posterior a fecha inicio"""
+        fecha_inicio = self.initial_data.get('fecha_inicio')
+        if fecha_inicio and value <= fecha_inicio:
+            raise serializers.ValidationError("La fecha de fin debe ser posterior a la fecha de inicio")
+        return value
+    
+    def validate(self, data):
+        """Validaciones adicionales del período"""
+        # Validar que no se solapen períodos
+        empresa = data.get('empresa')
+        fecha_inicio = data.get('fecha_inicio')
+        fecha_fin = data.get('fecha_fin')
+        
+        if empresa and fecha_inicio and fecha_fin:
+            periodos_existentes = PeriodoContable.objects.filter(
+                empresa=empresa,
+                fecha_inicio__lte=fecha_fin,
+                fecha_fin__gte=fecha_inicio
+            )
+            
+            # Excluir el período actual si estamos actualizando
+            if self.instance:
+                periodos_existentes = periodos_existentes.exclude(id=self.instance.id)
+            
+            if periodos_existentes.exists():
+                raise serializers.ValidationError("Ya existe un período que se solapa con las fechas especificadas")
+        
+        return data   
+    
+

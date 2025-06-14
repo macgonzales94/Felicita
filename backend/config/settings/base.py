@@ -38,18 +38,26 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    #'django_extensions',
     'django_filters',
-    'import_export',
-    'drf_yasg',
+    'import_export',  # Para admin import/export
+    'drf_yasg',       # Para documentación API
+    'drf_spectacular', # Documentación API mejorada
 ]
+
+# Solo agregar en desarrollo
+if DEBUG:
+    THIRD_PARTY_APPS += [
+        'django_extensions',
+        'debug_toolbar',
+    ]
 
 LOCAL_APPS = [
     'aplicaciones.core',
     'aplicaciones.usuarios',
-    #'aplicaciones.facturacion',
-    #'aplicaciones.inventario',
-    #'aplicaciones.contabilidad',
+    'aplicaciones.facturacion',
+    'aplicaciones.inventario',
+    'aplicaciones.contabilidad',
+    # Comentados hasta que estén listos
     #'aplicaciones.punto_venta',
     #'aplicaciones.reportes',
     #'aplicaciones.integraciones',
@@ -72,6 +80,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 ]
+
+# Middleware solo para desarrollo
+if DEBUG:
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+
+    ]
 
 # =============================================================================
 # URLs Y WSGI
@@ -219,6 +234,7 @@ REST_FRAMEWORK = {
     'DATETIME_FORMAT': '%d/%m/%Y %H:%M',
     'DATE_FORMAT': '%d/%m/%Y',
     'TIME_FORMAT': '%H:%M',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # =============================================================================
@@ -245,7 +261,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = config('DEBUG', default=False, cast=bool)
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS', 
-    default='http://localhost:3000', 
+    default='http://localhost:3000,http://127.0.0.1:3000', 
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
@@ -290,6 +306,57 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='FELICITA <noreply@felicita.pe>')
 
 # =============================================================================
+# CONFIGURACIÓN IMPORT_EXPORT
+# =============================================================================
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+IMPORT_EXPORT_SKIP_ADMIN_LOG = False
+IMPORT_EXPORT_TMP_STORAGE_CLASS = 'import_export.tmp_storages.TempFolderStorage'
+
+# Formatos permitidos para import/export
+IMPORT_EXPORT_FORMATS = [
+    'import_export.formats.base_formats.CSV',
+    'import_export.formats.base_formats.XLS',
+    'import_export.formats.base_formats.XLSX',
+    'import_export.formats.base_formats.TSV',
+    'import_export.formats.base_formats.JSON',
+]
+
+# =============================================================================
+# CONFIGURACIÓN DRF SPECTACULAR (API DOCS)
+# =============================================================================
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'FELICITA API',
+    'DESCRIPTION': 'Sistema de Facturación Electrónica para Perú',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SORT_OPERATIONS': False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': False,
+    },
+}
+
+# =============================================================================
+# CONFIGURACIÓN DEBUG TOOLBAR (solo desarrollo)
+# =============================================================================
+if DEBUG:
+    INTERNAL_IPS = [
+        '127.0.0.1',
+        'localhost',
+    ]
+    
+    # Para Docker
+    import socket
+    try:
+        hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+        INTERNAL_IPS = [ip[:-1] + '1' for ip in ips] + ['127.0.0.1', '10.0.2.2']
+    except:
+        pass
+
+# =============================================================================
 # CONFIGURACIÓN LOGGING
 # =============================================================================
 LOGGING = {
@@ -331,6 +398,16 @@ LOGGING = {
             'level': config('LOG_LEVEL', default='DEBUG'),
             'propagate': True,
         },
+        'felicita.facturacion': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'felicita.contabilidad': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
@@ -347,6 +424,27 @@ SUNAT_CONFIGURACION = {
     'MONEDA_BASE': config('MONEDA_BASE', default='PEN'),
     'PLAN_CUENTAS': config('PLAN_CUENTAS', default='PCGE'),
     'METODO_INVENTARIO': config('METODO_INVENTARIO', default='PEPS'),
+    'IGV_TASA': 0.18,  # Para cálculos
+    'MONEDAS_SOPORTADAS': ['PEN', 'USD', 'EUR'],
+    'TIPOS_DOCUMENTO': {
+        'DNI': '1',
+        'CE': '4', 
+        'RUC': '6',
+        'PASSPORT': '7'
+    },
+    'CODIGOS_AFECTACION_IGV': {
+        'gravado': '10',
+        'exonerado': '20',
+        'inafecto': '30',
+        'exportacion': '40'
+    },
+    'TIPOS_COMPROBANTE': {
+        'factura': '01',
+        'boleta': '03',
+        'nota_credito': '07',
+        'nota_debito': '08',
+        'guia_remision': '09'
+    }
 }
 
 # Series de comprobantes
@@ -382,6 +480,9 @@ NUBEFACT_CONFIGURACION = {
     'RUC_EMISOR': config('NUBEFACT_RUC_EMISOR', default='20123456789'),
     'USUARIO_SOL': config('NUBEFACT_USUARIO_SOL', default='MODDATOS'),
     'CLAVE_SOL': config('NUBEFACT_CLAVE_SOL', default='MODDATOS'),
+    'AUTO_SEND': config('NUBEFACT_AUTO_SEND', default=True, cast=bool),
+    'RETRY_ATTEMPTS': config('NUBEFACT_RETRY_ATTEMPTS', default=3, cast=int),
+    'TIMEOUT': config('NUBEFACT_TIMEOUT', default=30, cast=int),
 }
 
 # APIs Perú (RENIEC/SUNAT)
@@ -390,6 +491,17 @@ APIS_PERU = {
     'RENIEC_TOKEN': config('RENIEC_API_TOKEN', default=''),
     'SUNAT_URL': config('SUNAT_API_URL', default='https://api.apis.net.pe/v1/ruc'),
     'SUNAT_TOKEN': config('SUNAT_API_TOKEN', default=''),
+}
+
+# =============================================================================
+# CONFIGURACIÓN CONTABLE
+# =============================================================================
+CONTABILIDAD_CONFIGURACION = {
+    'PLAN_CUENTAS_DEFAULT': 'PCGE',
+    'GENERAR_ASIENTOS_AUTOMATICOS': config('CONTABILIDAD_ASIENTOS_AUTO', default=True, cast=bool),
+    'PERMITIR_EDICION_ASIENTOS_CONTABILIZADOS': config('CONTABILIDAD_EDITAR_CONTABILIZADOS', default=False, cast=bool),
+    'PERIODO_ACTUAL_AUTO': config('CONTABILIDAD_PERIODO_AUTO', default=True, cast=bool),
+    'CERRAR_PERIODO_AUTOMATICO': config('CONTABILIDAD_CERRAR_AUTO', default=False, cast=bool),
 }
 
 # =============================================================================
@@ -410,3 +522,6 @@ CSRF_COOKIE_HTTPONLY = True
 # Configuración de archivos subidos
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+
+# Configuración de timezone
+USE_TZ = True

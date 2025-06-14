@@ -13,17 +13,18 @@ ENV PIP_NO_CACHE_DIR=1
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libxmlsec1-openssl \
+    pkg-config \
     curl \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
-# Crear usuario
-RUN groupadd -r felicita && useradd --no-log-init -r -g felicita felicita
-
-# Crear directorios
+# Crear directorios y preparar permisos para logs
 RUN mkdir -p /app /app/logs /app/media /app/staticfiles && \
-    chown -R felicita:felicita /app && \
-    chmod -R 755 /app/logs
+    chmod -R 777 /app/logs && \
+    touch /app/logs/felicita_dev.log && chmod 666 /app/logs/felicita_dev.log
 
 WORKDIR /app
 
@@ -53,17 +54,11 @@ RUN pip install \
 
 # Copiar código
 COPY . /app/
-RUN chown -R felicita:felicita /app
 
 # Copiar script de entrada
-COPY --chown=felicita:felicita docker/entrypoint-dev.sh /entrypoint-dev.sh
+COPY docker/entrypoint-dev.sh /entrypoint-dev.sh
 RUN chmod +x /entrypoint-dev.sh
-
-USER felicita
 
 EXPOSE 8000
 
 CMD ["/entrypoint-dev.sh"]
-
-# Crear directorio de logs con permisos
-RUN mkdir -p /app/logs && chmod -R 755 /app/logs

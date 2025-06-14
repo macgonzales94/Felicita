@@ -341,7 +341,7 @@ def validar_email_formato(email: str) -> bool:
     """
     Validar formato de email
     """
-    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     return re.match(patron, email) is not None
 
 

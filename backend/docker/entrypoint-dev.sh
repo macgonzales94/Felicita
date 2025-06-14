@@ -11,7 +11,14 @@ log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] FELICITA: $1"
 }
 
-# Función para esperar a que PostgreSQL esté listo
+# Verificar que el archivo de log exista
+prepare_logs() {
+    mkdir -p /app/logs
+    touch /app/logs/felicita_dev.log
+    chmod 666 /app/logs/felicita_dev.log
+}
+
+# Esperar a PostgreSQL
 wait_for_postgres() {
     log "Esperando a que PostgreSQL esté disponible..."
     while ! nc -z ${DB_HOST:-db} ${DB_PORT:-5432}; do
@@ -21,7 +28,7 @@ wait_for_postgres() {
     log "PostgreSQL está disponible"
 }
 
-# Función para esperar a que Redis esté listo
+# Esperar a Redis
 wait_for_redis() {
     log "Esperando a que Redis esté disponible..."
     REDIS_HOST=${REDIS_HOST:-redis}
@@ -33,7 +40,7 @@ wait_for_redis() {
     log "Redis está disponible"
 }
 
-# Función para aplicar migraciones
+# Aplicar migraciones
 apply_migrations() {
     log "Aplicando migraciones de Django..."
     python manage.py makemigrations --noinput
@@ -41,17 +48,15 @@ apply_migrations() {
     log "Migraciones aplicadas correctamente"
 }
 
-# Función para crear superusuario de desarrollo
+# Crear superusuario si no existe
 create_superuser() {
     log "Verificando/creando superusuario de desarrollo..."
-
     python manage.py shell << PYTHON_EOF
 from django.contrib.auth import get_user_model
 from aplicaciones.core.models import Empresa
 
 User = get_user_model()
 
-# Verificar o crear empresa base
 empresa, _ = Empresa.objects.get_or_create(
     id=1,
     defaults={
@@ -61,7 +66,6 @@ empresa, _ = Empresa.objects.get_or_create(
     }
 )
 
-# Crear superusuario si no existe
 if not User.objects.filter(email="admin@felicita.pe").exists():
     usuario = User.objects.create_superuser(
         email="admin@felicita.pe",
@@ -72,7 +76,7 @@ if not User.objects.filter(email="admin@felicita.pe").exists():
         apellido_materno="FELICITA",
         numero_documento="12345678",
         tipo_documento="DNI",
-        empresa=empresa  # ← IMPORTANTE: sin comillas
+        empresa=empresa
     )
     print("✅ Superusuario creado:", usuario)
 else:
@@ -82,9 +86,10 @@ PYTHON_EOF
     log "Superusuario verificado/creado"
 }
 
-# Función principal de inicialización
+# Inicializar entorno
 initialize() {
     log "Iniciando FELICITA Backend en modo desarrollo..."
+    prepare_logs
     wait_for_postgres
     wait_for_redis
     apply_migrations
@@ -92,26 +97,26 @@ initialize() {
     log "Inicialización completada"
 }
 
-# Función para iniciar servidor de desarrollo
+# Iniciar servidor
 start_development_server() {
     log "Iniciando servidor de desarrollo Django..."
     log "Servidor disponible en: http://0.0.0.0:8000"
     exec python manage.py runserver 0.0.0.0:8000
 }
 
-# Función para iniciar worker de Celery
+# Iniciar worker
 start_celery_worker() {
     log "Iniciando Celery Worker..."
     exec celery -A config worker --loglevel=INFO --concurrency=2
 }
 
-# Función para iniciar beat de Celery
+# Iniciar beat
 start_celery_beat() {
     log "Iniciando Celery Beat..."
     exec celery -A config beat --loglevel=INFO
 }
 
-# Función principal
+# Entrada principal
 main() {
     if [ "$1" != "help" ]; then
         initialize
@@ -138,5 +143,3 @@ main() {
 }
 
 main "$@"
-
-set -e

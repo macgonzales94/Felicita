@@ -573,7 +573,7 @@ class ItemComprobanteBase(ModeloBase):
 # =============================================================================
 # MODELO FACTURA ITEM
 # =============================================================================
-class FacturaItem(ItemComprobanteBase):
+class ItemFactura(ItemComprobanteBase):
     """
     Items de facturas
     """
@@ -599,7 +599,7 @@ class FacturaItem(ItemComprobanteBase):
 # =============================================================================
 # MODELO BOLETA ITEM
 # =============================================================================
-class BoletaItem(ItemComprobanteBase):
+class ItemBoleta(ItemComprobanteBase):
     """
     Items de boletas
     """
@@ -908,3 +908,126 @@ class GuiaRemision(ModeloBase):
     
     def __str__(self):
         return f"Guía {self.serie_numero}"
+    
+    
+    
+    # 1. MODELO ITEM NOTA DE CRÉDITO (backend/aplicaciones/facturacion/models.py)
+
+class ItemNotaCredito(ItemComprobanteBase):
+    """
+    Items de notas de crédito
+    """
+    
+    nota_credito = models.ForeignKey(
+        'NotaCredito',
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Nota de Crédito'
+    )
+    
+    numero_item = models.PositiveIntegerField(
+        verbose_name='Número de Item'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_nota_credito_item'
+        verbose_name = 'Item de Nota de Crédito'
+        verbose_name_plural = 'Items de Notas de Crédito'
+        unique_together = ['nota_credito', 'numero_item']
+        ordering = ['numero_item']
+
+
+# 2. MODELO ITEM NOTA DE DÉBITO (backend/aplicaciones/facturacion/models.py)
+class ItemNotaDebito(ItemComprobanteBase):
+    """
+    Items de notas de débito
+    """
+    
+    nota_debito = models.ForeignKey(
+        'NotaDebito',
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Nota de Débito'
+    )
+    
+    numero_item = models.PositiveIntegerField(
+        verbose_name='Número de Item'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_nota_debito_item'
+        verbose_name = 'Item de Nota de Débito'
+        verbose_name_plural = 'Items de Notas de Débito'
+        unique_together = ['nota_debito', 'numero_item']
+        ordering = ['numero_item']
+
+
+# 3. MODELO ITEM GUÍA DE REMISIÓN (backend/aplicaciones/facturacion/models.py)
+class ItemGuiaRemision(ModeloBase):
+    """
+    Items de guías de remisión
+    """
+    
+    guia_remision = models.ForeignKey(
+        'GuiaRemision',
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Guía de Remisión'
+    )
+    
+    numero_item = models.PositiveIntegerField(
+        verbose_name='Número de Item'
+    )
+    
+    producto = models.ForeignKey(
+        'inventario.Producto',
+        on_delete=models.PROTECT,
+        verbose_name='Producto'
+    )
+    
+    descripcion = models.CharField(
+        max_length=500,
+        verbose_name='Descripción'
+    )
+    
+    unidad_medida = models.CharField(
+        max_length=10,
+        default='NIU',
+        verbose_name='Unidad de Medida',
+        help_text='Código de unidad según catálogo SUNAT'
+    )
+    
+    cantidad = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        validators=[MinValueValidator(Decimal('0.0001'))],
+        verbose_name='Cantidad'
+    )
+    
+    peso_unitario = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        default=Decimal('0.0000'),
+        verbose_name='Peso Unitario (kg)'
+    )
+    
+    peso_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
+        verbose_name='Peso Total (kg)'
+    )
+    
+    class Meta:
+        db_table = 'facturacion_guia_remision_item'
+        verbose_name = 'Item de Guía de Remisión'
+        verbose_name_plural = 'Items de Guías de Remisión'
+        unique_together = ['guia_remision', 'numero_item']
+        ordering = ['numero_item']
+    
+    def save(self, *args, **kwargs):
+        """Calcular peso total automáticamente"""
+        self.peso_total = self.cantidad * self.peso_unitario
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.descripcion} - {self.cantidad} {self.unidad_medida}"

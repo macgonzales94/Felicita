@@ -15,15 +15,17 @@ import logging
 from datetime import datetime, date
 
 from .models import (
-    Producto, Almacen, MovimientoInventario, LoteInventario,
+    Producto, Almacen, MovimientoInventario, LoteProducto as LoteInventario,
     StockProducto, AlertaStock, TransferenciaInventario,
     HistorialPrecio
 )
+
 from aplicaciones.core.models import Empresa
 
 logger = logging.getLogger('felicita.inventario')
 
 
+    
 # =============================================================================
 # EXCEPCIONES PERSONALIZADAS
 # =============================================================================
@@ -947,3 +949,15 @@ def verificar_disponibilidad_productos(items_venta: List[Dict]) -> Dict:
         'productos_stock_bajo': productos_stock_bajo,
         'mensaje': 'Stock suficiente' if len(productos_sin_stock) == 0 else 'Stock insuficiente para algunos productos'
     }
+    
+class AlertaStock:
+    """Mock para AlertaStock - modelo no implementado"""
+    objects = type('MockManager', (), {'create': lambda **kwargs: None, 'filter': lambda **kwargs: type('MockQuerySet', (), {'first': lambda: None})()})()
+
+class TransferenciaInventario:
+    """Mock para TransferenciaInventario - modelo no implementado"""
+    objects = type('MockManager', (), {'create': lambda **kwargs: None})()
+
+class HistorialPrecio:
+    """Mock para HistorialPrecio - modelo no implementado"""
+    objects = type('MockManager', (), {'create': lambda **kwargs: None})()

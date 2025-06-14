@@ -28,7 +28,7 @@ bcrypt==4.0.1
 # =============================================================================
 # CACHE Y PERFORMANCE
 # =============================================================================
-redis==5.0.1
+redis==4.6.0
 django-redis==5.4.0
 django-cachalot==2.6.1
 
@@ -52,15 +52,22 @@ zeep==4.2.1
 lxml==4.9.3
 xmltodict==0.13.0
 
-# Validaciones Perú
-python-ruc==1.0.0
-python-dni==1.0.0
+# =============================================================================
+# ADMIN Y GESTIÓN DE DATOS (SOLUCIÓN AL ERROR)
+# =============================================================================
+django-import-export==3.3.1
+tablib==3.5.0
 
+# =============================================================================
+# VALIDACIONES PERÚ (alternativas funcionales)
+# =============================================================================
+# Usando regex y validaciones personalizadas en lugar de librerías no existentes
+# python-ruc y python-dni no existen en PyPI, se implementan manualmente
 # =============================================================================
 # MANEJO DE ARCHIVOS Y DOCUMENTOS
 # =============================================================================
 Pillow==10.1.0
-reportlab==4.0.6
+reportlab==4.0.7
 openpyxl==3.1.2
 xlsxwriter==3.1.9
 pypdf2==3.0.1
@@ -76,13 +83,10 @@ python-dateutil==2.8.2
 pytz==2023.3
 python-decouple==3.8
 
-# Números y decimales
-python-decimal==1.0.0
-
 # UUID y generación de códigos
 shortuuid==1.0.11
-python-barcode==0.15.1
-qrcode==7.4.2
+python-barcode[images]==0.15.1
+qrcode[pil]==7.4.2
 
 # =============================================================================
 # VALIDACIONES Y SERIALIZACIÓN
@@ -96,7 +100,7 @@ jsonschema==4.19.2
 # =============================================================================
 sentry-sdk==1.38.0
 django-debug-toolbar==4.2.0
-django-silk==5.0.4
+
 
 # =============================================================================
 # TESTING
@@ -118,9 +122,6 @@ drf-yasg==1.21.7
 # ESPECÍFICOS PARA FACTURACIÓN ELECTRÓNICA PERÚ
 # =============================================================================
 
-# Códigos SUNAT
-python-sunat==1.0.0
-
 # Generación de PDF para comprobantes
 weasyprint==60.2
 html2text==2020.1.16
@@ -128,6 +129,13 @@ html2text==2020.1.16
 # Firma digital (para futuras implementaciones)
 pyOpenSSL==23.3.0
 pycryptodome==3.19.0
+
+# Manejo de fechas en español
+babel==2.13.1
+
+# Para formularios mejorados
+django-crispy-forms==2.1
+crispy-bootstrap4==2022.1
 
 # =============================================================================
 # PRODUCCIÓN

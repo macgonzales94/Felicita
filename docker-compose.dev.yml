@@ -144,7 +144,7 @@ services:
       - ./backend:/app
       - backend_media_dev:/app/media
       - backend_static_dev:/app/staticfiles
-      - ./logs:/app/logs
+      - ./backend/logs:/app/logs
     ports:
       - "8000:8000"
     networks:
@@ -242,7 +242,7 @@ services:
     volumes:
       - ./backend:/app
       - backend_media_dev:/app/media
-      - ./logs:/app/logs
+      - ./backend/logs:/app/logs
     networks:
       - felicita_network
     depends_on:
@@ -287,7 +287,7 @@ services:
     volumes:
       - ./backend:/app
       - celery_beat_data_dev:/app/celerybeat
-      - ./logs:/app/logs
+      - ./backend/logs:/app/logs
     networks:
       - felicita_network
     depends_on:

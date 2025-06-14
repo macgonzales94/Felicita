@@ -1,945 +1,564 @@
 """
-SERVICES DE CONTABILIDAD - PROYECTO FELICITA
+SERVICES DE INVENTARIO - PROYECTO FELICITA
 Sistema de Facturación Electrónica para Perú
 
-Servicios para generación automática de asientos contables según PCGE
+Servicios para manejo de inventario con método PEPS (Primeras Entradas, Primeras Salidas)
+según normativa SUNAT
 """
 
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import logging
-from datetime import date, datetime
+from datetime import datetime, date
 
+# Importar solo los modelos que existen
 from .models import (
-    PlanCuentas, AsientoContable, DetalleAsiento, PeriodoContable,
-    CuentaPorCobrar, CuentaPorPagar, LibroMayor, BalanceComprobacion
+    Producto, Almacen, MovimientoInventario, StockProducto, 
+    LoteProducto, KardexProducto, TransferenciaAlmacen
 )
 from aplicaciones.core.models import Empresa
-from aplicaciones.facturacion.models import Factura, Boleta, NotaCredito
 
-logger = logging.getLogger('felicita.contabilidad')
+logger = logging.getLogger('felicita.inventario')
 
 
 # =============================================================================
 # EXCEPCIONES PERSONALIZADAS
 # =============================================================================
-class ContabilidadError(Exception):
-    """Error base para contabilidad"""
+class InventarioError(Exception):
+    """Error base para inventario"""
     pass
 
 
-class AsientoDescuadradoError(ContabilidadError):
-    """Error cuando el asiento no cuadra (debe != haber)"""
+class StockInsuficienteError(InventarioError):
+    """Error cuando no hay suficiente stock"""
     pass
 
 
-class CuentaNoEncontradaError(ContabilidadError):
-    """Error cuando no se encuentra una cuenta contable"""
-    pass
-
-
-class PeriodoInactivoError(ContabilidadError):
-    """Error cuando se intenta operar en un período inactivo"""
+class ProductoInactivoError(InventarioError):
+    """Error cuando se intenta usar un producto inactivo"""
     pass
 
 
 # =============================================================================
-# SERVICIO PRINCIPAL DE CONTABILIDAD
+# SERVICIO PRINCIPAL DE INVENTARIO
 # =============================================================================
-class ContabilidadService:
+class InventarioService:
     """
-    Servicio para manejo completo de contabilidad automática según PCGE
+    Servicio para manejo completo de inventario con método PEPS
     """
     
     def __init__(self, empresa_id: int = None):
         """
-        Inicializar servicio de contabilidad
+        Inicializar servicio de inventario
         
         Args:
             empresa_id: ID de la empresa (opcional)
         """
         self.empresa_id = empresa_id
-        self.periodo_actual = self._obtener_periodo_actual()
-        logger.debug(f"ContabilidadService inicializado para empresa {empresa_id}")
+        logger.debug(f"InventarioService inicializado para empresa {empresa_id}")
     
     # =============================================================================
-    # MÉTODOS PÚBLICOS - ASIENTOS AUTOMÁTICOS
+    # MÉTODOS PÚBLICOS - MOVIMIENTOS DE INVENTARIO
     # =============================================================================
     
     @transaction.atomic
-    def generar_asiento_venta(
+    def registrar_entrada(
         self,
-        comprobante,
-        es_nota_credito: bool = False
-    ) -> AsientoContable:
+        producto_id: int,
+        cantidad: Decimal,
+        costo_unitario: Decimal,
+        almacen_id: int,
+        tipo_documento: str = 'COMPRA',
+        documento_referencia: str = '',
+        observaciones: str = ''
+    ) -> MovimientoInventario:
         """
-        Generar asiento contable automático para ventas
-        
-        Asiento tipo para ventas:
-        DEBE: 12 Cuentas por Cobrar Comerciales (total)
-        HABER: 70 Ventas (subtotal)
-        HABER: 40 Tributos por Pagar - IGV (igv)
+        Registrar entrada de inventario
         
         Args:
-            comprobante: Instancia de Factura, Boleta o NotaCredito
-            es_nota_credito: Si es nota de crédito (invierte el asiento)
+            producto_id: ID del producto
+            cantidad: Cantidad que ingresa
+            costo_unitario: Costo unitario del producto
+            almacen_id: ID del almacén
+            tipo_documento: Tipo de documento
+            documento_referencia: Referencia del documento
+            observaciones: Observaciones del movimiento
             
         Returns:
-            AsientoContable: El asiento generado
+            MovimientoInventario: El movimiento creado
         """
-        logger.info(f"Generando asiento de venta para {comprobante.numero_completo}")
+        # Validaciones
+        producto = self._validar_producto(producto_id)
+        almacen = self._validar_almacen(almacen_id)
+        self._validar_cantidad_positiva(cantidad)
+        self._validar_costo_positivo(costo_unitario)
         
-        # Validar período activo
-        self._validar_periodo_activo(comprobante.fecha_emision)
+        # Obtener stock actual
+        stock_actual = self._obtener_stock_actual(producto, almacen)
         
-        # Obtener cuentas contables
-        cuenta_por_cobrar = self._obtener_cuenta_por_codigo('12111')  # Facturas por cobrar
-        cuenta_ventas = self._obtener_cuenta_por_codigo('70111')      # Venta de mercaderías
-        cuenta_igv = self._obtener_cuenta_por_codigo('40111')         # IGV por pagar
+        # Generar número de movimiento
+        numero_movimiento = self._generar_numero_movimiento('ENT')
         
-        # Determinar concepto y multiplicador
-        if es_nota_credito:
-            concepto = f"Nota de Crédito {comprobante.numero_completo}"
-            multiplicador = -1  # Invertir el asiento
-        else:
-            tipo_comp = "Factura" if isinstance(comprobante, Factura) else "Boleta"
-            concepto = f"{tipo_comp} {comprobante.numero_completo} - {comprobante.cliente.razon_social}"
-            multiplicador = 1
-        
-        # Crear asiento contable
-        asiento = AsientoContable.objects.create(
-            empresa_id=self.empresa_id,
-            numero_asiento=self._generar_numero_asiento(),
-            fecha_asiento=comprobante.fecha_emision,
-            tipo_asiento='VENTA',
-            concepto=concepto,
-            documento_referencia=comprobante.numero_completo,
-            periodo=self.periodo_actual,
-            moneda=comprobante.moneda,
-            tipo_cambio=comprobante.tipo_cambio,
-            total_debe=comprobante.total * multiplicador if multiplicador == 1 else Decimal('0'),
-            total_haber=comprobante.total * abs(multiplicador) if multiplicador == -1 else Decimal('0'),
-            usuario_creacion_id=getattr(comprobante, 'usuario_creacion_id', None)
+        # Crear movimiento de inventario
+        movimiento = MovimientoInventario.objects.create(
+            numero_movimiento=numero_movimiento,
+            tipo_movimiento='entrada',
+            origen_movimiento=tipo_documento.lower(),
+            producto=producto,
+            almacen=almacen,
+            cantidad=cantidad,
+            cantidad_anterior=stock_actual,
+            costo_unitario=costo_unitario,
+            documento_referencia=documento_referencia,
+            observaciones=observaciones
         )
         
-        # Detalles del asiento
-        detalles = []
+        # Actualizar o crear stock
+        self._actualizar_stock_producto(producto, almacen, cantidad, 'suma')
         
-        if not es_nota_credito:
-            # Asiento normal de venta
-            # DEBE: Cuentas por Cobrar
-            detalles.append({
-                'cuenta': cuenta_por_cobrar,
-                'debe': comprobante.total,
-                'haber': Decimal('0'),
-                'concepto': f"Por venta según {comprobante.numero_completo}"
-            })
-            
-            # HABER: Ventas
-            detalles.append({
-                'cuenta': cuenta_ventas,
-                'debe': Decimal('0'),
-                'haber': comprobante.subtotal,
-                'concepto': f"Venta de mercaderías según {comprobante.numero_completo}"
-            })
-            
-            # HABER: IGV por Pagar
-            if comprobante.igv > 0:
-                detalles.append({
-                    'cuenta': cuenta_igv,
-                    'debe': Decimal('0'),
-                    'haber': comprobante.igv,
-                    'concepto': f"IGV por pagar según {comprobante.numero_completo}"
-                })
-        else:
-            # Asiento de nota de crédito (inverso)
-            # HABER: Cuentas por Cobrar
-            detalles.append({
-                'cuenta': cuenta_por_cobrar,
-                'debe': Decimal('0'),
-                'haber': comprobante.total,
-                'concepto': f"Por anulación según {comprobante.numero_completo}"
-            })
-            
-            # DEBE: Ventas
-            detalles.append({
-                'cuenta': cuenta_ventas,
-                'debe': comprobante.subtotal,
-                'haber': Decimal('0'),
-                'concepto': f"Anulación venta según {comprobante.numero_completo}"
-            })
-            
-            # DEBE: IGV por Pagar
-            if comprobante.igv > 0:
-                detalles.append({
-                    'cuenta': cuenta_igv,
-                    'debe': comprobante.igv,
-                    'haber': Decimal('0'),
-                    'concepto': f"Anulación IGV según {comprobante.numero_completo}"
-                })
+        # Crear registro de kardex
+        self._crear_kardex_entrada(movimiento, stock_actual)
         
-        # Crear detalles del asiento
-        self._crear_detalles_asiento(asiento, detalles)
-        
-        # Validar que el asiento cuadre
-        self._validar_asiento_cuadrado(asiento)
-        
-        # Marcar asiento como contabilizado
-        asiento.estado = 'CONTABILIZADO'
-        asiento.save()
-        
-        # Generar cuenta por cobrar si es venta
-        if not es_nota_credito and isinstance(comprobante, (Factura, Boleta)):
-            self._generar_cuenta_por_cobrar(comprobante, asiento)
-        elif es_nota_credito:
-            self._aplicar_nota_credito_cuenta_cobrar(comprobante, asiento)
-        
-        # Actualizar libro mayor
-        self._actualizar_libro_mayor(asiento)
-        
-        logger.info(f"Asiento de venta generado exitosamente - ID: {asiento.id}")
-        
-        return asiento
+        logger.info(f"Entrada registrada: {movimiento.numero_movimiento}")
+        return movimiento
     
     @transaction.atomic
-    def generar_asiento_compra(
+    def registrar_salida(
         self,
-        factura_compra,
-        cuentas_detalle: List[Dict] = None
-    ) -> AsientoContable:
+        producto_id: int,
+        cantidad: Decimal,
+        almacen_id: int,
+        tipo_documento: str = 'VENTA',
+        documento_referencia: str = '',
+        observaciones: str = ''
+    ) -> Tuple[MovimientoInventario, List[Dict]]:
         """
-        Generar asiento contable para compras
-        
-        Asiento tipo para compras:
-        DEBE: 60 Compras (subtotal)
-        DEBE: 40 IGV por Acreditar (igv)
-        HABER: 42 Cuentas por Pagar (total)
+        Registrar salida de inventario usando método PEPS
         
         Args:
-            factura_compra: Datos de la factura de compra
-            cuentas_detalle: Detalle de cuentas personalizadas
+            producto_id: ID del producto
+            cantidad: Cantidad que sale
+            almacen_id: ID del almacén
+            tipo_documento: Tipo de documento
+            documento_referencia: Referencia del documento
+            observaciones: Observaciones del movimiento
             
         Returns:
-            AsientoContable: El asiento generado
+            Tuple: (MovimientoInventario, lista de lotes consumidos)
         """
-        logger.info(f"Generando asiento de compra para factura {factura_compra.get('numero')}")
+        # Validaciones
+        producto = self._validar_producto(producto_id)
+        almacen = self._validar_almacen(almacen_id)
+        self._validar_cantidad_positiva(cantidad)
         
-        # Validar período activo
-        fecha_compra = factura_compra.get('fecha_emision')
-        if isinstance(fecha_compra, str):
-            fecha_compra = datetime.strptime(fecha_compra, '%Y-%m-%d').date()
+        # Verificar stock disponible
+        stock_actual = self._obtener_stock_actual(producto, almacen)
+        if stock_actual < cantidad:
+            raise StockInsuficienteError(
+                f"Stock insuficiente. Disponible: {stock_actual}, Requerido: {cantidad}"
+            )
         
-        self._validar_periodo_activo(fecha_compra)
+        # Calcular costo promedio PEPS
+        costo_promedio = self._calcular_costo_promedio_peps(producto, almacen, cantidad)
         
-        # Obtener cuentas contables
-        cuenta_compras = self._obtener_cuenta_por_codigo('60111')     # Mercaderías
-        cuenta_igv_acreditar = self._obtener_cuenta_por_codigo('40119')  # IGV por acreditar
-        cuenta_por_pagar = self._obtener_cuenta_por_codigo('42111')   # Facturas por pagar
+        # Generar número de movimiento
+        numero_movimiento = self._generar_numero_movimiento('SAL')
         
-        # Crear asiento contable
-        concepto = f"Compra según factura {factura_compra.get('numero')} - {factura_compra.get('proveedor_nombre')}"
-        
-        asiento = AsientoContable.objects.create(
-            empresa_id=self.empresa_id,
-            numero_asiento=self._generar_numero_asiento(),
-            fecha_asiento=fecha_compra,
-            tipo_asiento='COMPRA',
-            concepto=concepto,
-            documento_referencia=factura_compra.get('numero'),
-            periodo=self.periodo_actual,
-            moneda=factura_compra.get('moneda', 'PEN'),
-            tipo_cambio=Decimal(str(factura_compra.get('tipo_cambio', 1.0))),
-            total_debe=Decimal(str(factura_compra.get('total'))),
-            total_haber=Decimal(str(factura_compra.get('total'))),
-            usuario_creacion_id=factura_compra.get('usuario_id')
+        # Crear movimiento de inventario
+        movimiento = MovimientoInventario.objects.create(
+            numero_movimiento=numero_movimiento,
+            tipo_movimiento='salida',
+            origen_movimiento=tipo_documento.lower(),
+            producto=producto,
+            almacen=almacen,
+            cantidad=cantidad,
+            cantidad_anterior=stock_actual,
+            costo_unitario=costo_promedio,
+            documento_referencia=documento_referencia,
+            observaciones=observaciones
         )
         
-        # Detalles del asiento
-        detalles = []
+        # Actualizar stock
+        self._actualizar_stock_producto(producto, almacen, cantidad, 'resta')
         
-        # DEBE: Compras
-        if cuentas_detalle:
-            # Usar cuentas personalizadas
-            for detalle in cuentas_detalle:
-                cuenta = self._obtener_cuenta_por_codigo(detalle['codigo_cuenta'])
-                detalles.append({
-                    'cuenta': cuenta,
-                    'debe': Decimal(str(detalle['importe'])),
-                    'haber': Decimal('0'),
-                    'concepto': detalle.get('concepto', f"Compra según factura {factura_compra.get('numero')}")
-                })
-        else:
-            # Usar cuenta de compras general
-            detalles.append({
-                'cuenta': cuenta_compras,
-                'debe': Decimal(str(factura_compra.get('subtotal'))),
-                'haber': Decimal('0'),
-                'concepto': f"Compra de mercaderías según factura {factura_compra.get('numero')}"
-            })
+        # Crear registro de kardex
+        self._crear_kardex_salida(movimiento, stock_actual)
         
-        # DEBE: IGV por Acreditar
-        igv = Decimal(str(factura_compra.get('igv', 0)))
-        if igv > 0:
-            detalles.append({
-                'cuenta': cuenta_igv_acreditar,
-                'debe': igv,
-                'haber': Decimal('0'),
-                'concepto': f"IGV por acreditar según factura {factura_compra.get('numero')}"
-            })
-        
-        # HABER: Cuentas por Pagar
-        detalles.append({
-            'cuenta': cuenta_por_pagar,
-            'debe': Decimal('0'),
-            'haber': Decimal(str(factura_compra.get('total'))),
-            'concepto': f"Por compra según factura {factura_compra.get('numero')}"
-        })
-        
-        # Crear detalles del asiento
-        self._crear_detalles_asiento(asiento, detalles)
-        
-        # Validar que el asiento cuadre
-        self._validar_asiento_cuadrado(asiento)
-        
-        # Marcar asiento como contabilizado
-        asiento.estado = 'CONTABILIZADO'
-        asiento.save()
-        
-        # Generar cuenta por pagar
-        self._generar_cuenta_por_pagar(factura_compra, asiento)
-        
-        # Actualizar libro mayor
-        self._actualizar_libro_mayor(asiento)
-        
-        logger.info(f"Asiento de compra generado exitosamente - ID: {asiento.id}")
-        
-        return asiento
+        logger.info(f"Salida registrada: {movimiento.numero_movimiento}")
+        return movimiento, []  # Lista vacía por compatibilidad
     
-    @transaction.atomic
-    def generar_asiento_pago(
-        self,
-        pago_data: Dict
-    ) -> AsientoContable:
+    # =============================================================================
+    # MÉTODOS PÚBLICOS - CONSULTAS
+    # =============================================================================
+    
+    def obtener_stock_producto(self, producto_id: int, almacen_id: int = None) -> Dict:
         """
-        Generar asiento contable para pagos
-        
-        Asiento tipo para pago a proveedor:
-        DEBE: 42 Cuentas por Pagar
-        HABER: 10 Efectivo y Equivalentes
+        Obtener stock actual de un producto
         
         Args:
-            pago_data: Datos del pago
+            producto_id: ID del producto
+            almacen_id: ID del almacén (opcional, si no se especifica retorna todos)
             
         Returns:
-            AsientoContable: El asiento generado
+            Dict: Información del stock
         """
-        logger.info(f"Generando asiento de pago por {pago_data.get('monto')}")
+        producto = self._validar_producto(producto_id)
         
-        # Validar período activo
-        fecha_pago = pago_data.get('fecha_pago')
-        if isinstance(fecha_pago, str):
-            fecha_pago = datetime.strptime(fecha_pago, '%Y-%m-%d').date()
-        
-        self._validar_periodo_activo(fecha_pago)
-        
-        # Obtener cuentas contables
-        cuenta_por_pagar = self._obtener_cuenta_por_codigo('42111')   # Facturas por pagar
-        
-        # Determinar cuenta de efectivo según medio de pago
-        medio_pago = pago_data.get('medio_pago', 'EFECTIVO')
-        if medio_pago == 'EFECTIVO':
-            cuenta_efectivo = self._obtener_cuenta_por_codigo('10111')  # Caja
-        elif medio_pago == 'BANCO':
-            cuenta_efectivo = self._obtener_cuenta_por_codigo('10411')  # Cuentas corrientes
-        else:
-            cuenta_efectivo = self._obtener_cuenta_por_codigo('10111')  # Por defecto caja
-        
-        # Crear asiento contable
-        concepto = f"Pago a {pago_data.get('proveedor_nombre')} - {pago_data.get('documento_referencia', '')}"
-        
-        asiento = AsientoContable.objects.create(
-            empresa_id=self.empresa_id,
-            numero_asiento=self._generar_numero_asiento(),
-            fecha_asiento=fecha_pago,
-            tipo_asiento='PAGO',
-            concepto=concepto,
-            documento_referencia=pago_data.get('documento_referencia', ''),
-            periodo=self.periodo_actual,
-            moneda=pago_data.get('moneda', 'PEN'),
-            tipo_cambio=Decimal(str(pago_data.get('tipo_cambio', 1.0))),
-            total_debe=Decimal(str(pago_data.get('monto'))),
-            total_haber=Decimal(str(pago_data.get('monto'))),
-            usuario_creacion_id=pago_data.get('usuario_id')
-        )
-        
-        # Detalles del asiento
-        detalles = [
-            {
-                'cuenta': cuenta_por_pagar,
-                'debe': Decimal(str(pago_data.get('monto'))),
-                'haber': Decimal('0'),
-                'concepto': f"Pago a {pago_data.get('proveedor_nombre')}"
-            },
-            {
-                'cuenta': cuenta_efectivo,
-                'debe': Decimal('0'),
-                'haber': Decimal(str(pago_data.get('monto'))),
-                'concepto': f"Pago por {medio_pago.lower()}"
+        if almacen_id:
+            almacen = self._validar_almacen(almacen_id)
+            stock = self._obtener_stock_actual(producto, almacen)
+            
+            return {
+                'producto_id': producto.id,
+                'producto_codigo': producto.codigo_producto,
+                'producto_descripcion': producto.descripcion,
+                'almacen_id': almacen.id,
+                'almacen_codigo': almacen.codigo,
+                'stock_actual': stock,
+                'stock_minimo': producto.stock_minimo,
+                'stock_maximo': producto.stock_maximo,
+                'requiere_reposicion': stock <= producto.stock_minimo
             }
-        ]
-        
-        # Crear detalles del asiento
-        self._crear_detalles_asiento(asiento, detalles)
-        
-        # Validar que el asiento cuadre
-        self._validar_asiento_cuadrado(asiento)
-        
-        # Marcar asiento como contabilizado
-        asiento.estado = 'CONTABILIZADO'
-        asiento.save()
-        
-        # Actualizar cuenta por pagar
-        self._actualizar_cuenta_por_pagar(pago_data, asiento)
-        
-        # Actualizar libro mayor
-        self._actualizar_libro_mayor(asiento)
-        
-        logger.info(f"Asiento de pago generado exitosamente - ID: {asiento.id}")
-        
-        return asiento
-    
-    @transaction.atomic
-    def generar_asiento_cobro(
-        self,
-        cobro_data: Dict
-    ) -> AsientoContable:
-        """
-        Generar asiento contable para cobros
-        
-        Asiento tipo para cobro a cliente:
-        DEBE: 10 Efectivo y Equivalentes
-        HABER: 12 Cuentas por Cobrar
-        
-        Args:
-            cobro_data: Datos del cobro
-            
-        Returns:
-            AsientoContable: El asiento generado
-        """
-        logger.info(f"Generando asiento de cobro por {cobro_data.get('monto')}")
-        
-        # Validar período activo
-        fecha_cobro = cobro_data.get('fecha_cobro')
-        if isinstance(fecha_cobro, str):
-            fecha_cobro = datetime.strptime(fecha_cobro, '%Y-%m-%d').date()
-        
-        self._validar_periodo_activo(fecha_cobro)
-        
-        # Obtener cuentas contables
-        cuenta_por_cobrar = self._obtener_cuenta_por_codigo('12111')  # Facturas por cobrar
-        
-        # Determinar cuenta de efectivo según medio de cobro
-        medio_cobro = cobro_data.get('medio_cobro', 'EFECTIVO')
-        if medio_cobro == 'EFECTIVO':
-            cuenta_efectivo = self._obtener_cuenta_por_codigo('10111')  # Caja
-        elif medio_cobro == 'BANCO':
-            cuenta_efectivo = self._obtener_cuenta_por_codigo('10411')  # Cuentas corrientes
         else:
-            cuenta_efectivo = self._obtener_cuenta_por_codigo('10111')  # Por defecto caja
-        
-        # Crear asiento contable
-        concepto = f"Cobro de {cobro_data.get('cliente_nombre')} - {cobro_data.get('documento_referencia', '')}"
-        
-        asiento = AsientoContable.objects.create(
-            empresa_id=self.empresa_id,
-            numero_asiento=self._generar_numero_asiento(),
-            fecha_asiento=fecha_cobro,
-            tipo_asiento='COBRO',
-            concepto=concepto,
-            documento_referencia=cobro_data.get('documento_referencia', ''),
-            periodo=self.periodo_actual,
-            moneda=cobro_data.get('moneda', 'PEN'),
-            tipo_cambio=Decimal(str(cobro_data.get('tipo_cambio', 1.0))),
-            total_debe=Decimal(str(cobro_data.get('monto'))),
-            total_haber=Decimal(str(cobro_data.get('monto'))),
-            usuario_creacion_id=cobro_data.get('usuario_id')
-        )
-        
-        # Detalles del asiento
-        detalles = [
-            {
-                'cuenta': cuenta_efectivo,
-                'debe': Decimal(str(cobro_data.get('monto'))),
-                'haber': Decimal('0'),
-                'concepto': f"Cobro por {medio_cobro.lower()}"
-            },
-            {
-                'cuenta': cuenta_por_cobrar,
-                'debe': Decimal('0'),
-                'haber': Decimal(str(cobro_data.get('monto'))),
-                'concepto': f"Cobro de {cobro_data.get('cliente_nombre')}"
+            # Obtener stock de todos los almacenes
+            stocks = StockProducto.objects.filter(producto=producto)
+            stock_total = sum(s.cantidad_actual for s in stocks)
+            
+            stock_por_almacen = []
+            for stock in stocks:
+                stock_por_almacen.append({
+                    'almacen_id': stock.almacen.id,
+                    'almacen_codigo': stock.almacen.codigo,
+                    'almacen_nombre': stock.almacen.nombre,
+                    'cantidad': stock.cantidad_actual,
+                    'costo_promedio': stock.costo_promedio,
+                    'valor_inventario': stock.valor_inventario
+                })
+            
+            return {
+                'producto_id': producto.id,
+                'producto_codigo': producto.codigo_producto,
+                'producto_descripcion': producto.descripcion,
+                'stock_total': stock_total,
+                'stock_minimo': producto.stock_minimo,
+                'stock_maximo': producto.stock_maximo,
+                'stock_por_almacen': stock_por_almacen,
+                'requiere_reposicion': stock_total <= producto.stock_minimo
             }
-        ]
-        
-        # Crear detalles del asiento
-        self._crear_detalles_asiento(asiento, detalles)
-        
-        # Validar que el asiento cuadre
-        self._validar_asiento_cuadrado(asiento)
-        
-        # Marcar asiento como contabilizado
-        asiento.estado = 'CONTABILIZADO'
-        asiento.save()
-        
-        # Actualizar cuenta por cobrar
-        self._actualizar_cuenta_por_cobrar(cobro_data, asiento)
-        
-        # Actualizar libro mayor
-        self._actualizar_libro_mayor(asiento)
-        
-        logger.info(f"Asiento de cobro generado exitosamente - ID: {asiento.id}")
-        
-        return asiento
     
-    # =============================================================================
-    # MÉTODOS DE CONSULTA Y REPORTES
-    # =============================================================================
-    
-    def generar_balance_comprobacion(
+    def obtener_kardex_producto(
         self,
-        fecha_desde: date,
-        fecha_hasta: date,
-        nivel_cuenta: int = 2
-    ) -> Dict:
+        producto_id: int,
+        almacen_id: int = None,
+        fecha_desde: date = None,
+        fecha_hasta: date = None
+    ) -> List[Dict]:
         """
-        Generar balance de comprobación
+        Obtener kardex (movimientos) de un producto
         
         Args:
-            fecha_desde: Fecha de inicio
-            fecha_hasta: Fecha de fin
-            nivel_cuenta: Nivel de cuenta a mostrar (2, 3, 4, etc.)
+            producto_id: ID del producto
+            almacen_id: ID del almacén (opcional)
+            fecha_desde: Fecha desde (opcional)
+            fecha_hasta: Fecha hasta (opcional)
             
         Returns:
-            Dict: Balance de comprobación
+            List[Dict]: Lista de movimientos del kardex
         """
-        logger.info(f"Generando balance de comprobación desde {fecha_desde} hasta {fecha_hasta}")
+        filtros = {'producto_id': producto_id}
         
-        # Obtener movimientos del período
-        movimientos = DetalleAsiento.objects.filter(
-            asiento__fecha_asiento__range=[fecha_desde, fecha_hasta],
-            asiento__estado='CONTABILIZADO'
-        ).select_related('cuenta', 'asiento')
+        if almacen_id:
+            filtros['almacen_id'] = almacen_id
         
-        # Agrupar por cuenta
-        cuentas_balance = {}
-        
-        for movimiento in movimientos:
-            codigo_cuenta = movimiento.cuenta.codigo_cuenta[:nivel_cuenta + 1]
+        if fecha_desde:
+            filtros['fecha__gte'] = fecha_desde
             
-            if codigo_cuenta not in cuentas_balance:
-                cuenta_padre = PlanCuentas.objects.filter(
-                    codigo_cuenta=codigo_cuenta
-                ).first()
-                
-                cuentas_balance[codigo_cuenta] = {
-                    'codigo': codigo_cuenta,
-                    'nombre': cuenta_padre.nombre_cuenta if cuenta_padre else 'Sin nombre',
-                    'saldo_inicial': Decimal('0'),
-                    'debe': Decimal('0'),
-                    'haber': Decimal('0'),
-                    'saldo_final': Decimal('0')
-                }
-            
-            cuentas_balance[codigo_cuenta]['debe'] += movimiento.debe
-            cuentas_balance[codigo_cuenta]['haber'] += movimiento.haber
+        if fecha_hasta:
+            filtros['fecha__lte'] = fecha_hasta
         
-        # Calcular saldos finales
-        total_debe = Decimal('0')
-        total_haber = Decimal('0')
+        kardex = KardexProducto.objects.filter(**filtros).order_by('fecha', 'creado_en')
         
-        for cuenta in cuentas_balance.values():
-            cuenta['saldo_final'] = cuenta['debe'] - cuenta['haber']
-            total_debe += cuenta['debe']
-            total_haber += cuenta['haber']
+        kardex_data = []
+        for registro in kardex:
+            kardex_data.append({
+                'fecha': registro.fecha,
+                'tipo_operacion': registro.tipo_operacion,
+                'detalle': registro.detalle,
+                'documento_referencia': registro.documento_referencia,
+                'cantidad_entrada': registro.cantidad_entrada,
+                'costo_unitario_entrada': registro.costo_unitario_entrada,
+                'costo_total_entrada': registro.costo_total_entrada,
+                'cantidad_salida': registro.cantidad_salida,
+                'costo_unitario_salida': registro.costo_unitario_salida,
+                'costo_total_salida': registro.costo_total_salida,
+                'cantidad_saldo': registro.cantidad_saldo,
+                'costo_unitario_saldo': registro.costo_unitario_saldo,
+                'costo_total_saldo': registro.costo_total_saldo
+            })
         
-        # Ordenar por código de cuenta
-        cuentas_ordenadas = sorted(cuentas_balance.values(), key=lambda x: x['codigo'])
-        
-        return {
-            'periodo': {
-                'fecha_desde': fecha_desde,
-                'fecha_hasta': fecha_hasta
-            },
-            'cuentas': cuentas_ordenadas,
-            'totales': {
-                'total_debe': total_debe,
-                'total_haber': total_haber,
-                'diferencia': total_debe - total_haber
-            },
-            'cuadrado': total_debe == total_haber
-        }
-    
-    def generar_estado_resultados(
-        self,
-        fecha_desde: date,
-        fecha_hasta: date
-    ) -> Dict:
-        """
-        Generar estado de resultados básico
-        
-        Args:
-            fecha_desde: Fecha de inicio
-            fecha_hasta: Fecha de fin
-            
-        Returns:
-            Dict: Estado de resultados
-        """
-        logger.info(f"Generando estado de resultados desde {fecha_desde} hasta {fecha_hasta}")
-        
-        # Consultar movimientos por grupos de cuentas
-        movimientos = DetalleAsiento.objects.filter(
-            asiento__fecha_asiento__range=[fecha_desde, fecha_hasta],
-            asiento__estado='CONTABILIZADO'
-        ).select_related('cuenta')
-        
-        # Inicializar totales
-        ventas_netas = Decimal('0')
-        costo_ventas = Decimal('0')
-        gastos_operativos = Decimal('0')
-        gastos_financieros = Decimal('0')
-        otros_ingresos = Decimal('0')
-        
-        # Procesar movimientos por tipo de cuenta
-        for movimiento in movimientos:
-            codigo = movimiento.cuenta.codigo_cuenta
-            
-            # Ventas (70)
-            if codigo.startswith('70'):
-                ventas_netas += movimiento.haber - movimiento.debe
-            
-            # Costo de ventas (69)
-            elif codigo.startswith('69'):
-                costo_ventas += movimiento.debe - movimiento.haber
-            
-            # Gastos operativos (63, 64, 65, 66, 67)
-            elif codigo.startswith(('63', '64', '65', '66', '67')):
-                gastos_operativos += movimiento.debe - movimiento.haber
-            
-            # Gastos financieros (67)
-            elif codigo.startswith('67'):
-                gastos_financieros += movimiento.debe - movimiento.haber
-            
-            # Otros ingresos (75, 76, 77)
-            elif codigo.startswith(('75', '76', '77')):
-                otros_ingresos += movimiento.haber - movimiento.debe
-        
-        # Calcular resultados
-        utilidad_bruta = ventas_netas - costo_ventas
-        utilidad_operativa = utilidad_bruta - gastos_operativos
-        utilidad_antes_impuestos = utilidad_operativa - gastos_financieros + otros_ingresos
-        
-        # Impuesto a la renta (estimado al 29.5%)
-        impuesto_renta = utilidad_antes_impuestos * Decimal('0.295') if utilidad_antes_impuestos > 0 else Decimal('0')
-        utilidad_neta = utilidad_antes_impuestos - impuesto_renta
-        
-        return {
-            'periodo': {
-                'fecha_desde': fecha_desde,
-                'fecha_hasta': fecha_hasta
-            },
-            'ingresos': {
-                'ventas_netas': ventas_netas,
-                'otros_ingresos': otros_ingresos,
-                'total_ingresos': ventas_netas + otros_ingresos
-            },
-            'costos_gastos': {
-                'costo_ventas': costo_ventas,
-                'gastos_operativos': gastos_operativos,
-                'gastos_financieros': gastos_financieros,
-                'total_costos_gastos': costo_ventas + gastos_operativos + gastos_financieros
-            },
-            'resultados': {
-                'utilidad_bruta': utilidad_bruta,
-                'utilidad_operativa': utilidad_operativa,
-                'utilidad_antes_impuestos': utilidad_antes_impuestos,
-                'impuesto_renta': impuesto_renta,
-                'utilidad_neta': utilidad_neta
-            },
-            'ratios': {
-                'margen_bruto': (utilidad_bruta / ventas_netas * 100) if ventas_netas > 0 else Decimal('0'),
-                'margen_operativo': (utilidad_operativa / ventas_netas * 100) if ventas_netas > 0 else Decimal('0'),
-                'margen_neto': (utilidad_neta / ventas_netas * 100) if ventas_netas > 0 else Decimal('0')
-            }
-        }
+        return kardex_data
     
     # =============================================================================
-    # MÉTODOS PRIVADOS
+    # MÉTODOS PRIVADOS - VALIDACIONES
     # =============================================================================
     
-    def _obtener_periodo_actual(self) -> PeriodoContable:
-        """Obtener el período contable actual"""
+    def _validar_producto(self, producto_id: int) -> Producto:
+        """Validar que el producto existe y está activo"""
         try:
-            return PeriodoContable.objects.get(
-                año=date.today().year,
-                activo=True
-            )
-        except PeriodoContable.DoesNotExist:
-            # Crear período automáticamente si no existe
-            return PeriodoContable.objects.create(
-                año=date.today().year,
-                fecha_inicio=date(date.today().year, 1, 1),
-                fecha_fin=date(date.today().year, 12, 31),
-                activo=True
-            )
+            producto = Producto.objects.get(id=producto_id)
+            if not producto.activo:
+                raise ProductoInactivoError(f"El producto {producto.codigo_producto} no está activo")
+            return producto
+        except Producto.DoesNotExist:
+            raise InventarioError(f"El producto con ID {producto_id} no existe")
     
-    def _validar_periodo_activo(self, fecha: date):
-        """Validar que la fecha esté en un período activo"""
-        if not self.periodo_actual.activo:
-            raise PeriodoInactivoError("El período contable no está activo")
-        
-        if not (self.periodo_actual.fecha_inicio <= fecha <= self.periodo_actual.fecha_fin):
-            raise PeriodoInactivoError(f"La fecha {fecha} no está en el período contable activo")
-    
-    def _obtener_cuenta_por_codigo(self, codigo: str) -> PlanCuentas:
-        """Obtener cuenta contable por código"""
+    def _validar_almacen(self, almacen_id: int) -> Almacen:
+        """Validar que el almacén existe y está activo"""
         try:
-            return PlanCuentas.objects.get(codigo_cuenta=codigo)
-        except PlanCuentas.DoesNotExist:
-            raise CuentaNoEncontradaError(f"No se encontró la cuenta con código {codigo}")
+            almacen = Almacen.objects.get(id=almacen_id)
+            if not almacen.activo:
+                raise InventarioError(f"El almacén {almacen.nombre} no está activo")
+            return almacen
+        except Almacen.DoesNotExist:
+            raise InventarioError(f"El almacén con ID {almacen_id} no existe")
     
-    def _generar_numero_asiento(self) -> str:
-        """Generar número correlativo de asiento"""
-        ultimo_asiento = AsientoContable.objects.filter(
-            periodo=self.periodo_actual
-        ).order_by('-numero_asiento').first()
-        
-        if ultimo_asiento:
-            try:
-                numero = int(ultimo_asiento.numero_asiento.split('-')[-1]) + 1
-            except (ValueError, IndexError):
-                numero = 1
-        else:
-            numero = 1
-        
-        return f"AS-{self.periodo_actual.año}-{numero:06d}"
+    def _validar_cantidad_positiva(self, cantidad: Decimal):
+        """Validar que la cantidad sea positiva"""
+        if cantidad <= 0:
+            raise InventarioError("La cantidad debe ser mayor a cero")
     
-    def _crear_detalles_asiento(self, asiento: AsientoContable, detalles: List[Dict]):
-        """Crear detalles del asiento contable"""
-        for detalle in detalles:
-            DetalleAsiento.objects.create(
-                asiento=asiento,
-                cuenta=detalle['cuenta'],
-                debe=detalle['debe'],
-                haber=detalle['haber'],
-                concepto=detalle['concepto'],
-                moneda=asiento.moneda,
-                tipo_cambio=asiento.tipo_cambio
-            )
+    def _validar_costo_positivo(self, costo: Decimal):
+        """Validar que el costo sea positivo"""
+        if costo < 0:
+            raise InventarioError("El costo no puede ser negativo")
     
-    def _validar_asiento_cuadrado(self, asiento: AsientoContable):
-        """Validar que el asiento cuadre"""
-        detalles = asiento.detalles.all()
-        
-        total_debe = sum(detalle.debe for detalle in detalles)
-        total_haber = sum(detalle.haber for detalle in detalles)
-        
-        if total_debe != total_haber:
-            raise AsientoDescuadradoError(
-                f"El asiento no cuadra. Debe: {total_debe}, Haber: {total_haber}"
-            )
-        
-        # Actualizar totales del asiento
-        asiento.total_debe = total_debe
-        asiento.total_haber = total_haber
-        asiento.save()
+    # =============================================================================
+    # MÉTODOS PRIVADOS - LÓGICA DE NEGOCIO
+    # =============================================================================
     
-    def _generar_cuenta_por_cobrar(self, comprobante, asiento: AsientoContable):
-        """Generar cuenta por cobrar automática"""
-        CuentaPorCobrar.objects.create(
-            cliente=comprobante.cliente,
-            tipo_documento=comprobante._meta.verbose_name,
-            numero_documento=comprobante.numero_completo,
-            fecha_emision=comprobante.fecha_emision,
-            fecha_vencimiento=comprobante.fecha_vencimiento or comprobante.fecha_emision,
-            monto_original=comprobante.total,
-            monto_pendiente=comprobante.total,
-            moneda=comprobante.moneda,
-            asiento=asiento,
-            estado='PENDIENTE'
+    def _obtener_stock_actual(self, producto: Producto, almacen: Almacen) -> Decimal:
+        """Obtener stock actual de un producto en un almacén"""
+        try:
+            stock = StockProducto.objects.get(producto=producto, almacen=almacen)
+            return stock.cantidad_actual
+        except StockProducto.DoesNotExist:
+            return Decimal('0')
+    
+    def _actualizar_stock_producto(
+        self,
+        producto: Producto,
+        almacen: Almacen,
+        cantidad: Decimal,
+        operacion: str
+    ):
+        """Actualizar el stock actual del producto"""
+        stock, created = StockProducto.objects.get_or_create(
+            producto=producto,
+            almacen=almacen,
+            defaults={
+                'cantidad_actual': Decimal('0'),
+                'cantidad_reservada': Decimal('0'),
+                'costo_promedio': Decimal('0')
+            }
+        )
+        
+        if operacion == 'suma':
+            stock.cantidad_actual += cantidad
+            stock.fecha_ultimo_ingreso = timezone.now()
+        elif operacion == 'resta':
+            stock.cantidad_actual -= cantidad
+            stock.fecha_ultima_salida = timezone.now()
+        
+        stock.fecha_ultimo_movimiento = timezone.now()
+        stock.save()
+    
+    def _calcular_costo_promedio_peps(
+        self,
+        producto: Producto,
+        almacen: Almacen,
+        cantidad: Decimal
+    ) -> Decimal:
+        """Calcular costo promedio usando método PEPS"""
+        try:
+            stock = StockProducto.objects.get(producto=producto, almacen=almacen)
+            return stock.costo_promedio
+        except StockProducto.DoesNotExist:
+            return Decimal('0')
+    
+    def _generar_numero_movimiento(self, prefijo: str) -> str:
+        """Generar número único para movimiento"""
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        return f"{prefijo}-{timestamp}"
+    
+    def _crear_kardex_entrada(self, movimiento: MovimientoInventario, stock_anterior: Decimal):
+        """Crear registro de kardex para entrada"""
+        stock_nuevo = stock_anterior + movimiento.cantidad
+        
+        KardexProducto.objects.create(
+            fecha=movimiento.fecha_movimiento.date(),
+            producto=movimiento.producto,
+            almacen=movimiento.almacen,
+            tipo_operacion='entrada',
+            detalle=f"{movimiento.origen_movimiento.title()} - {movimiento.observaciones}",
+            documento_referencia=movimiento.documento_referencia,
+            cantidad_entrada=movimiento.cantidad,
+            costo_unitario_entrada=movimiento.costo_unitario,
+            cantidad_salida=Decimal('0'),
+            costo_unitario_salida=Decimal('0'),
+            cantidad_saldo=stock_nuevo,
+            costo_unitario_saldo=movimiento.costo_unitario,
+            movimiento_inventario=movimiento
         )
     
-    def _aplicar_nota_credito_cuenta_cobrar(self, nota_credito, asiento: AsientoContable):
-        """Aplicar nota de crédito a cuenta por cobrar"""
-        # Buscar cuenta por cobrar del documento modificado
-        cuenta_cobrar = CuentaPorCobrar.objects.filter(
-            numero_documento=f"{nota_credito.documento_modificado_serie}-{nota_credito.documento_modificado_numero:08d}",
-            estado='PENDIENTE'
-        ).first()
+    def _crear_kardex_salida(self, movimiento: MovimientoInventario, stock_anterior: Decimal):
+        """Crear registro de kardex para salida"""
+        stock_nuevo = stock_anterior - movimiento.cantidad
         
-        if cuenta_cobrar:
-            # Aplicar el monto de la nota de crédito
-            cuenta_cobrar.monto_pendiente -= nota_credito.total
-            
-            if cuenta_cobrar.monto_pendiente <= 0:
-                cuenta_cobrar.estado = 'CANCELADO'
-                cuenta_cobrar.fecha_cancelacion = timezone.now().date()
-            
-            cuenta_cobrar.save()
-    
-    def _generar_cuenta_por_pagar(self, factura_compra: Dict, asiento: AsientoContable):
-        """Generar cuenta por pagar automática"""
-        fecha_vencimiento = factura_compra.get('fecha_vencimiento')
-        if isinstance(fecha_vencimiento, str):
-            fecha_vencimiento = datetime.strptime(fecha_vencimiento, '%Y-%m-%d').date()
-        elif not fecha_vencimiento:
-            fecha_vencimiento = asiento.fecha_asiento
-        
-        CuentaPorPagar.objects.create(
-            proveedor_nombre=factura_compra.get('proveedor_nombre'),
-            proveedor_documento=factura_compra.get('proveedor_ruc'),
-            tipo_documento='FACTURA',
-            numero_documento=factura_compra.get('numero'),
-            fecha_emision=asiento.fecha_asiento,
-            fecha_vencimiento=fecha_vencimiento,
-            monto_original=Decimal(str(factura_compra.get('total'))),
-            monto_pendiente=Decimal(str(factura_compra.get('total'))),
-            moneda=factura_compra.get('moneda', 'PEN'),
-            asiento=asiento,
-            estado='PENDIENTE'
+        KardexProducto.objects.create(
+            fecha=movimiento.fecha_movimiento.date(),
+            producto=movimiento.producto,
+            almacen=movimiento.almacen,
+            tipo_operacion='salida',
+            detalle=f"{movimiento.origen_movimiento.title()} - {movimiento.observaciones}",
+            documento_referencia=movimiento.documento_referencia,
+            cantidad_entrada=Decimal('0'),
+            costo_unitario_entrada=Decimal('0'),
+            cantidad_salida=movimiento.cantidad,
+            costo_unitario_salida=movimiento.costo_unitario,
+            cantidad_saldo=stock_nuevo,
+            costo_unitario_saldo=movimiento.costo_unitario,
+            movimiento_inventario=movimiento
         )
-    
-    def _actualizar_cuenta_por_pagar(self, pago_data: Dict, asiento: AsientoContable):
-        """Actualizar cuenta por pagar con pago"""
-        cuenta_pagar = CuentaPorPagar.objects.filter(
-            numero_documento=pago_data.get('documento_referencia'),
-            estado='PENDIENTE'
-        ).first()
-        
-        if cuenta_pagar:
-            monto_pago = Decimal(str(pago_data.get('monto')))
-            cuenta_pagar.monto_pendiente -= monto_pago
-            
-            if cuenta_pagar.monto_pendiente <= 0:
-                cuenta_pagar.estado = 'CANCELADO'
-                cuenta_pagar.fecha_cancelacion = timezone.now().date()
-            
-            cuenta_pagar.save()
-    
-    def _actualizar_cuenta_por_cobrar(self, cobro_data: Dict, asiento: AsientoContable):
-        """Actualizar cuenta por cobrar con cobro"""
-        cuenta_cobrar = CuentaPorCobrar.objects.filter(
-            numero_documento=cobro_data.get('documento_referencia'),
-            estado='PENDIENTE'
-        ).first()
-        
-        if cuenta_cobrar:
-            monto_cobro = Decimal(str(cobro_data.get('monto')))
-            cuenta_cobrar.monto_pendiente -= monto_cobro
-            
-            if cuenta_cobrar.monto_pendiente <= 0:
-                cuenta_cobrar.estado = 'CANCELADO'
-                cuenta_cobrar.fecha_cancelacion = timezone.now().date()
-            
-            cuenta_cobrar.save()
-    
-    def _actualizar_libro_mayor(self, asiento: AsientoContable):
-        """Actualizar libro mayor con los movimientos del asiento"""
-        for detalle in asiento.detalles.all():
-            # Buscar o crear entrada en libro mayor
-            libro_mayor, created = LibroMayor.objects.get_or_create(
-                cuenta=detalle.cuenta,
-                periodo=asiento.periodo,
-                defaults={
-                    'saldo_inicial': Decimal('0'),
-                    'total_debe': Decimal('0'),
-                    'total_haber': Decimal('0'),
-                    'saldo_final': Decimal('0')
-                }
-            )
-            
-            # Actualizar totales
-            libro_mayor.total_debe += detalle.debe
-            libro_mayor.total_haber += detalle.haber
-            libro_mayor.saldo_final = libro_mayor.saldo_inicial + libro_mayor.total_debe - libro_mayor.total_haber
-            libro_mayor.save()
 
 
 # =============================================================================
 # FUNCIONES DE CONVENIENCIA
 # =============================================================================
-def generar_asiento_venta(comprobante, es_nota_credito: bool = False) -> AsientoContable:
+
+def actualizar_inventario_venta(
+    producto_id: int,
+    cantidad_vendida: Decimal,
+    comprobante_referencia: str,
+    almacen_id: int = None
+) -> Dict:
     """
-    Función de conveniencia para generar asiento de venta
+    Función de conveniencia para actualizar inventario por venta
     
     Args:
-        comprobante: Instancia del comprobante
-        es_nota_credito: Si es nota de crédito
+        producto_id: ID del producto vendido
+        cantidad_vendida: Cantidad vendida
+        comprobante_referencia: Referencia del comprobante
+        almacen_id: ID del almacén (opcional, usa el principal si no se especifica)
         
     Returns:
-        AsientoContable: El asiento generado
+        Dict: Resultado de la operación
     """
     try:
-        service = ContabilidadService()
-        return service.generar_asiento_venta(comprobante, es_nota_credito)
+        # Si no se especifica almacén, usar el principal
+        if not almacen_id:
+            almacen_principal = Almacen.objects.filter(
+                es_principal=True, activo=True
+            ).first()
+            
+            if not almacen_principal:
+                raise InventarioError("No hay almacenes principales configurados")
+            
+            almacen_id = almacen_principal.id
+        
+        # Crear servicio y registrar salida
+        service = InventarioService()
+        movimiento, lotes = service.registrar_salida(
+            producto_id=producto_id,
+            cantidad=abs(cantidad_vendida),  # Asegurar cantidad positiva
+            almacen_id=almacen_id,
+            tipo_documento='VENTA',
+            documento_referencia=comprobante_referencia,
+            observaciones=f"Venta según comprobante {comprobante_referencia}"
+        )
+        
+        return {
+            'success': True,
+            'movimiento_id': movimiento.id,
+            'mensaje': 'Inventario actualizado exitosamente'
+        }
+        
     except Exception as e:
-        logger.error(f"Error al generar asiento de venta: {e}")
-        raise
+        logger.error(f"Error al actualizar inventario por venta: {e}")
+        return {
+            'success': False,
+            'error': str(e),
+            'mensaje': 'Error al actualizar inventario'
+        }
 
 
-def generar_asiento_compra(factura_compra: Dict) -> AsientoContable:
+def obtener_stock_disponible(producto_id: int, almacen_id: int = None) -> Decimal:
     """
-    Función de conveniencia para generar asiento de compra
+    Función de conveniencia para obtener stock total disponible de un producto
     
     Args:
-        factura_compra: Datos de la factura de compra
+        producto_id: ID del producto
+        almacen_id: ID del almacén (opcional)
         
     Returns:
-        AsientoContable: El asiento generado
+        Decimal: Stock total disponible
     """
     try:
-        service = ContabilidadService()
-        return service.generar_asiento_compra(factura_compra)
-    except Exception as e:
-        logger.error(f"Error al generar asiento de compra: {e}")
-        raise
+        if almacen_id:
+            stocks = StockProducto.objects.filter(
+                producto_id=producto_id,
+                almacen_id=almacen_id
+            )
+        else:
+            stocks = StockProducto.objects.filter(producto_id=producto_id)
+        
+        return sum(stock.cantidad_disponible for stock in stocks)
+    except Exception:
+        return Decimal('0')
 
 
-def obtener_balance_comprobacion(fecha_desde: date, fecha_hasta: date) -> Dict:
+def verificar_disponibilidad_productos(items_venta: List[Dict]) -> Dict:
     """
-    Función de conveniencia para obtener balance de comprobación
+    Verificar disponibilidad de stock para múltiples productos
     
     Args:
-        fecha_desde: Fecha de inicio
-        fecha_hasta: Fecha de fin
+        items_venta: Lista de items con producto_id y cantidad
         
     Returns:
-        Dict: Balance de comprobación
+        Dict: Resultado de la verificación
     """
-    try:
-        service = ContabilidadService()
-        return service.generar_balance_comprobacion(fecha_desde, fecha_hasta)
-    except Exception as e:
-        logger.error(f"Error al generar balance de comprobación: {e}")
-        raise
-
-
-def obtener_estado_resultados(fecha_desde: date, fecha_hasta: date) -> Dict:
-    """
-    Función de conveniencia para obtener estado de resultados
+    productos_sin_stock = []
+    productos_stock_bajo = []
     
-    Args:
-        fecha_desde: Fecha de inicio
-        fecha_hasta: Fecha de fin
+    for item in items_venta:
+        producto_id = item.get('producto_id')
+        cantidad_requerida = Decimal(str(item.get('cantidad', 0)))
         
-    Returns:
-        Dict: Estado de resultados
-    """
-    try:
-        service = ContabilidadService()
-        return service.generar_estado_resultados(fecha_desde, fecha_hasta)
-    except Exception as e:
-        logger.error(f"Error al generar estado de resultados: {e}")
-        raise
+        if not producto_id or cantidad_requerida <= 0:
+            continue
+        
+        stock_disponible = obtener_stock_disponible(producto_id)
+        
+        if stock_disponible < cantidad_requerida:
+            productos_sin_stock.append({
+                'producto_id': producto_id,
+                'cantidad_requerida': cantidad_requerida,
+                'stock_disponible': stock_disponible,
+                'faltante': cantidad_requerida - stock_disponible
+            })
+        elif stock_disponible <= cantidad_requerida * Decimal('1.1'):  # 10% de margen
+            productos_stock_bajo.append({
+                'producto_id': producto_id,
+                'stock_disponible': stock_disponible,
+                'cantidad_requerida': cantidad_requerida
+            })
+    
+    return {
+        'puede_procesar': len(productos_sin_stock) == 0,
+        'productos_sin_stock': productos_sin_stock,
+        'productos_stock_bajo': productos_stock_bajo,
+        'total_items_verificados': len(items_venta)
+    }

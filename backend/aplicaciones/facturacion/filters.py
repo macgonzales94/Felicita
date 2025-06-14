@@ -9,8 +9,10 @@ import django_filters
 from django.db import models
 from datetime import date, timedelta
 
-from .models import Factura, Boleta, NotaCredito, NotaDebito, SerieComprobante
+from .models import Factura, Boleta, NotaCredito, NotaDebito, GuiaRemision, SerieComprobante
+
 from aplicaciones.core.models import Cliente
+
 
 
 # =============================================================================
@@ -561,3 +563,256 @@ class EstadoCompletoFilter(django_filters.Filter):
             return qs.filter(estado_sunat='RECHAZADO')
         
         return qs
+
+
+# =============================================================================
+# FILTROS DE FACTURACIÓN FALTANTES
+# =============================================================================
+
+class NotaDebitoFilter(ComprobanteBaseFilter):
+    """Filtro específico para notas de débito"""
+    
+    # Filtros específicos de notas de débito
+    codigo_motivo = django_filters.ChoiceFilter(
+        choices=[
+            ('01', 'Intereses por mora'),
+            ('02', 'Aumento en el valor'),
+            ('03', 'Penalidades/otros conceptos'),
+            ('10', 'Ajustes de operaciones de exportación'),
+            ('11', 'Ajustes afectos al IVAP')
+        ]
+    )
+    
+    # Filtro por documento modificado
+    documento_modificado_serie = django_filters.CharFilter(
+        field_name='documento_modificado_serie',
+        lookup_expr='iexact'
+    )
+    
+    documento_modificado_numero = django_filters.NumberFilter(
+        field_name='documento_modificado_numero'
+    )
+    
+    documento_modificado_tipo = django_filters.ChoiceFilter(
+        choices=[
+            ('01', 'Factura'),
+            ('03', 'Boleta')
+        ]
+    )
+    
+    # Filtro por descripción del motivo
+    descripcion_motivo = django_filters.CharFilter(
+        field_name='descripcion_motivo',
+        lookup_expr='icontains'
+    )
+    
+    # Filtro por notas de débito automáticas vs manuales
+    automatica = django_filters.BooleanFilter(
+        method='filtrar_automaticas',
+        label='Notas automáticas'
+    )
+    
+    # Filtro por tipo de operación (intereses, penalidades, etc.)
+    tipo_operacion = django_filters.ChoiceFilter(
+        choices=[
+            ('intereses', 'Intereses por mora'),
+            ('penalidades', 'Penalidades'),
+            ('ajustes', 'Ajustes'),
+            ('otros', 'Otros conceptos')
+        ],
+        method='filtrar_por_tipo_operacion'
+    )
+    
+    class Meta:
+        model = NotaDebito
+        fields = [
+            'fecha_emision', 'fecha_desde', 'fecha_hasta', 'periodo',
+            'cliente', 'cliente_documento', 'cliente_nombre',
+            'serie', 'numero', 'numero_desde', 'numero_hasta',
+            'total', 'total_desde', 'total_hasta',
+            'estado_sunat', 'moneda', 'enviado_sunat',
+            'codigo_motivo', 'documento_modificado_serie',
+            'documento_modificado_numero', 'documento_modificado_tipo',
+            'descripcion_motivo', 'automatica', 'tipo_operacion'
+        ]
+    
+    def filtrar_automaticas(self, queryset, name, value):
+        """Filtrar notas de débito automáticas"""
+        if value:
+            # Las automáticas generalmente son intereses por mora
+            return queryset.filter(codigo_motivo='01')
+        else:
+            # Las manuales tienen otros códigos
+            return queryset.exclude(codigo_motivo='01')
+    
+    def filtrar_por_tipo_operacion(self, queryset, name, value):
+        """Filtrar por tipo de operación"""
+        if value == 'intereses':
+            return queryset.filter(codigo_motivo='01')
+        elif value == 'penalidades':
+            return queryset.filter(codigo_motivo='03')
+        elif value == 'ajustes':
+            return queryset.filter(codigo_motivo__in=['10', '11'])
+        elif value == 'otros':
+            return queryset.filter(codigo_motivo='02')
+        return queryset
+
+
+class GuiaRemisionFilter(django_filters.FilterSet):
+    """Filtro específico para guías de remisión"""
+    
+    # Filtros por fecha
+    fecha_emision = django_filters.DateFilter(field_name='fecha_emision')
+    fecha_desde = django_filters.DateFilter(field_name='fecha_emision', lookup_expr='gte')
+    fecha_hasta = django_filters.DateFilter(field_name='fecha_emision', lookup_expr='lte')
+    
+    # Filtros por traslado
+    fecha_traslado = django_filters.DateFilter(field_name='fecha_inicio_traslado')
+    fecha_traslado_desde = django_filters.DateFilter(field_name='fecha_inicio_traslado', lookup_expr='gte')
+    fecha_traslado_hasta = django_filters.DateFilter(field_name='fecha_inicio_traslado', lookup_expr='lte')
+    
+    # Filtros por tipo de traslado
+    tipo_traslado = django_filters.ChoiceFilter(
+        choices=[
+            ('01', 'Venta'),
+            ('02', 'Compra'),
+            ('04', 'Traslado entre establecimientos de la misma empresa'),
+            ('08', 'Importación'),
+            ('09', 'Exportación'),
+            ('13', 'Otros'),
+            ('14', 'Venta sujeta a confirmación del comprador'),
+            ('18', 'Traslado emisor itinerante CP'),
+            ('19', 'Traslado a zona primaria')
+        ]
+    )
+    
+    modalidad_transporte = django_filters.ChoiceFilter(
+        choices=[
+            ('01', 'Transporte público'),
+            ('02', 'Transporte privado')
+        ]
+    )
+    
+    # Filtros por transportista
+    transportista_ruc = django_filters.CharFilter(
+        field_name='transportista_ruc',
+        lookup_expr='icontains'
+    )
+    
+    transportista_nombre = django_filters.CharFilter(
+        field_name='transportista_nombre',
+        lookup_expr='icontains'
+    )
+    
+    # Filtros por vehículo
+    vehiculo_placa = django_filters.CharFilter(
+        field_name='vehiculo_placa',
+        lookup_expr='icontains'
+    )
+    
+    # Filtros por conductor
+    conductor_nombre = django_filters.CharFilter(
+        field_name='conductor_nombre',
+        lookup_expr='icontains'
+    )
+    
+    conductor_licencia = django_filters.CharFilter(
+        field_name='conductor_licencia',
+        lookup_expr='icontains'
+    )
+    
+    # Filtros por ubicación
+    ubigeo_origen = django_filters.CharFilter(
+        field_name='ubigeo_origen',
+        lookup_expr='exact'
+    )
+    
+    ubigeo_destino = django_filters.CharFilter(
+        field_name='ubigeo_destino',
+        lookup_expr='exact'
+    )
+    
+    # Filtros por peso
+    peso_desde = django_filters.NumberFilter(
+        field_name='peso_bruto_total',
+        lookup_expr='gte'
+    )
+    
+    peso_hasta = django_filters.NumberFilter(
+        field_name='peso_bruto_total',
+        lookup_expr='lte'
+    )
+    
+    # Filtros por estado SUNAT
+    estado_sunat = django_filters.ChoiceFilter(
+        choices=[
+            ('PENDIENTE', 'Pendiente'),
+            ('ACEPTADO', 'Aceptado'),
+            ('RECHAZADO', 'Rechazado'),
+            ('ANULADO', 'Anulado')
+        ]
+    )
+    
+    # Filtro por envío a SUNAT
+    enviado_sunat = django_filters.BooleanFilter(
+        field_name='nubefact_id',
+        lookup_expr='isnull',
+        exclude=True,
+        label='Enviado a SUNAT'
+    )
+    
+    # Filtros especiales
+    traslados_hoy = django_filters.BooleanFilter(
+        method='filtrar_traslados_hoy',
+        label='Traslados de hoy'
+    )
+    
+    traslados_pendientes = django_filters.BooleanFilter(
+        method='filtrar_traslados_pendientes',
+        label='Traslados pendientes'
+    )
+    
+    por_transportista = django_filters.CharFilter(
+        method='filtrar_por_transportista',
+        label='Buscar por transportista'
+    )
+    
+    class Meta:
+        model = GuiaRemision
+        fields = [
+            'fecha_emision', 'fecha_desde', 'fecha_hasta',
+            'fecha_traslado', 'fecha_traslado_desde', 'fecha_traslado_hasta',
+            'tipo_traslado', 'modalidad_transporte',
+            'transportista_ruc', 'transportista_nombre',
+            'vehiculo_placa', 'conductor_nombre', 'conductor_licencia',
+            'ubigeo_origen', 'ubigeo_destino',
+            'peso_desde', 'peso_hasta',
+            'estado_sunat', 'enviado_sunat',
+            'traslados_hoy', 'traslados_pendientes', 'por_transportista'
+        ]
+    
+    def filtrar_traslados_hoy(self, queryset, name, value):
+        """Filtrar traslados programados para hoy"""
+        if value:
+            hoy = date.today()
+            return queryset.filter(fecha_inicio_traslado=hoy)
+        return queryset
+    
+    def filtrar_traslados_pendientes(self, queryset, name, value):
+        """Filtrar traslados aún no realizados"""
+        if value:
+            hoy = date.today()
+            return queryset.filter(
+                fecha_inicio_traslado__gte=hoy,
+                estado_sunat__in=['PENDIENTE', 'ACEPTADO']
+            )
+        return queryset
+    
+    def filtrar_por_transportista(self, queryset, name, value):
+        """Filtrar por RUC o nombre del transportista"""
+        return queryset.filter(
+            models.Q(transportista_ruc__icontains=value) |
+            models.Q(transportista_nombre__icontains=value)
+        )
+
+

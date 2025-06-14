@@ -175,19 +175,19 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename':  os.path.join(BASE_DIR.parent, 'logs', 'felicita_dev.log'),
+            'filename': os.path.join(BASE_DIR, 'logs', 'felicita_dev.log'),
             'formatter': 'verbose'
         },
         'nubefact': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler', 
-            'filename': os.path.join(BASE_DIR.parent, 'logs', 'nubefact.log'),
+            'filename': os.path.join(BASE_DIR, 'logs', 'nubefact.log'),
             'formatter': 'verbose'
         },
         'inventario': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR.parent, 'logs', 'inventario.log'),
+            'filename': os.path.join(BASE_DIR, 'logs', 'inventario.log'),
             'formatter': 'verbose'
         },
     },
@@ -293,14 +293,6 @@ REPORTES_CONFIG = {
 # =============================================================================
 if DEBUG:
     try:
-        import debug_toolbar
-        
-        INSTALLED_APPS += [
-            'debug_toolbar',
-        ]
-        
-        MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-        
         INTERNAL_IPS = [
             '127.0.0.1',
             'localhost',

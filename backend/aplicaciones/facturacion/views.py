@@ -25,14 +25,14 @@ from .models import (
 )
 from .serializers import (
     FacturaSerializer, BoletaSerializer, NotaCreditoSerializer,
-    SerieComprobanteSerializer, ConsultaEstadoSerializer,
+    SerieComprobanteSerializer, ConsultaEstadoSerializer, NotaDebitoSerializer, GuiaRemisionSerializer,
     AnularComprobanteSerializer
 )
-from .filters import FacturaFilter, BoletaFilter, NotaCreditoFilter
+from .filters import FacturaFilter, BoletaFilter, NotaCreditoFilter, NotaDebitoFilter
 from aplicaciones.core.permissions import TienePermisoModulo
 from aplicaciones.integraciones.services.nubefact import nubefact_service
-from aplicaciones.inventario.services import actualizar_inventario_venta
-from aplicaciones.contabilidad.services import generar_asiento_venta
+#from aplicaciones.inventario.services import actualizar_inventario_venta
+#from aplicaciones.contabilidad.services import generar_asiento_venta
 
 logger = logging.getLogger('felicita.facturacion')
 
@@ -52,7 +52,7 @@ class ComprobanteViewSetMixin:
     def get_permissions(self):
         """Permisos específicos por acción"""
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            self.permission_classes = [IsAuthenticated, TienePermisoModulo]
+            self.permission_classes = [IsAuthenticated]
         else:
             self.permission_classes = [IsAuthenticated]
         return super().get_permissions()
@@ -754,4 +754,652 @@ class EstadisticasFacturacionView(viewsets.ViewSet):
         return Response({
             'periodo': periodo,
             'ventas': resultado
+        })
+        
+
+
+# =============================================================================
+# VIEWSETS DE FACTURACIÓN FALTANTES
+# =============================================================================
+
+class NotaDebitoViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestión de notas de débito"""
+    
+    queryset = NotaDebito.objects.select_related('cliente', 'serie_comprobante').prefetch_related('items')
+    serializer_class = NotaDebitoSerializer
+    permission_classes = [IsAuthenticated, TienePermisoModulo]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = NotaDebitoFilter
+    search_fields = ['numero', 'cliente__razon_social', 'cliente__numero_documento', 'numero_documento_modificado']
+    ordering_fields = ['fecha_emision', 'numero', 'total']
+    ordering = ['-fecha_emision', '-numero']
+    
+    def get_permissions(self):
+        """Permisos específicos por acción"""
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, TienePermisoModulo]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+    
+    def get_queryset(self):
+        """Filtrar por empresa del usuario"""
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'empresa'):
+            queryset = queryset.filter(empresa=self.request.user.empresa)
+        return queryset
+    
+    def perform_create(self, serializer):
+        """Crear nota de débito con usuario y empresa actuales"""
+        serializer.save(
+            usuario_creacion=self.request.user,
+            empresa=getattr(self.request.user, 'empresa', None)
+        )
+    
+    @action(detail=True, methods=['post'])
+    def enviar_sunat(self, request, pk=None):
+        """Enviar nota de débito a SUNAT via Nubefact"""
+        nota_debito = self.get_object()
+        
+        try:
+            # Preparar datos para Nubefact
+            serializer = self.get_serializer(nota_debito)
+            nota_data = serializer._preparar_datos_nubefact(nota_debito)
+            
+            # Enviar a Nubefact
+            response = nubefact_service.emitir_nota_debito(nota_data)
+            
+            if response.get('success'):
+                # Actualizar nota de débito con respuesta
+                nota_debito.nubefact_id = response.get('invoice_id')
+                nota_debito.estado_sunat = response.get('estado_sunat', 'PENDIENTE')
+                nota_debito.hash_cpe = response.get('hash_documento')
+                nota_debito.save()
+                
+                logger.info(f"Nota de débito {nota_debito.numero_completo} enviada a SUNAT")
+                
+                return Response({
+                    'success': True,
+                    'message': 'Nota de débito enviada exitosamente a SUNAT'
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': response.get('message', 'Error al enviar a SUNAT')
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            logger.error(f"Error al enviar nota de débito a SUNAT: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al enviar a SUNAT: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['get'])
+    def consultar_estado(self, request, pk=None):
+        """Consultar estado de la nota de débito en SUNAT"""
+        nota_debito = self.get_object()
+        
+        if not nota_debito.nubefact_id:
+            return Response({
+                'success': False,
+                'message': 'La nota de débito no ha sido enviada a SUNAT'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Consultar estado en Nubefact
+            response = nubefact_service.consultar_estado(nota_debito.nubefact_id)
+            
+            if response.get('success'):
+                # Actualizar estado local
+                nota_debito.estado_sunat = response.get('estado_sunat', nota_debito.estado_sunat)
+                nota_debito.save()
+                
+                return Response({
+                    'success': True,
+                    'estado_sunat': nota_debito.estado_sunat,
+                    'mensaje_sunat': response.get('mensaje_sunat', ''),
+                    'fecha_consulta': timezone.now()
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': response.get('message', 'Error al consultar estado')
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            logger.error(f"Error al consultar estado en SUNAT: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al consultar estado: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['post'])
+    def anular(self, request, pk=None):
+        """Anular nota de débito"""
+        nota_debito = self.get_object()
+        
+        if nota_debito.estado_sunat == 'ANULADO':
+            return Response({
+                'success': False,
+                'message': 'La nota de débito ya está anulada'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            with transaction.atomic():
+                # Marcar como anulada
+                nota_debito.estado_sunat = 'ANULADO'
+                nota_debito.fecha_anulacion = timezone.now()
+                nota_debito.usuario_anulacion = request.user
+                nota_debito.motivo_anulacion = request.data.get('motivo', 'Anulación solicitada por usuario')
+                nota_debito.save()
+                
+                # Generar asiento contable inverso
+                generar_asiento_venta(nota_debito, es_nota_credito=True)
+                
+                logger.info(f"Nota de débito {nota_debito.numero_completo} anulada")
+                
+                return Response({
+                    'success': True,
+                    'message': 'Nota de débito anulada exitosamente'
+                })
+                
+        except Exception as e:
+            logger.error(f"Error al anular nota de débito: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al anular: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['get'])
+    def estadisticas(self, request):
+        """Obtener estadísticas de notas de débito"""
+        queryset = self.get_queryset()
+        
+        # Estadísticas básicas
+        total_notas = queryset.count()
+        total_pendientes = queryset.filter(estado_sunat='PENDIENTE').count()
+        total_aceptadas = queryset.filter(estado_sunat='ACEPTADO').count()
+        total_rechazadas = queryset.filter(estado_sunat='RECHAZADO').count()
+        total_anuladas = queryset.filter(estado_sunat='ANULADO').count()
+        
+        # Estadísticas de montos
+        from django.db.models import Sum, Avg
+        estadisticas_montos = queryset.aggregate(
+            monto_total=Sum('total'),
+            monto_promedio=Avg('total')
+        )
+        
+        # Estadísticas por motivo
+        estadisticas_motivos = {}
+        motivos = queryset.values_list('codigo_motivo', flat=True).distinct()
+        for motivo in motivos:
+            count = queryset.filter(codigo_motivo=motivo).count()
+            estadisticas_motivos[motivo] = count
+        
+        return Response({
+            'totales': {
+                'total_notas': total_notas,
+                'pendientes': total_pendientes,
+                'aceptadas': total_aceptadas,
+                'rechazadas': total_rechazadas,
+                'anuladas': total_anuladas
+            },
+            'montos': {
+                'monto_total': float(estadisticas_montos['monto_total'] or 0),
+                'monto_promedio': float(estadisticas_montos['monto_promedio'] or 0)
+            },
+            'por_motivo': estadisticas_motivos
+        })
+
+
+class GuiaRemisionViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestión de guías de remisión"""
+    
+    queryset = GuiaRemision.objects.select_related('empresa').prefetch_related('items')
+    serializer_class = GuiaRemisionSerializer
+    permission_classes = [IsAuthenticated, TienePermisoModulo]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = GuiaRemisionFilter
+    search_fields = ['serie_numero', 'transportista_nombre', 'transportista_ruc', 'vehiculo_placa']
+    ordering_fields = ['fecha_emision', 'fecha_inicio_traslado', 'peso_bruto_total']
+    ordering = ['-fecha_emision', '-fecha_inicio_traslado']
+    
+    def get_permissions(self):
+        """Permisos específicos por acción"""
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, TienePermisoModulo]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+    
+    def get_queryset(self):
+        """Filtrar por empresa del usuario"""
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'empresa'):
+            queryset = queryset.filter(empresa=self.request.user.empresa)
+        return queryset
+    
+    def perform_create(self, serializer):
+        """Crear guía de remisión con usuario y empresa actuales"""
+        serializer.save(
+            usuario_creacion=self.request.user,
+            empresa=getattr(self.request.user, 'empresa', None)
+        )
+    
+    @action(detail=True, methods=['post'])
+    def enviar_sunat(self, request, pk=None):
+        """Enviar guía de remisión a SUNAT via Nubefact"""
+        guia = self.get_object()
+        
+        try:
+            # Preparar datos para Nubefact
+            serializer = self.get_serializer(guia)
+            guia_data = serializer._preparar_datos_nubefact(guia)
+            
+            # Enviar a Nubefact
+            response = nubefact_service.emitir_guia_remision(guia_data)
+            
+            if response.get('success'):
+                # Actualizar guía con respuesta
+                guia.nubefact_id = response.get('invoice_id')
+                guia.estado_sunat = response.get('estado_sunat', 'PENDIENTE')
+                guia.hash_cpe = response.get('hash_documento')
+                guia.save()
+                
+                logger.info(f"Guía de remisión {guia.serie_numero} enviada a SUNAT")
+                
+                return Response({
+                    'success': True,
+                    'message': 'Guía de remisión enviada exitosamente a SUNAT'
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': response.get('message', 'Error al enviar a SUNAT')
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            logger.error(f"Error al enviar guía de remisión a SUNAT: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al enviar a SUNAT: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['get'])
+    def consultar_estado(self, request, pk=None):
+        """Consultar estado de la guía de remisión en SUNAT"""
+        guia = self.get_object()
+        
+        if not guia.nubefact_id:
+            return Response({
+                'success': False,
+                'message': 'La guía de remisión no ha sido enviada a SUNAT'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Consultar estado en Nubefact
+            response = nubefact_service.consultar_estado(guia.nubefact_id)
+            
+            if response.get('success'):
+                # Actualizar estado local
+                guia.estado_sunat = response.get('estado_sunat', guia.estado_sunat)
+                guia.save()
+                
+                return Response({
+                    'success': True,
+                    'estado_sunat': guia.estado_sunat,
+                    'mensaje_sunat': response.get('mensaje_sunat', ''),
+                    'fecha_consulta': timezone.now()
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': response.get('message', 'Error al consultar estado')
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            logger.error(f"Error al consultar estado en SUNAT: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al consultar estado: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['get'])
+    def traslados_hoy(self, request):
+        """Obtener traslados programados para hoy"""
+        from datetime import date
+        
+        hoy = date.today()
+        traslados = self.get_queryset().filter(fecha_inicio_traslado=hoy)
+        
+        serializer = self.get_serializer(traslados, many=True)
+        
+        return Response({
+            'fecha': hoy,
+            'total_traslados': traslados.count(),
+            'traslados': serializer.data
+        })
+    
+    @action(detail=False, methods=['get'])
+    def por_transportista(self, request):
+        """Obtener guías agrupadas por transportista"""
+        transportistas = {}
+        
+        for guia in self.get_queryset().select_related():
+            transportista = guia.transportista_ruc
+            if transportista not in transportistas:
+                transportistas[transportista] = {
+                    'ruc': guia.transportista_ruc,
+                    'nombre': guia.transportista_nombre,
+                    'guias': [],
+                    'total_peso': 0,
+                    'total_guias': 0
+                }
+            
+            transportistas[transportista]['guias'].append({
+                'id': guia.id,
+                'serie_numero': guia.serie_numero,
+                'fecha_emision': guia.fecha_emision,
+                'fecha_traslado': guia.fecha_inicio_traslado,
+                'peso_bruto': float(guia.peso_bruto_total),
+                'estado_sunat': guia.estado_sunat
+            })
+            transportistas[transportista]['total_peso'] += float(guia.peso_bruto_total)
+            transportistas[transportista]['total_guias'] += 1
+        
+        return Response({
+            'transportistas': list(transportistas.values()),
+            'resumen': {
+                'total_transportistas': len(transportistas),
+                'total_guias': sum(t['total_guias'] for t in transportistas.values()),
+                'peso_total': sum(t['total_peso'] for t in transportistas.values())
+            }
+        })
+    
+    @action(detail=False, methods=['get'])
+    def estadisticas(self, request):
+        """Obtener estadísticas de guías de remisión"""
+        queryset = self.get_queryset()
+        
+        # Estadísticas básicas
+        total_guias = queryset.count()
+        total_pendientes = queryset.filter(estado_sunat='PENDIENTE').count()
+        total_aceptadas = queryset.filter(estado_sunat='ACEPTADO').count()
+        total_rechazadas = queryset.filter(estado_sunat='RECHAZADO').count()
+        
+        # Estadísticas de peso
+        from django.db.models import Sum, Avg
+        estadisticas_peso = queryset.aggregate(
+            peso_total=Sum('peso_bruto_total'),
+            peso_promedio=Avg('peso_bruto_total')
+        )
+        
+        # Estadísticas por tipo de traslado
+        estadisticas_traslado = {}
+        tipos = queryset.values_list('tipo_traslado', flat=True).distinct()
+        for tipo in tipos:
+            count = queryset.filter(tipo_traslado=tipo).count()
+            estadisticas_traslado[tipo] = count
+        
+        # Estadísticas por modalidad de transporte
+        estadisticas_modalidad = {}
+        modalidades = queryset.values_list('modalidad_transporte', flat=True).distinct()
+        for modalidad in modalidades:
+            count = queryset.filter(modalidad_transporte=modalidad).count()
+            estadisticas_modalidad[modalidad] = count
+        
+        return Response({
+            'totales': {
+                'total_guias': total_guias,
+                'pendientes': total_pendientes,
+                'aceptadas': total_aceptadas,
+                'rechazadas': total_rechazadas
+            },
+            'peso': {
+                'peso_total': float(estadisticas_peso['peso_total'] or 0),
+                'peso_promedio': float(estadisticas_peso['peso_promedio'] or 0)
+            },
+            'por_tipo_traslado': estadisticas_traslado,
+            'por_modalidad_transporte': estadisticas_modalidad
+        })
+
+
+# =============================================================================
+# VIEWSETS DE CONTABILIDAD FALTANTES
+# =============================================================================
+
+from aplicaciones.contabilidad.models import BalanceComprobacion, PeriodoContable
+from aplicaciones.contabilidad.serializers import BalanceComprobacionSerializer, PeriodoContableSerializer
+from aplicaciones.contabilidad.filters import BalanceComprobacionFilter, PeriodoContableFilter
+
+
+class BalanceComprobacionViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestión de balances de comprobación"""
+    
+    queryset = BalanceComprobacion.objects.select_related('empresa', 'periodo', 'cuenta', 'usuario_generacion')
+    serializer_class = BalanceComprobacionSerializer
+    permission_classes = [IsAuthenticated, TienePermisoModulo]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = BalanceComprobacionFilter
+    search_fields = ['cuenta__codigo', 'cuenta__nombre', 'periodo__nombre']
+    ordering_fields = ['fecha_desde', 'fecha_hasta', 'cuenta__codigo']
+    ordering = ['cuenta__codigo', 'fecha_desde']
+    
+    def get_queryset(self):
+        """Filtrar por empresa del usuario"""
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'empresa'):
+            queryset = queryset.filter(empresa=self.request.user.empresa)
+        return queryset
+    
+    def perform_create(self, serializer):
+        """Crear balance con usuario y empresa actuales"""
+        serializer.save(
+            usuario_generacion=self.request.user,
+            empresa=getattr(self.request.user, 'empresa', None)
+        )
+    
+    @action(detail=False, methods=['post'])
+    def generar_balance(self, request):
+        """Generar balance de comprobación automáticamente"""
+        from aplicaciones.contabilidad.services import ContabilidadService
+        
+        try:
+            fecha_desde = request.data.get('fecha_desde')
+            fecha_hasta = request.data.get('fecha_hasta')
+            nivel_cuenta = request.data.get('nivel_cuenta', 2)
+            
+            if not fecha_desde or not fecha_hasta:
+                return Response({
+                    'success': False,
+                    'message': 'Se requieren fecha_desde y fecha_hasta'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Generar balance usando el servicio
+            service = ContabilidadService(empresa_id=getattr(request.user, 'empresa_id', None))
+            balance_data = service.generar_balance_comprobacion(
+                fecha_desde=datetime.strptime(fecha_desde, '%Y-%m-%d').date(),
+                fecha_hasta=datetime.strptime(fecha_hasta, '%Y-%m-%d').date(),
+                nivel_cuenta=nivel_cuenta
+            )
+            
+            return Response({
+                'success': True,
+                'balance': balance_data
+            })
+            
+        except Exception as e:
+            logger.error(f"Error al generar balance: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al generar balance: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['get'])
+    def estado_resultados(self, request):
+        """Generar estado de resultados"""
+        from aplicaciones.contabilidad.services import ContabilidadService
+        
+        try:
+            fecha_desde = request.query_params.get('fecha_desde')
+            fecha_hasta = request.query_params.get('fecha_hasta')
+            
+            if not fecha_desde or not fecha_hasta:
+                return Response({
+                    'success': False,
+                    'message': 'Se requieren fecha_desde y fecha_hasta'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Generar estado de resultados
+            service = ContabilidadService(empresa_id=getattr(request.user, 'empresa_id', None))
+            estado_resultados = service.generar_estado_resultados(
+                fecha_desde=datetime.strptime(fecha_desde, '%Y-%m-%d').date(),
+                fecha_hasta=datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+            )
+            
+            return Response({
+                'success': True,
+                'estado_resultados': estado_resultados
+            })
+            
+        except Exception as e:
+            logger.error(f"Error al generar estado de resultados: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al generar estado de resultados: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PeriodoContableViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestión de períodos contables"""
+    
+    queryset = PeriodoContable.objects.select_related('empresa', 'usuario_cierre')
+    serializer_class = PeriodoContableSerializer
+    permission_classes = [IsAuthenticated, TienePermisoModulo]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = PeriodoContableFilter
+    search_fields = ['nombre', 'año']
+    ordering_fields = ['año', 'mes', 'fecha_inicio']
+    ordering = ['-año', '-mes']
+    
+    def get_queryset(self):
+        """Filtrar por empresa del usuario"""
+        queryset = super().get_queryset()
+        if hasattr(self.request.user, 'empresa'):
+            queryset = queryset.filter(empresa=self.request.user.empresa)
+        return queryset
+    
+    def perform_create(self, serializer):
+        """Crear período con empresa actual"""
+        serializer.save(
+            empresa=getattr(self.request.user, 'empresa', None)
+        )
+    
+    @action(detail=True, methods=['post'])
+    def cerrar_periodo(self, request, pk=None):
+        """Cerrar período contable"""
+        periodo = self.get_object()
+        
+        try:
+            observaciones = request.data.get('observaciones', '')
+            periodo.cerrar_periodo(request.user, observaciones)
+            
+            logger.info(f"Período {periodo.nombre} cerrado por {request.user.username}")
+            
+            return Response({
+                'success': True,
+                'message': 'Período cerrado exitosamente'
+            })
+            
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error al cerrar período: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al cerrar período: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['post'])
+    def reabrir_periodo(self, request, pk=None):
+        """Reabrir período contable"""
+        periodo = self.get_object()
+        
+        try:
+            periodo.reabrir_periodo(request.user)
+            
+            logger.info(f"Período {periodo.nombre} reabierto por {request.user.username}")
+            
+            return Response({
+                'success': True,
+                'message': 'Período reabierto exitosamente'
+            })
+            
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error al reabrir período: {e}")
+            return Response({
+                'success': False,
+                'message': f'Error al reabrir período: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['get'])
+    def periodo_actual(self, request):
+        """Obtener período contable actual"""
+        from datetime import date
+        
+        hoy = date.today()
+        periodo_actual = self.get_queryset().filter(
+            fecha_inicio__lte=hoy,
+            fecha_fin__gte=hoy,
+            estado='abierto'
+        ).first()
+        
+        if periodo_actual:
+            serializer = self.get_serializer(periodo_actual)
+            return Response({
+                'success': True,
+                'periodo_actual': serializer.data
+            })
+        else:
+            return Response({
+                'success': False,
+                'message': 'No hay período contable activo para la fecha actual'
+            }, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=False, methods=['get'])
+    def resumen(self, request):
+        """Obtener resumen de períodos contables"""
+        queryset = self.get_queryset()
+        
+        # Estadísticas básicas
+        total_periodos = queryset.count()
+        periodos_abiertos = queryset.filter(estado='abierto').count()
+        periodos_cerrados = queryset.filter(estado='cerrado').count()
+        periodos_auditoria = queryset.filter(estado='auditoria').count()
+        periodos_bloqueados = queryset.filter(estado='bloqueado').count()
+        
+        # Períodos por año
+        from django.db.models import Count
+        por_año = queryset.values('año').annotate(
+            count=Count('id')
+        ).order_by('-año')
+        
+        return Response({
+            'totales': {
+                'total_periodos': total_periodos,
+                'abiertos': periodos_abiertos,
+                'cerrados': periodos_cerrados,
+                'en_auditoria': periodos_auditoria,
+                'bloqueados': periodos_bloqueados
+            },
+            'por_año': list(por_año)
         })

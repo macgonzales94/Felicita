@@ -892,3 +892,673 @@ class LibroElectronico(ModeloBase):
     
     def __str__(self):
         return f"PLE {self.tipo_libro} - {self.periodo} - {self.empresa.razon_social}"
+
+# =============================================================================
+# MODELOS DE CONTABILIDAD FALTANTES
+# =============================================================================
+
+# 4. MODELO BALANCE DE COMPROBACIÓN (backend/aplicaciones/contabilidad/models.py)
+class BalanceComprobacion(ModeloBase):
+    """
+    Balance de comprobación por períodos
+    """
+    
+    empresa = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.CASCADE,
+        related_name='balances_comprobacion',
+        verbose_name='Empresa'
+    )
+    
+    periodo = models.ForeignKey(
+        'PeriodoContable',
+        on_delete=models.CASCADE,
+        related_name='balances_comprobacion',
+        verbose_name='Período Contable'
+    )
+    
+    cuenta = models.ForeignKey(
+        'CuentaContable',
+        on_delete=models.CASCADE,
+        related_name='balances_comprobacion',
+        verbose_name='Cuenta Contable'
+    )
+    
+    fecha_desde = models.DateField(
+        verbose_name='Fecha Desde'
+    )
+    
+    fecha_hasta = models.DateField(
+        verbose_name='Fecha Hasta'
+    )
+    
+    # Saldos iniciales
+    saldo_inicial_debe = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Saldo Inicial Debe'
+    )
+    
+    saldo_inicial_haber = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Saldo Inicial Haber'
+    )
+    
+    # Movimientos del período
+    movimientos_debe = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Movimientos Debe'
+    )
+    
+    movimientos_haber = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Movimientos Haber'
+    )
+    
+    # Saldos finales
+    saldo_final_debe = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Saldo Final Debe'
+    )
+    
+    saldo_final_haber = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Saldo Final Haber'
+    )
+    
+    # Control
+    fecha_generacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Generación'
+    )
+    
+    usuario_generacion = models.ForeignKey(
+        'usuarios.Usuario',
+        on_delete=models.PROTECT,
+        verbose_name='Usuario que Generó'
+    )
+    
+    es_balance_oficial = models.BooleanField(
+        default=False,
+        verbose_name='Es Balance Oficial',
+        help_text='Balance oficial presentado a organismos reguladores'
+    )
+    
+    observaciones = models.TextField(
+        blank=True,
+        verbose_name='Observaciones'
+    )
+    
+    class Meta:
+        db_table = 'contabilidad_balance_comprobacion'
+        verbose_name = 'Balance de Comprobación'
+        verbose_name_plural = 'Balances de Comprobación'
+        unique_together = ['empresa', 'periodo', 'cuenta', 'fecha_desde', 'fecha_hasta']
+        indexes = [
+            models.Index(fields=['empresa', 'periodo']),
+            models.Index(fields=['fecha_desde', 'fecha_hasta']),
+            models.Index(fields=['es_balance_oficial']),
+        ]
+        ordering = ['cuenta__codigo', 'fecha_desde']
+    
+    def __str__(self):
+        return f"Balance {self.cuenta.codigo} - {self.fecha_desde} a {self.fecha_hasta}"
+    
+    def calcular_saldos_finales(self):
+        """Calcular saldos finales basados en naturaleza de cuenta"""
+        if self.cuenta.naturaleza == 'deudora':
+            # Para cuentas deudoras: saldo = debe - haber
+            saldo_neto = (self.saldo_inicial_debe + self.movimientos_debe) - (self.saldo_inicial_haber + self.movimientos_haber)
+            if saldo_neto > 0:
+                self.saldo_final_debe = saldo_neto
+                self.saldo_final_haber = Decimal('0.00')
+            else:
+                self.saldo_final_debe = Decimal('0.00')
+                self.saldo_final_haber = abs(saldo_neto)
+        else:
+            # Para cuentas acreedoras: saldo = haber - debe
+            saldo_neto = (self.saldo_inicial_haber + self.movimientos_haber) - (self.saldo_inicial_debe + self.movimientos_debe)
+            if saldo_neto > 0:
+                self.saldo_final_haber = saldo_neto
+                self.saldo_final_debe = Decimal('0.00')
+            else:
+                self.saldo_final_haber = Decimal('0.00')
+                self.saldo_final_debe = abs(saldo_neto)
+
+
+# 5. MODELO PERÍODO CONTABLE (backend/aplicaciones/contabilidad/models.py)
+class PeriodoContable(ModeloBase):
+    """
+    Períodos contables para control de ejercicios
+    """
+    
+    ESTADO_PERIODO_CHOICES = [
+        ('abierto', 'Abierto'),
+        ('cerrado', 'Cerrado'),
+        ('auditoria', 'En Auditoría'),
+        ('bloqueado', 'Bloqueado'),
+    ]
+    
+    empresa = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.CASCADE,
+        related_name='periodos_contables',
+        verbose_name='Empresa'
+    )
+    
+    año = models.PositiveIntegerField(
+        verbose_name='Año'
+    )
+    
+    mes = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 13)],
+        blank=True,
+        null=True,
+        verbose_name='Mes',
+        help_text='Dejar vacío para período anual'
+    )
+    
+    nombre = models.CharField(
+        max_length=100,
+        verbose_name='Nombre del Período'
+    )
+    
+    fecha_inicio = models.DateField(
+        verbose_name='Fecha de Inicio'
+    )
+    
+    fecha_fin = models.DateField(
+        verbose_name='Fecha de Fin'
+    )
+    
+    estado = models.CharField(
+        max_length=15,
+        choices=ESTADO_PERIODO_CHOICES,
+        default='abierto',
+        verbose_name='Estado del Período'
+    )
+    
+    es_periodo_principal = models.BooleanField(
+        default=True,
+        verbose_name='Es Período Principal',
+        help_text='Período principal para reportes y cierres'
+    )
+    
+    fecha_cierre = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Cierre'
+    )
+    
+    usuario_cierre = models.ForeignKey(
+        'usuarios.Usuario',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name='periodos_cerrados',
+        verbose_name='Usuario que Cerró'
+    )
+    
+    observaciones_cierre = models.TextField(
+        blank=True,
+        verbose_name='Observaciones del Cierre'
+    )
+    
+    # Control de re-apertura
+    permite_reapertura = models.BooleanField(
+        default=True,
+        verbose_name='Permite Reapertura',
+        help_text='Si se permite reabrir el período después del cierre'
+    )
+    
+    class Meta:
+        db_table = 'contabilidad_periodo_contable'
+        verbose_name = 'Período Contable'
+        verbose_name_plural = 'Períodos Contables'
+        unique_together = ['empresa', 'año', 'mes']
+        indexes = [
+            models.Index(fields=['empresa', 'año']),
+            models.Index(fields=['estado']),
+            models.Index(fields=['es_periodo_principal']),
+        ]
+        ordering = ['-año', '-mes']
+    
+    def __str__(self):
+        if self.mes:
+            return f"{self.año}-{self.mes:02d} - {self.nombre}"
+        return f"{self.año} - {self.nombre}"
+    
+    def cerrar_periodo(self, usuario, observaciones=''):
+        """Cerrar período contable"""
+        if self.estado != 'abierto':
+            raise ValueError("Solo se pueden cerrar períodos abiertos")
+        
+        self.estado = 'cerrado'
+        self.fecha_cierre = timezone.now()
+        self.usuario_cierre = usuario
+        self.observaciones_cierre = observaciones
+        self.save()
+    
+    def reabrir_periodo(self, usuario):
+        """Reabrir período contable"""
+        if not self.permite_reapertura:
+            raise ValueError("Este período no permite reapertura")
+        
+        if self.estado != 'cerrado':
+            raise ValueError("Solo se pueden reabrir períodos cerrados")
+        
+        self.estado = 'abierto'
+        self.fecha_cierre = None
+        self.usuario_cierre = None
+        self.observaciones_cierre = ''
+        self.save()
+#=============================================================================
+# MODELO CUENTA POR COBRAR
+# =============================================================================
+class CuentaPorCobrar(ModeloBase):
+    """
+    Cuentas por cobrar a clientes
+    """
+    
+    ESTADO_CHOICES = [
+        ('PENDIENTE', 'Pendiente'),
+        ('PARCIAL', 'Pago Parcial'),
+        ('CANCELADO', 'Cancelado'),
+        ('VENCIDO', 'Vencido'),
+    ]
+    
+    # Cliente
+    cliente = models.ForeignKey(
+        'facturacion.Cliente',
+        on_delete=models.PROTECT,
+        related_name='cuentas_por_cobrar',
+        verbose_name='Cliente'
+    )
+    
+    # Documento origen
+    tipo_documento = models.CharField(
+        max_length=20,
+        verbose_name='Tipo de Documento'
+    )
+    
+    numero_documento = models.CharField(
+        max_length=50,
+        verbose_name='Número de Documento'
+    )
+    
+    # Fechas
+    fecha_emision = models.DateField(
+        verbose_name='Fecha de Emisión'
+    )
+    
+    fecha_vencimiento = models.DateField(
+        verbose_name='Fecha de Vencimiento'
+    )
+    
+    fecha_cancelacion = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Cancelación'
+    )
+    
+    # Montos
+    monto_original = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        verbose_name='Monto Original'
+    )
+    
+    monto_pendiente = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        verbose_name='Monto Pendiente'
+    )
+    
+    # Moneda
+    moneda = models.CharField(
+        max_length=3,
+        default='PEN',
+        verbose_name='Moneda'
+    )
+    
+    # Estado
+    estado = models.CharField(
+        max_length=15,
+        choices=ESTADO_CHOICES,
+        default='PENDIENTE',
+        verbose_name='Estado'
+    )
+    
+    # Relación con asiento contable
+    asiento = models.ForeignKey(
+        'AsientoContable',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name='cuentas_por_cobrar',
+        verbose_name='Asiento Contable'
+    )
+    
+    # Observaciones
+    observaciones = models.TextField(
+        blank=True,
+        verbose_name='Observaciones'
+    )
+    
+    class Meta:
+        db_table = 'contabilidad_cuenta_por_cobrar'
+        verbose_name = 'Cuenta por Cobrar'
+        verbose_name_plural = 'Cuentas por Cobrar'
+        indexes = [
+            models.Index(fields=['cliente']),
+            models.Index(fields=['numero_documento']),
+            models.Index(fields=['fecha_vencimiento']),
+            models.Index(fields=['estado']),
+        ]
+        ordering = ['fecha_vencimiento', 'cliente']
+    
+    def __str__(self):
+        return f"{self.numero_documento} - {self.cliente} - {self.monto_pendiente}"
+    
+    def dias_vencimiento(self):
+        """Calcula los días de vencimiento"""
+        from datetime import date
+        if self.fecha_vencimiento and self.estado in ['PENDIENTE', 'PARCIAL']:
+            return (date.today() - self.fecha_vencimiento).days
+        return 0
+    
+    def esta_vencido(self):
+        """Verifica si la cuenta está vencida"""
+        return self.dias_vencimiento() > 0
+
+
+# =============================================================================
+# MODELO CUENTA POR PAGAR
+# =============================================================================
+class CuentaPorPagar(ModeloBase):
+    """
+    Cuentas por pagar a proveedores
+    """
+    
+    ESTADO_CHOICES = [
+        ('PENDIENTE', 'Pendiente'),
+        ('PARCIAL', 'Pago Parcial'),
+        ('CANCELADO', 'Cancelado'),
+        ('VENCIDO', 'Vencido'),
+    ]
+    
+    # Proveedor
+    proveedor_nombre = models.CharField(
+        max_length=200,
+        verbose_name='Nombre del Proveedor'
+    )
+    
+    proveedor_documento = models.CharField(
+        max_length=20,
+        verbose_name='Documento del Proveedor'
+    )
+    
+    # Documento origen
+    tipo_documento = models.CharField(
+        max_length=20,
+        verbose_name='Tipo de Documento'
+    )
+    
+    numero_documento = models.CharField(
+        max_length=50,
+        verbose_name='Número de Documento'
+    )
+    
+    # Fechas
+    fecha_emision = models.DateField(
+        verbose_name='Fecha de Emisión'
+    )
+    
+    fecha_vencimiento = models.DateField(
+        verbose_name='Fecha de Vencimiento'
+    )
+    
+    fecha_cancelacion = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de Cancelación'
+    )
+    
+    # Montos
+    monto_original = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        verbose_name='Monto Original'
+    )
+    
+    monto_pendiente = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        verbose_name='Monto Pendiente'
+    )
+    
+    # Moneda
+    moneda = models.CharField(
+        max_length=3,
+        default='PEN',
+        verbose_name='Moneda'
+    )
+    
+    # Estado
+    estado = models.CharField(
+        max_length=15,
+        choices=ESTADO_CHOICES,
+        default='PENDIENTE',
+        verbose_name='Estado'
+    )
+    
+    # Relación con asiento contable
+    asiento = models.ForeignKey(
+        'AsientoContable',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name='cuentas_por_pagar',
+        verbose_name='Asiento Contable'
+    )
+    
+    # Observaciones
+    observaciones = models.TextField(
+        blank=True,
+        verbose_name='Observaciones'
+    )
+    
+    class Meta:
+        db_table = 'contabilidad_cuenta_por_pagar'
+        verbose_name = 'Cuenta por Pagar'
+        verbose_name_plural = 'Cuentas por Pagar'
+        indexes = [
+            models.Index(fields=['proveedor_documento']),
+            models.Index(fields=['numero_documento']),
+            models.Index(fields=['fecha_vencimiento']),
+            models.Index(fields=['estado']),
+        ]
+        ordering = ['fecha_vencimiento', 'proveedor_nombre']
+    
+    def __str__(self):
+        return f"{self.numero_documento} - {self.proveedor_nombre} - {self.monto_pendiente}"
+    
+    def dias_vencimiento(self):
+        """Calcula los días de vencimiento"""
+        from datetime import date
+        if self.fecha_vencimiento and self.estado in ['PENDIENTE', 'PARCIAL']:
+            return (date.today() - self.fecha_vencimiento).days
+        return 0
+    
+    def esta_vencido(self):
+        """Verifica si la cuenta está vencida"""
+        return self.dias_vencimiento() > 0
+
+
+# =============================================================================
+# MODELO LIBRO MAYOR
+# =============================================================================
+class LibroMayor(ModeloBase):
+    """
+    Libro mayor para reportes contables
+    """
+    
+    empresa = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.CASCADE,
+        related_name='libros_mayor',
+        verbose_name='Empresa'
+    )
+    
+    cuenta = models.ForeignKey(
+        'CuentaContable',
+        on_delete=models.CASCADE,
+        related_name='libros_mayor',
+        verbose_name='Cuenta Contable'
+    )
+    
+    periodo = models.ForeignKey(
+        'PeriodoContable',
+        on_delete=models.CASCADE,
+        related_name='libros_mayor',
+        verbose_name='Período Contable'
+    )
+    
+    fecha_desde = models.DateField(
+        verbose_name='Fecha Desde'
+    )
+    
+    fecha_hasta = models.DateField(
+        verbose_name='Fecha Hasta'
+    )
+    
+    # Saldo inicial
+    saldo_inicial = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Saldo Inicial'
+    )
+    
+    # Movimientos
+    total_debe = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Total Debe'
+    )
+    
+    total_haber = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Total Haber'
+    )
+    
+    # Saldo final
+    saldo_final = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Saldo Final'
+    )
+    
+    # Control
+    fecha_generacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Generación'
+    )
+    
+    usuario_generacion = models.ForeignKey(
+        'usuarios.Usuario',
+        on_delete=models.PROTECT,
+        verbose_name='Usuario que Generó'
+    )
+    
+    class Meta:
+        db_table = 'contabilidad_libro_mayor'
+        verbose_name = 'Libro Mayor'
+        verbose_name_plural = 'Libros Mayor'
+        unique_together = ['empresa', 'cuenta', 'periodo', 'fecha_desde', 'fecha_hasta']
+        indexes = [
+            models.Index(fields=['empresa', 'cuenta']),
+            models.Index(fields=['periodo']),
+            models.Index(fields=['fecha_desde', 'fecha_hasta']),
+        ]
+        ordering = ['cuenta__codigo', 'fecha_desde']
+    
+    def __str__(self):
+        return f"Mayor {self.cuenta.codigo} - {self.fecha_desde} a {self.fecha_hasta}"
+
+# =============================================================================
+# ALIAS PARA COMPATIBILIDAD CON SERIALIZERS
+# =============================================================================
+
+# Los serializers referencian estos nombres, crear alias para compatibilidad
+#ItemFactura = FacturaItem
+#ItemBoleta = BoletaItem
+
+
+# =============================================================================
+# ACTUALIZACIONES NECESARIAS EN MODELOS EXISTENTES
+# =============================================================================
+
+"""
+ACTUALIZACIONES REQUERIDAS:
+
+1. En backend/aplicaciones/facturacion/models.py:
+   - Cambiar FacturaItem por ItemFactura (o crear alias)
+   - Cambiar BoletaItem por ItemBoleta (o crear alias)
+   - Agregar ItemNotaCredito
+   - Agregar ItemNotaDebito
+   - Agregar ItemGuiaRemision
+   - Completar modelo GuiaRemision con todos los campos requeridos
+   - Completar modelo NotaDebito con todos los campos requeridos
+
+2. En backend/aplicaciones/contabilidad/models.py:
+   - Agregar modelo BalanceComprobacion
+   - Agregar modelo PeriodoContable (si no existe)
+   - Verificar que todos los modelos referenciados en services.py existan
+
+3. En backend/aplicaciones/facturacion/serializers.py:
+   - Agregar ItemNotaCreditoSerializer
+   - Agregar ItemNotaDebitoSerializer
+   - Agregar ItemGuiaRemisionSerializer
+   - Agregar NotaDebitoSerializer
+   - Agregar GuiaRemisionSerializer completo
+
+4. En backend/aplicaciones/contabilidad/serializers.py:
+   - Agregar BalanceComprobacionSerializer
+   - Agregar PeriodoContableSerializer
+
+5. En backend/aplicaciones/facturacion/views.py:
+   - Agregar NotaDebitoViewSet
+   - Agregar GuiaRemisionViewSet
+
+6. En backend/aplicaciones/contabilidad/views.py:
+   - Agregar BalanceComprobacionViewSet
+   - Agregar PeriodoContableViewSet
+
+7. En backend/aplicaciones/facturacion/filters.py:
+   - Agregar NotaDebitoFilter
+   - Agregar GuiaRemisionFilter
+
+8. En backend/aplicaciones/contabilidad/filters.py:
+   - Agregar BalanceComprobacionFilter
+   - Agregar PeriodoContableFilter
+
+9. URLs y Admin:
+   - Registrar todos los modelos nuevos en admin.py
+   - Agregar URLs para los nuevos ViewSets
+"""
