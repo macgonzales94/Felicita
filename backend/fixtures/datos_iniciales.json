@@ -1,0 +1,280 @@
+[
+  {
+    "model": "core.tipocomprobante",
+    "pk": 1,
+    "fields": {
+      "codigo": "01",
+      "nombre": "Factura",
+      "descripcion": "Factura Electrónica",
+      "requiere_serie": true,
+      "formato_serie": "F###",
+      "activo": true
+    }
+  },
+  {
+    "model": "core.tipocomprobante",
+    "pk": 2,
+    "fields": {
+      "codigo": "03",
+      "nombre": "Boleta de Venta",
+      "descripcion": "Boleta de Venta Electrónica",
+      "requiere_serie": true,
+      "formato_serie": "B###",
+      "activo": true
+    }
+  },
+  {
+    "model": "core.tipocomprobante",
+    "pk": 3,
+    "fields": {
+      "codigo": "07",
+      "nombre": "Nota de Crédito",
+      "descripcion": "Nota de Crédito Electrónica",
+      "requiere_serie": true,
+      "formato_serie": "FC##",
+      "activo": true
+    }
+  },
+  {
+    "model": "core.tipocomprobante",
+    "pk": 4,
+    "fields": {
+      "codigo": "08",
+      "nombre": "Nota de Débito",
+      "descripcion": "Nota de Débito Electrónica",
+      "requiere_serie": true,
+      "formato_serie": "FD##",
+      "activo": true
+    }
+  },
+  {
+    "model": "core.empresa",
+    "pk": 1,
+    "fields": {
+      "ruc": "20123456789",
+      "razon_social": "EMPRESA DEMO FELICITA SAC",
+      "nombre_comercial": "FELICITA DEMO",
+      "direccion_fiscal": "AV. JAVIER PRADO ESTE 123, SAN ISIDRO, LIMA",
+      "ubigeo": "150130",
+      "telefono": "01-1234567",
+      "email": "demo@felicita.pe",
+      "representante_legal": "JUAN PEREZ LOPEZ",
+      "usuario_sol": "DEMO123456",
+      "activo": true
+    }
+  },
+  {
+    "model": "core.configuracion",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "igv_porcentaje": "18.00",
+      "moneda_defecto": "PEN",
+      "numeracion_automatica": true,
+      "envio_automatico_sunat": true,
+      "envio_email_cliente": false,
+      "metodo_valuacion": "PEPS",
+      "control_stock": true,
+      "formato_fecha": "DD/MM/YYYY",
+      "activo": true
+    }
+  },
+  {
+    "model": "core.sucursal",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "codigo": "001",
+      "nombre": "Sucursal Principal",
+      "direccion": "AV. JAVIER PRADO ESTE 123, SAN ISIDRO, LIMA",
+      "ubigeo": "150130",
+      "telefono": "01-1234567",
+      "email": "sucursal@felicita.pe",
+      "es_principal": true,
+      "activo": true
+    }
+  },
+  {
+    "model": "core.seriecomprobante",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "tipo_comprobante": 1,
+      "serie": "F001",
+      "numero_actual": 0,
+      "sucursal": 1,
+      "activo": true
+    }
+  },
+  {
+    "model": "core.seriecomprobante",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "tipo_comprobante": 2,
+      "serie": "B001",
+      "numero_actual": 0,
+      "sucursal": 1,
+      "activo": true
+    }
+  },
+  {
+    "model": "core.seriecomprobante",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "tipo_comprobante": 3,
+      "serie": "FC01",
+      "numero_actual": 0,
+      "sucursal": 1,
+      "activo": true
+    }
+  },
+  {
+    "model": "core.seriecomprobante",
+    "pk": 4,
+    "fields": {
+      "empresa": 1,
+      "tipo_comprobante": 4,
+      "serie": "FD01",
+      "numero_actual": 0,
+      "sucursal": 1,
+      "activo": true
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$8K9z1Xzd5K9z1Xzd5$+8K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Administrador",
+      "last_name": "Sistema",
+      "email": "admin@felicita.pe",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z",
+      "empresa": 1,
+      "rol": "administrador",
+      "telefono": "999123456",
+      "documento_identidad": "12345678",
+      "preferencias": {},
+      "notificaciones_email": true,
+      "notificaciones_sistema": true,
+      "intentos_fallidos": 0,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$8K9z1Xzd5K9z1Xzd5$+8K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "contador",
+      "first_name": "Maria",
+      "last_name": "Gonzales",
+      "email": "contador@felicita.pe",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z",
+      "empresa": 1,
+      "rol": "contador",
+      "telefono": "999123457",
+      "documento_identidad": "12345679",
+      "preferencias": {},
+      "notificaciones_email": true,
+      "notificaciones_sistema": true,
+      "intentos_fallidos": 0,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$8K9z1Xzd5K9z1Xzd5$+8K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5K9z1Xzd5=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "vendedor",
+      "first_name": "Carlos",
+      "last_name": "Rodriguez",
+      "email": "vendedor@felicita.pe",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z",
+      "empresa": 1,
+      "rol": "vendedor",
+      "telefono": "999123458",
+      "documento_identidad": "12345680",
+      "preferencias": {},
+      "notificaciones_email": true,
+      "notificaciones_sistema": true,
+      "intentos_fallidos": 0,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.cliente",
+    "pk": 1,
+    "fields": {
+      "empresa": 1,
+      "tipo_documento": "dni",
+      "numero_documento": "12345678",
+      "razon_social": "JUAN CARLOS PEREZ LOPEZ",
+      "nombre_comercial": "",
+      "direccion": "AV. EXAMPLE 123, LIMA",
+      "ubigeo": "150101",
+      "telefono": "999111222",
+      "email": "juan.perez@email.com",
+      "contacto_principal": "Juan Perez",
+      "limite_credito": "0.00",
+      "dias_credito": 0,
+      "activo": true
+    }
+  },
+  {
+    "model": "core.cliente",
+    "pk": 2,
+    "fields": {
+      "empresa": 1,
+      "tipo_documento": "ruc",
+      "numero_documento": "20987654321",
+      "razon_social": "EMPRESA CLIENTE SAC",
+      "nombre_comercial": "CLIENTE SAC",
+      "direccion": "AV. CLIENTE 456, LIMA",
+      "ubigeo": "150101",
+      "telefono": "01-2345678",
+      "email": "contacto@clientesac.pe",
+      "contacto_principal": "Ana Gutierrez",
+      "limite_credito": "10000.00",
+      "dias_credito": 30,
+      "activo": true
+    }
+  },
+  {
+    "model": "core.cliente",
+    "pk": 3,
+    "fields": {
+      "empresa": 1,
+      "tipo_documento": "dni",
+      "numero_documento": "87654321",
+      "razon_social": "MARIA ELENA SANTOS RODRIGUEZ",
+      "nombre_comercial": "",
+      "direccion": "JR. SANTOS 789, LIMA",
+      "ubigeo": "150101",
+      "telefono": "999333444",
+      "email": "maria.santos@email.com",
+      "contacto_principal": "Maria Santos",
+      "limite_credito": "0.00",
+      "dias_credito": 0,
+      "activo": true
+    }
+  }
+]

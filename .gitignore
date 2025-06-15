@@ -1,0 +1,432 @@
+# FELICITA - Git Ignore Configuration
+
+# ===========================================
+# VARIABLES DE ENTORNO Y SECRETOS
+# ===========================================
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Archivos de configuración sensibles
+secrets.json
+config.json
+*.key
+*.pem
+*.crt
+
+# ===========================================
+# PYTHON / DJANGO
+# ===========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ===========================================
+# NODE.JS / REACT / FRONTEND
+# ===========================================
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+build/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Vite build output
+dist/
+dist-ssr/
+
+# Rollup cache
+.rollup.cache
+
+# Storybook build outputs
+.out
+.storybook-out
+storybook-static
+
+# Temporary folders
+tmp/
+temp/
+
+# ===========================================
+# DOCKER
+# ===========================================
+# Docker compose override
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ===========================================
+# BASE DE DATOS
+# ===========================================
+# MySQL
+*.sql
+*.sql.gz
+*.sql.bz2
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# PostgreSQL dumps
+*.dump
+
+# ===========================================
+# LOGS Y AUDITORÍA
+# ===========================================
+# Archivos de log
+logs/
+*.log
+*.log.*
+
+# Archivos de auditoría
+audit/
+audit_*
+
+# ===========================================
+# MEDIOS Y UPLOADS
+# ===========================================
+# Archivos subidos por usuarios
+media/
+uploads/
+static_collected/
+staticfiles/
+
+# Archivos temporales de reportes
+reportes_temp/
+exports/
+
+# ===========================================
+# CONFIGURACIÓN DE EDITORES
+# ===========================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ===========================================
+# SISTEMA OPERATIVO
+# ===========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# ===========================================
+# ARCHIVOS DE BACKUP
+# ===========================================
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+
+# ===========================================
+# CERTIFICADOS Y LLAVES
+# ===========================================
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+
+# ===========================================
+# ARCHIVOS DE CONFIGURACIÓN LOCAL
+# ===========================================
+local_config.py
+local_settings.py
+config_local.json
+
+# ===========================================
+# ARCHIVOS DE TESTING
+# ===========================================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ===========================================
+# ARCHIVOS FELICITA ESPECÍFICOS
+# ===========================================
+# Archivos de configuración de empresa
+empresa_config.json
+certificados_sunat/
+
+# Archivos de prueba
+datos_prueba/
+facturas_prueba/
+
+# Archivos de desarrollo
+desarrollo_notas.md
+TODO.md
+NOTAS.md
+
+# Configuraciones locales específicas
+configuracion_local/

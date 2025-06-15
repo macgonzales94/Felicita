@@ -1,0 +1,66 @@
+services:
+  # MySQL 8.0 Database
+  db:
+    image: mysql:8.0
+    container_name: felicita_mysql
+    environment:
+      MYSQL_DATABASE: felicita_db
+      MYSQL_USER: felicita_user
+      MYSQL_PASSWORD: dev_password_123
+      MYSQL_ROOT_PASSWORD: root_password_123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql_mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+      --default-time-zone=-05:00
+    restart: unless-stopped
+    networks:
+      - felicita_network
+
+  # phpMyAdmin for database administration
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: felicita_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: felicita_user
+      PMA_PASSWORD: dev_password_123
+      MYSQL_ROOT_PASSWORD: root_password_123
+      PMA_ARBITRARY: 1
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - felicita_network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: felicita_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass felicita_redis_123
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - felicita_network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  felicita_network:
+    driver: bridge
