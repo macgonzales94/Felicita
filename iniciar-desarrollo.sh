@@ -96,6 +96,22 @@ mkdir -p backend/media/reportes
 mkdir -p backend/media/uploads
 mkdir -p backend/static
 mkdir -p sql
+
+# Crear archivo init.sql si no existe
+#if [ ! -f "sql/init.sql" ]; then
+#    show_message "Creando init.sql básico..."
+#    cat > sql/init.sql <<EOF
+#USE felicita_db;
+
+#CREATE TABLE IF NOT EXISTS ejemplo (
+#  id INT AUTO_INCREMENT PRIMARY KEY,
+
+#  nombre VARCHAR(100) NOT NULL
+#);
+#EOF
+#    show_success "Archivo init.sql creado en sql/init.sql"
+#fi
+
 show_success "Directorios creados"
 
 # Parar contenedores existentes
@@ -110,7 +126,7 @@ docker-compose up -d db redis phpmyadmin
 show_message "Esperando a que MySQL esté listo..."
 until docker-compose exec -T db mysqladmin ping -h"localhost" --silent; do
     echo -n "."
-    sleep 2
+    sleep 
 done
 echo ""
 show_success "MySQL está listo"

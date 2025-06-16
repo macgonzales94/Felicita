@@ -1,8 +1,8 @@
 """
-FELICITA - Modelos Usuarios
+FELICITA - Modelos Usuarios Completos
 Sistema de Facturación Electrónica para Perú
 
-Modelos para autenticación y autorización con JWT
+Modelos completos para autenticación, sesiones y auditoría
 """
 
 from django.contrib.auth.models import AbstractUser
@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth.models import Permission
 import logging
+import json
 
 logger = logging.getLogger('felicita.usuarios')
 
@@ -56,107 +57,98 @@ class Usuario(AbstractUser):
         help_text='Número de teléfono de contacto',
         validators=[
             RegexValidator(
-                regex=r'^[+]?[0-9\s\-\(\)]{7,20}$',
-                message='Formato de teléfono inválido'
+                regex=r'^[+]?[\d\s\-\(\)]+$',
+                message='Ingrese un número de teléfono válido'
             )
         ]
     )
     
     documento_identidad = models.CharField(
-        max_length=11,
+        max_length=20,
         blank=True,
         verbose_name='Documento de Identidad',
-        help_text='DNI o Carnet de Extranjería'
+        help_text='DNI, CE o RUC del usuario'
     )
     
-    # Configuraciones de usuario
-    preferencias = models.JSONField(
-        default=dict,
-        blank=True,
-        verbose_name='Preferencias',
-        help_text='Configuraciones personalizadas del usuario'
-    )
-    
-    # Control de acceso
-    ultimo_acceso_ip = models.GenericIPAddressField(
-        null=True,
-        blank=True,
-        verbose_name='Última IP de Acceso'
-    )
-    
-    intentos_fallidos = models.PositiveIntegerField(
-        default=0,
-        verbose_name='Intentos de Login Fallidos',
-        help_text='Contador de intentos de login fallidos'
-    )
-    
-    bloqueado_hasta = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name='Bloqueado Hasta',
-        help_text='Fecha hasta cuando está bloqueado el usuario'
-    )
-    
-    # Configuración de notificaciones
-    notificaciones_email = models.BooleanField(
-        default=True,
-        verbose_name='Notificaciones por Email',
-        help_text='Recibir notificaciones por correo electrónico'
-    )
-    
-    notificaciones_sistema = models.BooleanField(
-        default=True,
-        verbose_name='Notificaciones del Sistema',
-        help_text='Recibir notificaciones en el sistema'
-    )
-    
-    # Sucursales asignadas (para vendedores)
     sucursales = models.ManyToManyField(
         'core.Sucursal',
         blank=True,
         related_name='usuarios_asignados',
-        verbose_name='Sucursales Asignadas',
-        help_text='Sucursales donde puede trabajar este usuario'
+        verbose_name='Sucursales',
+        help_text='Sucursales a las que tiene acceso'
+    )
+    
+    # Campos de seguridad
+    bloqueado_hasta = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Bloqueado hasta',
+        help_text='Fecha hasta la cual el usuario está bloqueado'
+    )
+    
+    intentos_fallidos = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Intentos fallidos',
+        help_text='Número de intentos de login fallidos'
+    )
+    
+    ultimo_acceso_ip = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name='Última IP de acceso'
+    )
+    
+    # Campos de preferencias
+    preferencias = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Preferencias',
+        help_text='Preferencias personalizadas del usuario'
+    )
+    
+    notificaciones_email = models.BooleanField(
+        default=True,
+        verbose_name='Notificaciones por email'
+    )
+    
+    notificaciones_sistema = models.BooleanField(
+        default=True,
+        verbose_name='Notificaciones del sistema'
     )
     
     class Meta:
-        db_table = 'usuarios_usuario'
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
         ordering = ['username']
-        permissions = [
-            ('puede_ver_todas_empresas', 'Puede ver todas las empresas'),
-            ('puede_cambiar_roles', 'Puede cambiar roles de usuarios'),
-            ('puede_reiniciar_passwords', 'Puede reiniciar contraseñas'),
-            ('puede_bloquear_usuarios', 'Puede bloquear/desbloquear usuarios'),
-            ('puede_ver_auditoria', 'Puede ver logs de auditoría'),
+        indexes = [
+            models.Index(fields=['empresa', 'rol']),
+            models.Index(fields=['documento_identidad']),
+            models.Index(fields=['email']),
         ]
     
-    def __str__(self):
-        nombre_completo = self.get_full_name()
-        if nombre_completo:
-            return f"{self.username} - {nombre_completo}"
-        return self.username
-    
     def clean(self):
-        """Validaciones personalizadas"""
+        """Validaciones del modelo"""
         super().clean()
         
-        # Validar que cliente no tenga empresa asignada
-        if self.rol == 'cliente' and self.empresa:
+        # Validar que roles específicos tengan empresa
+        if self.rol in ['administrador', 'contador', 'vendedor', 'supervisor'] and not self.empresa:
             raise ValidationError({
-                'empresa': 'Los usuarios con rol Cliente no pueden tener empresa asignada'
+                'empresa': 'Este rol requiere estar asignado a una empresa'
             })
         
-        # Validar que otros roles sí tengan empresa
-        if self.rol != 'cliente' and not self.empresa and not self.is_superuser:
-            raise ValidationError({
-                'empresa': f'Los usuarios con rol {self.get_rol_display()} deben tener empresa asignada'
-            })
+        # Validar documento de identidad único
+        if self.documento_identidad:
+            existing = Usuario.objects.filter(
+                documento_identidad=self.documento_identidad
+            ).exclude(pk=self.pk)
+            if existing.exists():
+                raise ValidationError({
+                    'documento_identidad': 'Este documento de identidad ya existe'
+                })
     
     def save(self, *args, **kwargs):
         """Guardar con validaciones"""
-        self.full_clean()
+        self.clean()
         super().save(*args, **kwargs)
         logger.info(f"Usuario guardado: {self.username} - Rol: {self.rol}")
     
@@ -185,26 +177,28 @@ class Usuario(AbstractUser):
         
         # Verificar permisos del rol
         permisos_rol = self.obtener_permisos_rol()
-        return '*' in permisos_rol or permiso in permisos_rol
+        
+        # Verificar wildcard
+        if '*' in permisos_rol:
+            return True
+        
+        # Verificar permiso exacto
+        if permiso in permisos_rol:
+            return True
+        
+        # Verificar wildcards de módulo (ej: 'core.*')
+        modulo = permiso.split('.')[0]
+        if f"{modulo}.*" in permisos_rol:
+            return True
+        
+        return False
     
     def obtener_permisos_rol(self) -> list:
         """Obtener permisos según el rol"""
         permisos_por_rol = {
             'administrador': [
-                'core.view_empresa',
-                'core.change_empresa',
-                'core.add_sucursal',
-                'core.change_sucursal',
-                'core.view_sucursal',
-                'core.add_cliente',
-                'core.change_cliente',
-                'core.view_cliente',
-                'core.delete_cliente',
-                'core.change_configuracion',
-                'core.view_configuracion',
-                'usuarios.view_usuario',
-                'usuarios.change_usuario',
-                'usuarios.add_usuario',
+                'core.*',
+                'usuarios.*',
                 'facturacion.*',
                 'inventario.*',
                 'reportes.*',
@@ -294,26 +288,14 @@ class Usuario(AbstractUser):
         self.bloqueado_hasta = None
         self.intentos_fallidos = 0
         self.save(update_fields=['bloqueado_hasta', 'intentos_fallidos'])
-        logger.info(f"Usuario desbloqueado manualmente: {self.username}")
-    
-    def cambiar_rol(self, nuevo_rol, cambiado_por=None):
-        """Cambiar rol del usuario con auditoría"""
-        rol_anterior = self.rol
-        self.rol = nuevo_rol
-        self.save(update_fields=['rol'])
-        
-        # Log de auditoría
-        logger.info(
-            f"Rol cambiado: {self.username} de {rol_anterior} a {nuevo_rol} "
-            f"por {cambiado_por.username if cambiado_por else 'sistema'}"
-        )
+        logger.info(f"Usuario desbloqueado: {self.username}")
 
 # ===========================================
 # MODELO SESIÓN USUARIO
 # ===========================================
 
 class SesionUsuario(models.Model):
-    """Registro de sesiones de usuario para auditoría"""
+    """Registro de sesiones activas de usuarios"""
     
     usuario = models.ForeignKey(
         Usuario,
@@ -326,11 +308,12 @@ class SesionUsuario(models.Model):
         max_length=255,
         unique=True,
         verbose_name='Token JTI',
-        help_text='JWT Token Identifier'
+        help_text='Identificador único del refresh token'
     )
     
     ip_address = models.GenericIPAddressField(
-        verbose_name='Dirección IP'
+        verbose_name='Dirección IP',
+        help_text='IP desde donde se inició la sesión'
     )
     
     user_agent = models.TextField(
@@ -339,93 +322,94 @@ class SesionUsuario(models.Model):
         help_text='Información del navegador/dispositivo'
     )
     
-    fecha_inicio = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Fecha de Inicio'
-    )
-    
-    fecha_ultimo_uso = models.DateTimeField(
-        auto_now=True,
-        verbose_name='Fecha de Último Uso'
+    ubicacion = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Ubicación',
+        help_text='Ubicación geográfica aproximada'
     )
     
     activa = models.BooleanField(
         default=True,
-        verbose_name='Sesión Activa'
+        verbose_name='Sesión activa'
     )
     
-    # Información adicional
-    dispositivo = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='Dispositivo'
+    fecha_inicio = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de inicio'
     )
     
-    ubicacion = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='Ubicación'
+    fecha_expiracion = models.DateTimeField(
+        verbose_name='Fecha de expiración'
+    )
+    
+    ultima_actividad = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Última actividad'
     )
     
     class Meta:
-        db_table = 'usuarios_sesion'
         verbose_name = 'Sesión de Usuario'
         verbose_name_plural = 'Sesiones de Usuario'
-        ordering = ['-fecha_ultimo_uso']
+        ordering = ['-fecha_inicio']
         indexes = [
             models.Index(fields=['usuario', 'activa']),
             models.Index(fields=['token_jti']),
-            models.Index(fields=['fecha_ultimo_uso']),
+            models.Index(fields=['fecha_expiracion']),
         ]
     
     def __str__(self):
-        return f"{self.usuario.username} - {self.ip_address} - {self.fecha_inicio}"
+        return f"{self.usuario.username} - {self.ip_address} ({self.fecha_inicio})"
     
-    def cerrar_sesion(self):
-        """Cerrar sesión manualmente"""
+    @property
+    def esta_expirada(self):
+        """Verificar si la sesión está expirada"""
+        return timezone.now() > self.fecha_expiracion
+    
+    @property
+    def es_valida(self):
+        """Verificar si la sesión es válida"""
+        return self.activa and not self.esta_expirada
+    
+    def cerrar(self):
+        """Cerrar la sesión"""
         self.activa = False
         self.save(update_fields=['activa'])
-        logger.info(f"Sesión cerrada: {self.usuario.username} - {self.ip_address}")
-    
-    @property
-    def duracion(self):
-        """Obtener duración de la sesión"""
-        if self.activa:
-            return timezone.now() - self.fecha_inicio
-        return self.fecha_ultimo_uso - self.fecha_inicio
-    
-    @property
-    def es_dispositivo_movil(self):
-        """Detectar si es dispositivo móvil"""
-        if self.user_agent:
-            user_agent_lower = self.user_agent.lower()
-            return any(mobile in user_agent_lower for mobile in 
-                      ['mobile', 'android', 'iphone', 'ipad', 'tablet'])
-        return False
 
 # ===========================================
 # MODELO LOG AUDITORÍA
 # ===========================================
 
 class LogAuditoria(models.Model):
-    """Log de auditoría para acciones del sistema"""
+    """Log de auditoría para seguimiento de acciones"""
     
     ACCIONES = [
-        ('login', 'Inicio de Sesión'),
-        ('logout', 'Cierre de Sesión'),
-        ('login_fallido', 'Intento de Login Fallido'),
-        ('cambio_password', 'Cambio de Contraseña'),
-        ('cambio_rol', 'Cambio de Rol'),
-        ('bloqueo', 'Bloqueo de Usuario'),
-        ('desbloqueo', 'Desbloqueo de Usuario'),
-        ('creacion', 'Creación de Registro'),
-        ('modificacion', 'Modificación de Registro'),
-        ('eliminacion', 'Eliminación de Registro'),
-        ('facturacion', 'Acción de Facturación'),
-        ('anulacion', 'Anulación de Comprobante'),
-        ('configuracion', 'Cambio de Configuración'),
-        ('exportacion', 'Exportación de Datos'),
-        ('importacion', 'Importación de Datos'),
+        ('LOGIN', 'Inicio de sesión'),
+        ('LOGIN_FALLIDO', 'Intento de login fallido'),
+        ('LOGOUT', 'Cierre de sesión'),
+        ('REGISTRO', 'Registro de usuario'),
+        ('CREAR_USUARIO', 'Crear usuario'),
+        ('ACTUALIZAR_USUARIO', 'Actualizar usuario'),
+        ('ELIMINAR_USUARIO', 'Eliminar usuario'),
+        ('ACTIVAR_USUARIO', 'Activar usuario'),
+        ('DESACTIVAR_USUARIO', 'Desactivar usuario'),
+        ('DESBLOQUEAR_USUARIO', 'Desbloquear usuario'),
+        ('CAMBIAR_PASSWORD', 'Cambiar contraseña'),
+        ('CERRAR_SESION', 'Cerrar sesión específica'),
+        ('CERRAR_TODAS_SESIONES', 'Cerrar todas las sesiones'),
+        ('CREAR_FACTURA', 'Crear factura'),
+        ('ANULAR_FACTURA', 'Anular factura'),
+        ('CREAR_PRODUCTO', 'Crear producto'),
+        ('ACTUALIZAR_PRODUCTO', 'Actualizar producto'),
+        ('MOVIMIENTO_INVENTARIO', 'Movimiento de inventario'),
+        ('GENERAR_REPORTE', 'Generar reporte'),
+        ('MODIFICAR_CONFIGURACION', 'Modificar configuración'),
+    ]
+    
+    RESULTADOS = [
+        ('EXITOSO', 'Exitoso'),
+        ('FALLIDO', 'Fallido'),
+        ('ERROR', 'Error'),
     ]
     
     usuario = models.ForeignKey(
@@ -438,42 +422,15 @@ class LogAuditoria(models.Model):
     )
     
     accion = models.CharField(
-        max_length=20,
+        max_length=50,
         choices=ACCIONES,
         verbose_name='Acción'
     )
     
-    modelo = models.CharField(
+    recurso = models.CharField(
         max_length=100,
-        blank=True,
-        verbose_name='Modelo',
-        help_text='Modelo Django afectado'
-    )
-    
-    objeto_id = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name='ID del Objeto',
-        help_text='ID del objeto afectado'
-    )
-    
-    descripcion = models.TextField(
-        verbose_name='Descripción',
-        help_text='Descripción detallada de la acción'
-    )
-    
-    datos_anteriores = models.JSONField(
-        null=True,
-        blank=True,
-        verbose_name='Datos Anteriores',
-        help_text='Estado anterior del objeto (para modificaciones)'
-    )
-    
-    datos_nuevos = models.JSONField(
-        null=True,
-        blank=True,
-        verbose_name='Datos Nuevos',
-        help_text='Estado nuevo del objeto'
+        verbose_name='Recurso',
+        help_text='Recurso o módulo afectado'
     )
     
     ip_address = models.GenericIPAddressField(
@@ -487,78 +444,83 @@ class LogAuditoria(models.Model):
         verbose_name='User Agent'
     )
     
-    fecha = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Fecha',
-        help_text='Fecha y hora de la acción'
+    datos_adicionales = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Datos adicionales',
+        help_text='Información adicional sobre la acción'
     )
     
-    empresa = models.ForeignKey(
-        'core.Empresa',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name='Empresa',
-        help_text='Empresa en la que se realizó la acción'
+    resultado = models.CharField(
+        max_length=20,
+        choices=RESULTADOS,
+        default='EXITOSO',
+        verbose_name='Resultado'
+    )
+    
+    fecha_hora = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha y hora'
     )
     
     class Meta:
-        db_table = 'usuarios_log_auditoria'
         verbose_name = 'Log de Auditoría'
         verbose_name_plural = 'Logs de Auditoría'
-        ordering = ['-fecha']
+        ordering = ['-fecha_hora']
         indexes = [
-            models.Index(fields=['usuario', 'fecha']),
-            models.Index(fields=['accion', 'fecha']),
-            models.Index(fields=['modelo', 'objeto_id']),
-            models.Index(fields=['empresa', 'fecha']),
+            models.Index(fields=['usuario', 'fecha_hora']),
+            models.Index(fields=['accion', 'fecha_hora']),
+            models.Index(fields=['recurso', 'fecha_hora']),
+            models.Index(fields=['ip_address']),
         ]
     
     def __str__(self):
-        usuario_str = self.usuario.username if self.usuario else 'Sistema'
-        return f"{usuario_str} - {self.get_accion_display()} - {self.fecha}"
+        usuario_str = self.usuario.username if self.usuario else 'SISTEMA'
+        return f"{usuario_str} - {self.accion} - {self.resultado} ({self.fecha_hora})"
     
     @classmethod
-    def crear_log(cls, usuario=None, accion=None, descripcion=None, 
-                  modelo=None, objeto_id=None, datos_anteriores=None, 
-                  datos_nuevos=None, ip_address=None, user_agent=None, empresa=None):
-        """Método helper para crear logs de auditoría"""
+    def registrar(cls, usuario=None, accion=None, recurso=None, ip_address=None, 
+                  user_agent=None, datos_adicionales=None, resultado='EXITOSO'):
+        """Método para registrar logs de auditoría fácilmente"""
         return cls.objects.create(
             usuario=usuario,
             accion=accion,
-            descripcion=descripcion,
-            modelo=modelo,
-            objeto_id=str(objeto_id) if objeto_id else None,
-            datos_anteriores=datos_anteriores,
-            datos_nuevos=datos_nuevos,
+            recurso=recurso,
             ip_address=ip_address,
             user_agent=user_agent,
-            empresa=empresa
+            datos_adicionales=datos_adicionales or {},
+            resultado=resultado
         )
 
 # ===========================================
-# SIGNALS PARA AUDITORÍA
+# SIGNALS
 # ===========================================
 
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 @receiver(post_save, sender=Usuario)
-def log_usuario_cambio(sender, instance, created, **kwargs):
-    """Log cuando se crea o modifica un usuario"""
-    accion = 'creacion' if created else 'modificacion'
-    descripcion = f"Usuario {'creado' if created else 'modificado'}: {instance.username}"
-    
-    LogAuditoria.crear_log(
-        accion=accion,
-        descripcion=descripcion,
-        modelo='Usuario',
-        objeto_id=instance.id,
-        datos_nuevos={
-            'username': instance.username,
-            'email': instance.email,
-            'rol': instance.rol,
-            'activo': instance.is_active,
-        },
-        empresa=instance.empresa
+def usuario_post_save(sender, instance, created, **kwargs):
+    """Signal post-save para Usuario"""
+    if created:
+        LogAuditoria.registrar(
+            accion='CREAR_USUARIO',
+            recurso='USUARIO',
+            datos_adicionales={
+                'usuario_creado': instance.username,
+                'rol': instance.rol,
+                'empresa': instance.empresa.razon_social if instance.empresa else None
+            }
+        )
+
+@receiver(post_delete, sender=Usuario)
+def usuario_post_delete(sender, instance, **kwargs):
+    """Signal post-delete para Usuario"""
+    LogAuditoria.registrar(
+        accion='ELIMINAR_USUARIO',
+        recurso='USUARIO',
+        datos_adicionales={
+            'usuario_eliminado': instance.username,
+            'rol': instance.rol
+        }
     )
